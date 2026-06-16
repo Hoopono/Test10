@@ -1,0 +1,2123 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Don Pita Hotel — Sistema de Hóspedes</title>
+<!-- Firebase SDKs -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getFirestore, doc, getDoc, setDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDmKbWwT7AcnyJLUXgxg3VICMoU8GAleqs",
+    authDomain: "don-pita-hotel-64d9d.firebaseapp.com",
+    projectId: "don-pita-hotel-64d9d",
+    storageBucket: "don-pita-hotel-64d9d.firebasestorage.app",
+    messagingSenderId: "135402539938",
+    appId: "1:135402539938:web:d6d29c4d585cf3b7f180fb"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db  = getFirestore(app);
+
+  // Expose Firestore helpers to global scope so the main script can use them
+  window._fbDb = db;
+  window._fbDoc = doc;
+  window._fbGetDoc = getDoc;
+  window._fbSetDoc = setDoc;
+  window._fbOnSnapshot = onSnapshot;
+  window._fbCollection = collection;
+  window._firebaseReady = true;
+
+  // Signal that Firebase is ready
+  window.dispatchEvent(new Event('firebaseReady'));
+</script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@300;400;500;600&display=swap');
+
+  :root {
+    --gold: #C9A84C;
+    --gold-light: #E8C97A;
+    --navy: #1A2340;
+    --navy-mid: #253054;
+    --navy-light: #2E3D6B;
+    --cream: #F9F6EF;
+    --white: #FFFFFF;
+    --green: #2E7D52;
+    --green-light: #EAF5EF;
+    --red: #B23B3B;
+    --red-light: #FBF0F0;
+    --amber: #B07D1A;
+    --amber-light: #FDF5E0;
+    --gray: #8A8F9E;
+    --border: #E2DED4;
+    --mbrf-purple: #5B3A8C;
+    --mbrf-light: #F2EDF9;
+    --food-teal: #1A7A6E;
+    --food-light: #E6F4F2;
+    --reserva-blue: #1A4A7A;
+    --reserva-light: #E6EFF8;
+    --hist-brown: #7A4A1A;
+    --hist-light: #FDF1E6;
+    --quarto-orange: #C05C10;
+    --quarto-orange-light: #FDF0E6;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', sans-serif; background: var(--cream); color: var(--navy); min-height: 100vh; }
+
+  /* HEADER */
+  header {
+    background: linear-gradient(135deg, var(--navy) 0%, var(--navy-mid) 100%);
+    padding: 0 32px;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 72px; position: sticky; top: 0; z-index: 100;
+    box-shadow: 0 2px 20px rgba(26,35,64,0.25);
+  }
+  .logo { display: flex; align-items: center; gap: 14px; }
+  .logo-icon {
+    width: 44px; height: 44px;
+    background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%);
+    border-radius: 12px; display: flex; align-items: center; justify-content: center;
+    font-family: 'Playfair Display', serif; font-size: 17px; color: var(--navy); font-weight: 700;
+    box-shadow: 0 2px 8px rgba(201,168,76,0.4);
+  }
+  .logo-text { font-family: 'Playfair Display', serif; font-size: 20px; color: var(--white); letter-spacing: 0.3px; }
+  .logo-sub { font-size: 10px; color: var(--gold-light); letter-spacing: 2.5px; text-transform: uppercase; margin-top: 2px; }
+  .header-right { display: flex; align-items: center; gap: 20px; }
+  .header-date { font-size: 12px; color: rgba(255,255,255,0.55); text-align: right; }
+  .header-date span { display: block; color: var(--gold-light); font-weight: 600; font-size: 13px; }
+
+  /* TABS */
+  .tabs {
+    background: var(--navy-mid);
+    display: flex; gap: 0; padding: 0 28px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none;
+  }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab {
+    padding: 0 20px; height: 52px; font-size: 12px; font-weight: 600;
+    letter-spacing: 0.7px; text-transform: uppercase;
+    color: rgba(255,255,255,0.45); cursor: pointer;
+    border-bottom: 3px solid transparent; transition: all 0.2s;
+    display: flex; align-items: center; gap: 7px; white-space: nowrap; flex-shrink: 0;
+  }
+  .tab:hover { color: rgba(255,255,255,0.8); background: rgba(255,255,255,0.04); }
+  .tab.active { color: var(--gold); border-bottom-color: var(--gold); background: rgba(201,168,76,0.07); }
+  .tab-icon { font-size: 15px; }
+  .badge {
+    font-size: 10px; padding: 2px 6px; border-radius: 10px; font-weight: 700;
+    min-width: 18px; text-align: center;
+    background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.6);
+  }
+  .tab.active .badge { background: var(--gold); color: var(--navy); }
+  .badge-purple { background: var(--mbrf-purple); color: white; }
+  .badge-teal   { background: var(--food-teal); color: white; }
+  .badge-blue   { background: var(--reserva-blue); color: white; }
+  .badge-brown  { background: var(--hist-brown); color: white; }
+  .badge-orange { background: var(--quarto-orange); color: white; }
+
+  main { padding: 24px 32px; max-width: 1340px; margin: 0 auto; }
+
+  /* STATS */
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px; }
+  .stat {
+    background: var(--white); border-radius: 12px; padding: 18px 20px;
+    border: 1px solid var(--border); border-top: 3px solid var(--gold);
+    position: relative; overflow: hidden;
+  }
+  .stat.green  { border-top-color: var(--green); }
+  .stat.red    { border-top-color: var(--red); }
+  .stat.purple { border-top-color: var(--mbrf-purple); }
+  .stat.teal   { border-top-color: var(--food-teal); }
+  .stat.blue   { border-top-color: var(--reserva-blue); }
+  .stat.brown  { border-top-color: var(--hist-brown); }
+  .stat.orange { border-top-color: var(--quarto-orange); }
+  .stat-label { font-size: 10px; color: var(--gray); text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 6px; font-weight: 600; }
+  .stat-value { font-size: 26px; font-weight: 700; color: var(--navy); font-family: 'Playfair Display', serif; }
+  .stat-sub   { font-size: 11px; color: var(--gray); margin-top: 3px; }
+
+  /* TOOLBAR */
+  .toolbar { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+  .toolbar-title { font-family: 'Playfair Display', serif; font-size: 20px; color: var(--navy); flex: 1; }
+  .search-wrap { position: relative; }
+  .search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); font-size: 13px; opacity: 0.5; }
+  .search-input {
+    padding: 9px 14px 9px 30px; border: 1px solid var(--border); border-radius: 8px;
+    font-size: 13px; font-family: 'Inter', sans-serif; width: 210px;
+    background: var(--white); color: var(--navy); outline: none; transition: border-color 0.2s;
+  }
+  .search-input:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(201,168,76,0.12); }
+
+  /* BUTTONS */
+  .btn {
+    padding: 9px 18px; border-radius: 9px; font-size: 13px; font-weight: 600;
+    font-family: 'Inter', sans-serif; cursor: pointer; border: none;
+    transition: all 0.18s; display: inline-flex; align-items: center; gap: 6px;
+  }
+  .btn-primary  { background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%); color: var(--navy); box-shadow: 0 2px 8px rgba(201,168,76,0.3); }
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(201,168,76,0.4); }
+  .btn-outline  { background: transparent; border: 1.5px solid var(--border); color: var(--navy); }
+  .btn-outline:hover { border-color: var(--gold); color: var(--gold); }
+  .btn-mbrf     { background: linear-gradient(135deg, var(--mbrf-purple) 0%, #7B55B8 100%); color: white; box-shadow: 0 2px 8px rgba(91,58,140,0.3); }
+  .btn-mbrf:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(91,58,140,0.4); }
+  .btn-food     { background: linear-gradient(135deg, var(--food-teal) 0%, #22A090 100%); color: white; }
+  .btn-reserva  { background: linear-gradient(135deg, var(--reserva-blue) 0%, #2260A8 100%); color: white; }
+  .btn-danger   { background: linear-gradient(135deg, var(--red) 0%, #D44A4A 100%); color: white; }
+  .btn-hist     { background: linear-gradient(135deg, var(--hist-brown) 0%, #A0601A 100%); color: white; }
+  .btn-ghost    { background: rgba(0,0,0,0.04); border: 1px solid var(--border); color: var(--navy); }
+  .btn-ghost:hover { background: rgba(0,0,0,0.07); }
+  .btn-quarto   { background: linear-gradient(135deg, var(--quarto-orange) 0%, #E07030 100%); color: white; }
+
+  /* TABLE */
+  .table-wrap { background: var(--white); border-radius: 14px; border: 1px solid var(--border); overflow: hidden; overflow-x:auto; box-shadow: 0 2px 16px rgba(26,35,64,0.07); }
+  table { width: 100%; min-width:900px; border-collapse: collapse; font-size: 13px; }
+  thead { background: var(--navy); }
+  th { padding: 12px 16px; text-align: left; font-size: 10px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; color: rgba(255,255,255,0.55); white-space: nowrap; }
+  tbody tr { border-bottom: 1px solid #F3F0EA; transition: background 0.12s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: #FAFAF7; }
+  td { padding: 13px 16px; color: var(--navy); vertical-align: middle; }
+
+  .guest-name { font-weight: 600; font-size: 14px; cursor: pointer; color: var(--navy); display: inline-flex; align-items: center; gap: 5px; transition: color 0.15s; }
+  .guest-name:hover { color: var(--gold); }
+  .guest-room { color: var(--gray); font-size: 11px; margin-top: 3px; }
+
+  /* BADGES */
+  .badge-status { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 20px; font-size: 10px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; }
+  .badge-pago      { background: var(--green-light); color: var(--green); }
+  .badge-pendente  { background: var(--amber-light); color: var(--amber); }
+  .badge-vencido   { background: var(--red-light); color: var(--red); }
+  .badge-mbrf      { background: var(--mbrf-light); color: var(--mbrf-purple); }
+  .badge-reserva   { background: var(--reserva-light); color: var(--reserva-blue); }
+  .badge-confirmada{ background: var(--green-light); color: var(--green); }
+  .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; display: inline-block; }
+
+  /* PROGRESS BAR */
+  .dias-bar { display: flex; align-items: center; gap: 8px; }
+  .bar-bg   { flex: 1; height: 5px; background: var(--border); border-radius: 3px; overflow: hidden; max-width: 70px; }
+  .bar-fill { height: 100%; border-radius: 3px; background: var(--gold); }
+  .bar-fill.over { background: var(--red); }
+  .bar-text { font-size: 12px; color: var(--gray); white-space: nowrap; }
+
+  /* ACTION BUTTONS */
+  .actions { display: flex; gap: 5px; flex-wrap: wrap; }
+  .btn-sm {
+    padding: 5px 10px; font-size: 11px; border-radius: 7px; cursor: pointer;
+    border: 1px solid var(--border); background: white; color: var(--navy);
+    font-family: 'Inter', sans-serif; font-weight: 500; transition: all 0.14s;
+    display: inline-flex; align-items: center; gap: 3px;
+  }
+  .btn-sm:hover { border-color: var(--gold); color: var(--gold); }
+  .btn-sm.danger:hover    { border-color: var(--red); color: var(--red); background: var(--red-light); }
+  .btn-sm.checkout-btn:hover { border-color: var(--red); color: var(--red); background: var(--red-light); }
+
+  .alert-paid { display: inline-flex; align-items: center; gap: 4px; background: var(--green-light); color: var(--green); font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 5px; margin-top: 3px; }
+  .open-stay-badge { display: inline-flex; align-items: center; gap: 4px; background: var(--mbrf-light); color: var(--mbrf-purple); font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 5px; margin-top: 3px; }
+
+  /* MODALS */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(10,16,40,0.6); z-index: 200; align-items: center; justify-content: center; padding: 16px; backdrop-filter: blur(4px); }
+  .modal-overlay.open { display: flex; }
+  .modal { background: var(--white); border-radius: 18px; width: 540px; max-width: 100%; max-height: 92vh; overflow-y: auto; padding: 32px; box-shadow: 0 24px 80px rgba(10,16,40,0.3); position: relative; animation: modalIn 0.22s ease; }
+  @keyframes modalIn { from { transform: translateY(16px) scale(0.97); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
+  .modal-title { font-family: 'Playfair Display', serif; font-size: 22px; color: var(--navy); margin-bottom: 22px; padding-bottom: 14px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+  .form-row  { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+  .form-row.full  { grid-template-columns: 1fr; }
+  .form-row.three { grid-template-columns: 1fr 1fr 1fr; }
+  .form-group { display: flex; flex-direction: column; gap: 5px; }
+  .form-label { font-size: 10px; font-weight: 700; color: var(--gray); text-transform: uppercase; letter-spacing: 1px; }
+  .form-input, .form-select { padding: 10px 12px; border: 1.5px solid var(--border); border-radius: 9px; font-size: 13px; font-family: 'Inter', sans-serif; color: var(--navy); background: white; outline: none; transition: border-color 0.2s, box-shadow 0.2s; }
+  .form-input:focus, .form-select:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(201,168,76,0.12); }
+  .modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--border); flex-wrap: wrap; }
+  .modal-close { position: absolute; top: 16px; right: 16px; background: rgba(0,0,0,0.05); border: none; width: 32px; height: 32px; border-radius: 50%; font-size: 16px; cursor: pointer; color: var(--gray); display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+  .modal-close:hover { background: rgba(0,0,0,0.1); color: var(--navy); }
+
+  /* CONFIRM MODAL */
+  .confirm-modal  { width: 440px; }
+  .confirm-icon   { font-size: 44px; text-align: center; margin-bottom: 14px; }
+  .confirm-title  { font-family: 'Playfair Display', serif; font-size: 20px; color: var(--navy); text-align: center; margin-bottom: 8px; }
+  .confirm-msg    { font-size: 13px; color: var(--gray); text-align: center; line-height: 1.6; margin-bottom: 20px; }
+  .confirm-detail { background: var(--cream); border-radius: 10px; padding: 14px 16px; margin-bottom: 20px; border: 1px solid var(--border); }
+  .confirm-detail-row { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+  .confirm-detail-row:last-child { border-bottom: none; }
+  .confirm-detail-row .label { color: var(--gray); font-size: 12px; }
+  .confirm-detail-row .value { font-weight: 600; color: var(--navy); }
+  .confirm-detail-row .value.red   { color: var(--red); }
+  .confirm-detail-row .value.green { color: var(--green); }
+  .confirm-btns { display: flex; gap: 10px; }
+  .confirm-btns .btn { flex: 1; justify-content: center; }
+
+  /* PAGAMENTO MODAL */
+  .pgto-modal { width: 480px; }
+  .pgto-formas { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 18px; }
+  .pgto-forma-btn { display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 12px 8px; border-radius: 10px; border: 2px solid var(--border); background: white; cursor: pointer; transition: all 0.15s; font-family: 'Inter', sans-serif; color: var(--navy); }
+  .pgto-forma-btn .icon  { font-size: 22px; }
+  .pgto-forma-btn .label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+  .pgto-forma-btn:hover   { border-color: var(--gold); background: #FEFAE8; }
+  .pgto-forma-btn.selected { border-color: var(--gold); background: linear-gradient(135deg, #FEFAE8 0%, #FFF8D6 100%); box-shadow: 0 0 0 3px rgba(201,168,76,0.15); }
+  .pgto-forma-btn.selected .label { color: var(--amber); }
+  .pgto-resumo { background: var(--cream); border-radius: 10px; padding: 14px 16px; border: 1px solid var(--border); margin-bottom: 16px; }
+  .pgto-resumo-row { display: flex; justify-content: space-between; font-size: 13px; padding: 4px 0; }
+  .pgto-resumo-row .r-label { color: var(--gray); }
+  .pgto-resumo-row .r-value { font-weight: 600; }
+  .pgto-resumo-row.total { border-top: 1px solid var(--border); margin-top: 6px; padding-top: 10px; }
+  .pgto-resumo-row.total .r-label { font-weight: 700; color: var(--navy); }
+  .pgto-resumo-row.total .r-value { color: var(--green); font-size: 15px; }
+
+  /* INFO MODAL */
+  .info-modal { width: 500px; }
+  .info-header { display: flex; align-items: center; gap: 16px; margin-bottom: 22px; padding-bottom: 18px; border-bottom: 1px solid var(--border); }
+  .info-avatar { width: 56px; height: 56px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; flex-shrink: 0; }
+  .info-avatar.hotel { background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%); color: var(--navy); }
+  .info-avatar.mbrf  { background: linear-gradient(135deg, var(--mbrf-purple) 0%, #7B55B8 100%); color: white; }
+  .info-name { font-family: 'Playfair Display', serif; font-size: 20px; color: var(--navy); }
+  .info-sub  { font-size: 12px; color: var(--gray); margin-top: 4px; }
+  .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 18px; }
+  .info-card { background: var(--cream); border-radius: 10px; padding: 13px 15px; border: 1px solid var(--border); }
+  .info-card-label { font-size: 10px; color: var(--gray); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; font-weight: 600; }
+  .info-card-value { font-size: 15px; font-weight: 700; color: var(--navy); }
+  .info-card-sub   { font-size: 11px; color: var(--gray); margin-top: 2px; }
+  .info-card.highlight  { background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%); border-color: var(--gold); }
+  .info-card.highlight .info-card-label { color: rgba(26,35,64,0.6); }
+  .info-card.highlight .info-card-value { color: var(--navy); }
+  .info-card.red-card   { background: var(--red-light); border-color: #E8B0B0; }
+  .info-card.red-card .info-card-value { color: var(--red); }
+  .info-card.green-card { background: var(--green-light); border-color: #A8D8BC; }
+  .info-card.green-card .info-card-value { color: var(--green); }
+  .info-progress-wrap  { background: var(--cream); border-radius: 10px; padding: 14px 16px; border: 1px solid var(--border); margin-bottom: 16px; }
+  .info-progress-label { font-size: 11px; color: var(--gray); margin-bottom: 7px; display: flex; justify-content: space-between; }
+  .info-progress-bar   { height: 7px; background: var(--border); border-radius: 4px; overflow: hidden; }
+  .info-progress-fill  { height: 100%; border-radius: 4px; background: var(--gold); }
+  .info-progress-fill.over { background: var(--red); }
+  .info-progress-fill.paid { background: var(--green); }
+  .info-obs { background: var(--amber-light); border: 1px solid #E0C87A; border-radius: 8px; padding: 10px 14px; font-size: 13px; color: var(--amber); margin-bottom: 16px; display: flex; gap: 8px; align-items: flex-start; }
+  .info-footer { display: flex; gap: 8px; flex-wrap: wrap; padding-top: 14px; border-top: 1px solid var(--border); }
+
+  /* SECTION HEADERS */
+  .section-header { border-radius: 12px; padding: 20px 24px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; }
+  .section-header.mbrf    { background: linear-gradient(135deg, var(--mbrf-purple) 0%, #3D2760 100%); }
+  .section-header.food    { background: linear-gradient(135deg, var(--food-teal) 0%, #0F5449 100%); }
+  .section-header.reserva { background: linear-gradient(135deg, var(--reserva-blue) 0%, #102E55 100%); }
+  .section-header.hist    { background: linear-gradient(135deg, var(--hist-brown) 0%, #5A3010 100%); }
+  .section-header.quartos { background: linear-gradient(135deg, var(--quarto-orange) 0%, #8A3A08 100%); }
+  .section-header-text h2 { font-family: 'Playfair Display', serif; font-size: 20px; color: white; }
+  .section-header-text p  { font-size: 12px; color: rgba(255,255,255,0.6); margin-top: 3px; }
+  .section-logo { font-size: 32px; opacity: 0.8; }
+
+  /* REFEIÇÕES */
+  .meal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .meal-card { background: var(--white); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+  .meal-card-header { padding: 11px 14px; font-size: 12px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; display: flex; align-items: center; justify-content: space-between; }
+  .meal-card-header.almoco { background: #FFF8E6; color: var(--amber); border-bottom: 1px solid #F0E0BB; }
+  .meal-card-header.jantar { background: #EDF2FB; color: var(--reserva-blue); border-bottom: 1px solid #C5D5EC; }
+  .meal-card-body { padding: 10px 14px; }
+  .meal-person { display: flex; align-items: center; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid #F0EDE8; font-size: 13px; }
+  .meal-person:last-child { border-bottom: none; }
+  .meal-check { width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--border); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 11px; transition: all 0.15s; flex-shrink: 0; }
+  .meal-check.checked { background: var(--green); border-color: var(--green); color: white; }
+
+  /* RESERVAS */
+  .reserva-card { background: var(--white); border: 1px solid var(--border); border-radius: 12px; padding: 16px 20px; margin-bottom: 10px; display: flex; align-items: center; gap: 16px; transition: box-shadow 0.15s; }
+  .reserva-card:hover { box-shadow: 0 4px 18px rgba(26,35,64,0.09); }
+  .reserva-date-badge { background: linear-gradient(135deg, var(--reserva-blue) 0%, #2260A8 100%); color: white; border-radius: 12px; padding: 10px 14px; text-align: center; min-width: 58px; flex-shrink: 0; }
+  .reserva-date-day { font-size: 22px; font-weight: 700; font-family: 'Playfair Display', serif; line-height: 1; }
+  .reserva-date-mon { font-size: 10px; letter-spacing: 1px; text-transform: uppercase; opacity: 0.8; margin-top: 2px; }
+  .reserva-info { flex: 1; }
+  .reserva-name    { font-weight: 600; font-size: 15px; color: var(--navy); }
+  .reserva-details { font-size: 12px; color: var(--gray); margin-top: 4px; display: flex; gap: 10px; flex-wrap: wrap; }
+
+  /* HISTÓRICO */
+  .hist-card { background: var(--white); border: 1px solid var(--border); border-radius: 12px; padding: 16px 20px; margin-bottom: 10px; display: flex; align-items: flex-start; gap: 16px; transition: box-shadow 0.15s; }
+  .hist-card:hover { box-shadow: 0 4px 18px rgba(26,35,64,0.09); }
+  .hist-avatar { width: 46px; height: 46px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-family: 'Playfair Display', serif; font-size: 17px; font-weight: 700; flex-shrink: 0; }
+  .hist-avatar.hotel { background: linear-gradient(135deg, #C9A84C33 0%, #E8C97A33 100%); color: var(--amber); border: 1px solid #E8D08A; }
+  .hist-avatar.mbrf  { background: linear-gradient(135deg, #5B3A8C22 0%, #7B55B822 100%); color: var(--mbrf-purple); border: 1px solid #C8B8E8; }
+  .hist-info { flex: 1; }
+  .hist-name    { font-weight: 600; font-size: 14px; color: var(--navy); }
+  .hist-details { font-size: 12px; color: var(--gray); margin-top: 4px; display: flex; gap: 10px; flex-wrap: wrap; }
+  .hist-right   { text-align: right; flex-shrink: 0; }
+  .hist-saida-date { font-size: 13px; font-weight: 700; color: var(--navy); }
+  .hist-saida-time { font-size: 11px; color: var(--gray); margin-top: 2px; }
+  .hist-pgto-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 6px; margin-top: 6px; }
+  .hist-pgto-badge.quitado { background: var(--green-light); color: var(--green); }
+  .hist-pgto-badge.pendente { background: var(--red-light); color: var(--red); }
+
+  /* DATE NAV */
+  .date-nav { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; flex-wrap: wrap; }
+  .date-nav-btn { width: 36px; height: 36px; border-radius: 9px; border: 1.5px solid var(--border); background: white; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; transition: all 0.15s; color: var(--navy); }
+  .date-nav-btn:hover { border-color: var(--gold); color: var(--gold); }
+  .date-display { font-weight: 600; font-size: 14px; color: var(--navy); min-width: 200px; text-align: center; background: white; border: 1.5px solid var(--border); border-radius: 9px; padding: 8px 14px; text-transform: capitalize; }
+
+  /* EMPTY STATE */
+  .empty-state { text-align: center; padding: 56px 20px; color: var(--gray); }
+  .empty-icon  { font-size: 44px; margin-bottom: 12px; }
+  .empty-state h3 { font-size: 15px; color: var(--navy); margin-bottom: 6px; font-weight: 600; }
+  .empty-state p  { font-size: 13px; }
+
+  /* NOTIFICATION */
+  .notif { position: fixed; bottom: 24px; right: 24px; background: var(--green); color: white; padding: 14px 20px; border-radius: 12px; font-size: 13px; font-weight: 500; box-shadow: 0 8px 28px rgba(46,125,82,0.35); z-index: 400; display: none; align-items: center; gap: 10px; animation: slideUp 0.3s ease; max-width: calc(100vw - 48px); }
+  .notif.show   { display: flex; }
+  .notif.warn   { background: var(--amber); box-shadow: 0 8px 24px rgba(176,125,26,0.3); }
+  .notif.danger { background: var(--red);   box-shadow: 0 8px 24px rgba(178,59,59,0.3); }
+  @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+  /* ══════════════════════════════════════════
+     QUARTOS
+  ══════════════════════════════════════════ */
+  .quartos-legenda { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 18px; align-items: center; }
+  .legenda-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--gray); font-weight: 500; }
+  .legenda-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .legenda-dot.livre      { background: var(--green); }
+  .legenda-dot.ocupado    { background: var(--gold); }
+  .legenda-dot.mbrf       { background: var(--mbrf-purple); }
+  .legenda-dot.manutencao { background: var(--red); }
+
+  .quarto-filters { display: flex; gap: 8px; margin-bottom: 18px; flex-wrap: wrap; align-items: center; }
+  .quarto-filter-btn { padding: 7px 16px; border-radius: 20px; font-size: 12px; font-weight: 600; border: 1.5px solid var(--border); background: white; cursor: pointer; transition: all 0.15s; font-family: 'Inter', sans-serif; color: var(--gray); display: flex; align-items: center; gap: 5px; }
+  .quarto-filter-btn:hover { border-color: var(--navy); color: var(--navy); }
+  .quarto-filter-btn.active        { border-color: var(--navy); background: var(--navy); color: white; }
+  .quarto-filter-btn.active.livre  { border-color: var(--green); background: var(--green-light); color: var(--green); }
+  .quarto-filter-btn.active.ocupado{ border-color: var(--amber); background: var(--amber-light); color: var(--amber); }
+  .quarto-filter-btn.active.mbrf   { border-color: var(--mbrf-purple); background: var(--mbrf-light); color: var(--mbrf-purple); }
+  .quarto-filter-btn.active.manutencao { border-color: var(--red); background: var(--red-light); color: var(--red); }
+
+  .quartos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; }
+
+  .quarto-card {
+    background: var(--white); border-radius: 14px;
+    border: 2px solid var(--border); padding: 16px 15px 13px;
+    cursor: pointer; transition: all 0.18s; position: relative; overflow: hidden;
+  }
+  .quarto-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; }
+  .quarto-card.livre::before      { background: var(--green); }
+  .quarto-card.ocupado::before    { background: var(--gold); }
+  .quarto-card.mbrf::before       { background: var(--mbrf-purple); }
+  .quarto-card.manutencao::before { background: var(--red); }
+  .quarto-card:hover { box-shadow: 0 6px 22px rgba(26,35,64,0.13); transform: translateY(-2px); }
+  .quarto-card.livre:hover      { border-color: var(--green); }
+  .quarto-card.ocupado:hover    { border-color: var(--gold); }
+  .quarto-card.mbrf:hover       { border-color: var(--mbrf-purple); }
+  .quarto-card.manutencao:hover { border-color: var(--red); }
+
+  .quarto-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+  .quarto-num { font-family: 'Playfair Display', serif; font-size: 30px; font-weight: 700; color: var(--navy); line-height: 1; }
+  .quarto-andar { font-size: 10px; color: var(--gray); text-transform: uppercase; letter-spacing: 1px; font-weight: 600; margin-top: 2px; }
+  .quarto-tipo-tag {
+    font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+    padding: 3px 8px; border-radius: 6px; border: 1px solid var(--border); color: var(--gray);
+    background: var(--cream);
+  }
+  .quarto-status-badge { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 20px; font-size: 10px; font-weight: 700; letter-spacing: 0.3px; text-transform: uppercase; margin-bottom: 10px; }
+  .quarto-status-badge.livre      { background: var(--green-light); color: var(--green); }
+  .quarto-status-badge.ocupado    { background: var(--amber-light); color: var(--amber); }
+  .quarto-status-badge.mbrf       { background: var(--mbrf-light); color: var(--mbrf-purple); }
+  .quarto-status-badge.manutencao { background: var(--red-light); color: var(--red); }
+
+  .quarto-guest     { font-size: 13px; font-weight: 600; color: var(--navy); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 2px; }
+  .quarto-guest-sub { font-size: 11px; color: var(--gray); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .quarto-empty-msg { font-size: 12px; color: var(--gray); font-style: italic; }
+
+  .quarto-desc { font-size: 11px; color: var(--gray); margin-top: 9px; padding-top: 9px; border-top: 1px solid var(--border); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+  .quarto-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; padding-top: 8px; border-top: 1px dashed var(--border); }
+  .quarto-capacidade { font-size: 10px; color: var(--gray); display: flex; align-items: center; gap: 3px; }
+  .quarto-actions-mini { display: flex; gap: 4px; }
+
+  /* Modal quarto detail */
+  .qd-modal { width: 520px; }
+  .qd-header { display: flex; gap: 16px; align-items: flex-start; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+  .qd-num-badge { font-family: 'Playfair Display', serif; font-size: 48px; font-weight: 700; color: var(--navy); background: var(--cream); border-radius: 14px; padding: 10px 18px; border: 2px solid var(--border); line-height: 1; text-align: center; flex-shrink: 0; }
+  .qd-title { font-family: 'Playfair Display', serif; font-size: 20px; color: var(--navy); }
+  .qd-sub   { font-size: 12px; color: var(--gray); margin-top: 4px; }
+  .qd-grid  { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+  .qd-card  { background: var(--cream); border-radius: 10px; padding: 12px 14px; border: 1px solid var(--border); }
+  .qd-card-label { font-size: 10px; color: var(--gray); text-transform: uppercase; letter-spacing: 1px; font-weight: 600; margin-bottom: 3px; }
+  .qd-card-value { font-size: 14px; font-weight: 700; color: var(--navy); }
+
+  /* Modal editar quarto */
+  .tipo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 14px; }
+  .tipo-opt { padding: 10px 8px; border-radius: 9px; border: 2px solid var(--border); background: white; cursor: pointer; text-align: center; font-size: 11px; font-weight: 700; font-family: 'Inter', sans-serif; color: var(--gray); transition: all 0.15s; }
+  .tipo-opt .tipo-icon { font-size: 20px; display: block; margin-bottom: 4px; }
+  .tipo-opt:hover   { border-color: var(--gold); color: var(--amber); }
+  .tipo-opt.selected { border-color: var(--gold); background: var(--amber-light); color: var(--amber); }
+
+  .status-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 14px; }
+  .status-opt  { padding: 10px 8px; border-radius: 9px; border: 2px solid var(--border); background: white; cursor: pointer; text-align: center; font-size: 11px; font-weight: 700; font-family: 'Inter', sans-serif; color: var(--gray); transition: all 0.15s; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .status-opt .status-icon { font-size: 20px; }
+  .status-opt:hover { border-color: var(--navy); color: var(--navy); }
+  .status-opt.selected.livre      { border-color: var(--green); background: var(--green-light); color: var(--green); }
+  .status-opt.selected.manutencao { border-color: var(--red); background: var(--red-light); color: var(--red); }
+
+  @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+  /* RESPONSIVE */
+  @media (max-width: 960px) {
+    main { padding: 16px; }
+    .stats { grid-template-columns: 1fr 1fr; }
+    header { padding: 0 16px; }
+    .tabs { padding: 0 6px; }
+    .tab  { padding: 0 12px; font-size: 11px; }
+    th, td { padding: 10px 10px; }
+    .meal-grid { grid-template-columns: 1fr; }
+    .form-row  { grid-template-columns: 1fr; }
+    .form-row.three { grid-template-columns: 1fr 1fr; }
+    .reserva-card { flex-wrap: wrap; }
+    .info-grid    { grid-template-columns: 1fr; }
+    .pgto-formas  { grid-template-columns: repeat(3, 1fr); }
+    .quartos-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
+  }
+  @media (max-width: 600px) {
+    .stats { grid-template-columns: 1fr 1fr; gap: 10px; }
+    .pgto-formas  { grid-template-columns: repeat(3, 1fr); }
+    .hist-card    { flex-wrap: wrap; }
+    .quartos-grid { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">DP</div>
+    <div>
+      <div class="logo-text">Don Pita Hotel</div>
+      <div class="logo-sub">Sistema de Gestão</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div id="storageWarn" style="display:none;background:rgba(178,59,59,0.18);border:1px solid rgba(178,59,59,0.4);border-radius:8px;padding:6px 10px;font-size:11px;color:#ffaaaa;text-align:center;max-width:160px;line-height:1.3;">
+      ⚠️ Firebase offline<br>verifique a conexão
+    </div>
+    <!-- Firebase sync indicator -->
+    <div id="fbLoadingBar" style="display:none;background:rgba(201,168,76,0.15);border:1px solid rgba(201,168,76,0.35);border-radius:8px;padding:6px 12px;font-size:11px;color:var(--gold-light);display:flex;align-items:center;gap:6px;">
+      <span style="animation:spin 1s linear infinite;display:inline-block;">🔄</span> Sincronizando...
+    </div>
+    <div id="fbSyncOk" style="display:none;background:rgba(46,125,82,0.15);border:1px solid rgba(46,125,82,0.35);border-radius:8px;padding:6px 12px;font-size:11px;color:#7ddfaa;">
+      ☁️ Nuvem ativa
+    </div>
+    <div class="header-date">
+      <span id="clock"></span>
+      <span id="dateDisplay"></span>
+    </div>
+  </div>
+</header>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('hotel')">
+    <span class="tab-icon">🏨</span> Hotel
+    <span class="badge" id="hotelBadge">0</span>
+  </div>
+  <div class="tab" onclick="switchTab('mbrf')">
+    <span class="tab-icon">🏢</span> MBRF
+    <span class="badge badge-purple" id="mbrfBadge">0</span>
+  </div>
+  <div class="tab" onclick="switchTab('reservas')">
+    <span class="tab-icon">📋</span> Reservas
+    <span class="badge badge-blue" id="reservasBadge">0</span>
+  </div>
+  <div class="tab" onclick="switchTab('refeicoes')">
+    <span class="tab-icon">🍽️</span> Refeições
+    <span class="badge badge-teal" id="refeicoesBadge">0</span>
+  </div>
+  <div class="tab" onclick="switchTab('quartos')">
+    <span class="tab-icon">🚪</span> Quartos
+    <span class="badge badge-orange" id="quartosBadge">0</span>
+  </div>
+  <div class="tab" onclick="switchTab('historico')">
+    <span class="tab-icon">📁</span> Histórico
+    <span class="badge badge-brown" id="historicoBadge">0</span>
+  </div>
+</div>
+
+<main>
+
+  <!-- HOTEL TAB -->
+  <div id="tab-hotel">
+    <div class="stats" id="statsHotel"></div>
+    <div class="toolbar">
+      <div class="toolbar-title">Hóspedes Ativos</div>
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input class="search-input" type="text" placeholder="Buscar hóspede..." oninput="filterTable(this.value,'hotel')">
+      </div>
+      <button class="btn btn-primary" onclick="openModal('hotel')">+ Novo Hóspede</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Hóspede / Quarto</th>
+            <th>Check-in</th>
+            <th>Previsão Saída</th>
+            <th>Dias no Hotel</th>
+            <th>Dias Pagos</th>
+            <th>Valor Total</th>
+            <th>Status</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="tableHotel"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- MBRF TAB -->
+  <div id="tab-mbrf" style="display:none">
+    <div class="section-header mbrf">
+      <div class="section-header-text">
+        <h2>Categoria MBRF</h2>
+        <p>Funcionários BRF — dias acumulando automaticamente, sem data de saída fixa</p>
+      </div>
+      <div class="section-logo">🏢</div>
+    </div>
+    <div class="stats" id="statsMbrf"></div>
+    <div class="toolbar">
+      <div class="toolbar-title">Funcionários BRF</div>
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input class="search-input" type="text" placeholder="Buscar funcionário..." oninput="filterTable(this.value,'mbrf')">
+      </div>
+      <button class="btn btn-mbrf" onclick="openModal('mbrf')">+ Novo Funcionário BRF</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Funcionário / Quarto</th>
+            <th>Matrícula BRF</th>
+            <th>Data Entrada</th>
+            <th>Dias Hospedado</th>
+            <th>Dias Pagos</th>
+            <th>Valor Total</th>
+            <th>Saldo Devedor</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="tableMbrf"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- RESERVAS TAB -->
+  <div id="tab-reservas" style="display:none">
+    <div class="section-header reserva">
+      <div class="section-header-text">
+        <h2>Reservas Futuras</h2>
+        <p>Pré-reservas e check-ins agendados</p>
+      </div>
+      <div class="section-logo">📋</div>
+    </div>
+    <div class="stats" id="statsReservas"></div>
+    <div class="toolbar">
+      <div class="toolbar-title">Reservas</div>
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input class="search-input" type="text" placeholder="Buscar reserva..." oninput="filterReservas(this.value)">
+      </div>
+      <button class="btn btn-reserva" onclick="openReservaModal()">+ Nova Reserva</button>
+    </div>
+    <div id="reservasList"></div>
+  </div>
+
+  <!-- REFEIÇÕES TAB -->
+  <div id="tab-refeicoes" style="display:none">
+    <div class="section-header food">
+      <div class="section-header-text">
+        <h2>Refeições MBRF</h2>
+        <p>Controle de almoço e jantar dos funcionários BRF</p>
+      </div>
+      <div class="section-logo">🍽️</div>
+    </div>
+    <div class="stats" id="statsRefeicoes"></div>
+    <div class="date-nav">
+      <button class="date-nav-btn" onclick="navDay(-1)">‹</button>
+      <div class="date-display" id="foodDateDisplay"></div>
+      <button class="date-nav-btn" onclick="navDay(1)">›</button>
+      <button class="btn btn-food" style="margin-left:auto" onclick="openRefeicaoModal()">+ Adicionar Refeição</button>
+    </div>
+    <div id="refeicoesList"></div>
+  </div>
+
+  <!-- QUARTOS TAB -->
+  <div id="tab-quartos" style="display:none">
+    <div class="section-header quartos">
+      <div class="section-header-text">
+        <h2>Mapa de Quartos</h2>
+        <p>Visualize a ocupação, tipo e descrição de cada quarto</p>
+      </div>
+      <div class="section-logo">🚪</div>
+    </div>
+    <div class="stats" id="statsQuartos"></div>
+    <div class="toolbar">
+      <div class="toolbar-title">Quartos</div>
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input class="search-input" type="text" placeholder="Buscar quarto..." oninput="filterQuartos(this.value)" id="quartosSearch">
+      </div>
+      <button class="btn btn-quarto" onclick="openQuartoModal()">+ Novo Quarto</button>
+    </div>
+    <div class="quartos-legenda">
+      <span style="font-size:12px;color:var(--gray);font-weight:600;margin-right:4px;">Legenda:</span>
+      <div class="legenda-item"><div class="legenda-dot livre"></div> Livre</div>
+      <div class="legenda-item"><div class="legenda-dot ocupado"></div> Ocupado (Hotel)</div>
+      <div class="legenda-item"><div class="legenda-dot mbrf"></div> Ocupado (BRF)</div>
+      <div class="legenda-item"><div class="legenda-dot manutencao"></div> Manutenção</div>
+    </div>
+    <div class="quarto-filters" id="quartoFilters">
+      <button class="quarto-filter-btn active" data-filter="todos" onclick="setQuartoFilter('todos',this)">🏨 Todos</button>
+      <button class="quarto-filter-btn livre"  data-filter="livre"  onclick="setQuartoFilter('livre',this)">✅ Livres</button>
+      <button class="quarto-filter-btn ocupado" data-filter="ocupado" onclick="setQuartoFilter('ocupado',this)">🛏 Ocupados</button>
+      <button class="quarto-filter-btn mbrf" data-filter="mbrf" onclick="setQuartoFilter('mbrf',this)">🏢 BRF</button>
+      <button class="quarto-filter-btn manutencao" data-filter="manutencao" onclick="setQuartoFilter('manutencao',this)">🔧 Manutenção</button>
+    </div>
+    <div class="quartos-grid" id="quartosGrid"></div>
+  </div>
+
+  <!-- HISTÓRICO TAB -->
+  <div id="tab-historico" style="display:none">
+    <div class="section-header hist">
+      <div class="section-header-text">
+        <h2>Histórico de Saídas</h2>
+        <p>Todos os hóspedes que já deixaram o hotel — data e hora exatas</p>
+      </div>
+      <div class="section-logo">📁</div>
+    </div>
+    <div class="stats" id="statsHistorico"></div>
+    <div class="toolbar">
+      <div class="toolbar-title">Registros de Saída</div>
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input class="search-input" type="text" placeholder="Buscar no histórico..." oninput="filterHistorico(this.value)">
+      </div>
+      <button class="btn btn-ghost" onclick="if(confirm('Limpar todo o histórico?')){historico=[];saveHistorico();renderAll();}">🗑️ Limpar Histórico</button>
+    </div>
+    <div id="historicoList"></div>
+  </div>
+
+</main>
+
+<!-- MODAL CONFIRMAÇÃO SAÍDA -->
+<div class="modal-overlay" id="confirmSaidaOverlay">
+  <div class="modal confirm-modal">
+    <div class="confirm-icon" id="confirmIcon">🚪</div>
+    <div class="confirm-title" id="confirmTitle">Confirmar Saída</div>
+    <div class="confirm-msg" id="confirmMsg">Esta ação não pode ser desfeita.</div>
+    <div class="confirm-detail" id="confirmDetail"></div>
+    <div class="confirm-btns">
+      <button class="btn btn-outline" onclick="closeConfirmSaida()">Cancelar</button>
+      <button class="btn btn-danger" id="confirmSaidaBtn" onclick="executarSaida()">🚪 Confirmar Saída</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL PAGAMENTO -->
+<div class="modal-overlay" id="pgtoModalOverlay">
+  <div class="modal pgto-modal">
+    <button class="modal-close" onclick="closePgtoModal()">✕</button>
+    <div class="modal-title">💰 Registrar Pagamento</div>
+    <div style="margin-bottom:14px;">
+      <div class="form-label" style="margin-bottom:8px;">Forma de Pagamento</div>
+      <div class="pgto-formas">
+        <button class="pgto-forma-btn" data-forma="Dinheiro" onclick="selectForma(this)"><span class="icon">💵</span><span class="label">Dinheiro</span></button>
+        <button class="pgto-forma-btn" data-forma="Pix"      onclick="selectForma(this)"><span class="icon">📱</span><span class="label">Pix</span></button>
+        <button class="pgto-forma-btn" data-forma="Débito"   onclick="selectForma(this)"><span class="icon">💳</span><span class="label">Débito</span></button>
+        <button class="pgto-forma-btn" data-forma="Crédito"  onclick="selectForma(this)"><span class="icon">🏦</span><span class="label">Crédito</span></button>
+        <button class="pgto-forma-btn" data-forma="Faturado" onclick="selectForma(this)"><span class="icon">📄</span><span class="label">Faturado</span></button>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Dias a Adicionar</label>
+        <input class="form-input" type="number" id="pgto_dias" min="0" placeholder="0" oninput="updatePgtoResumo()">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Observação (opcional)</label>
+        <input class="form-input" id="pgto_obs" placeholder="Referência, nota...">
+      </div>
+    </div>
+    <div class="pgto-resumo" id="pgtoResumo"></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closePgtoModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="confirmarPagamento()">✅ Confirmar Pagamento</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL FICHA DO HÓSPEDE -->
+<div class="modal-overlay" id="infoModalOverlay">
+  <div class="modal info-modal">
+    <button class="modal-close" onclick="closeInfoModal()">✕</button>
+    <div class="info-header">
+      <div class="info-avatar" id="infoAvatar">A</div>
+      <div>
+        <div class="info-name" id="infoName">—</div>
+        <div class="info-sub"  id="infoSub">—</div>
+      </div>
+    </div>
+    <div class="info-grid" id="infoGrid"></div>
+    <div class="info-progress-wrap" id="infoProgressWrap"></div>
+    <div id="infoObsWrap"></div>
+    <div class="info-footer" id="infoFooter"></div>
+  </div>
+</div>
+
+<!-- MODAL HÓSPEDE / MBRF -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal-title" id="modalTitle">🏨 Novo Hóspede</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Nome <span style="color:var(--red)">*</span></label>
+        <input class="form-input" id="f_nome" placeholder="João da Silva">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Telefone <span style="color:var(--gray);font-weight:400;font-size:9px;">(opcional)</span></label>
+        <input class="form-input" id="f_telefone" placeholder="(49) 99999-9999">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Quarto <span style="color:var(--gray);font-weight:400;font-size:9px;">(opcional)</span></label>
+        <input class="form-input" id="f_quarto" placeholder="101">
+      </div>
+    </div>
+    <div class="form-row" id="f_matricula_row" style="display:none">
+      <div class="form-group">
+        <label class="form-label">Matrícula BRF <span style="color:var(--gray);font-weight:400;font-size:9px;">(opcional)</span></label>
+        <input class="form-input" id="f_matricula" placeholder="BRF-00000">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Setor / Cargo <span style="color:var(--gray);font-weight:400;font-size:9px;">(opcional)</span></label>
+        <input class="form-input" id="f_setor" placeholder="Produção">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Data Check-in <span style="color:var(--gray);font-weight:400;font-size:9px;">(padrão: hoje)</span></label>
+        <input class="form-input" type="date" id="f_checkin">
+      </div>
+      <div class="form-group" id="f_checkout_group">
+        <label class="form-label">Data Check-out <span style="color:var(--gray);font-weight:400;font-size:9px;">(opcional)</span></label>
+        <input class="form-input" type="date" id="f_checkout">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Valor por Diária (R$) <span style="color:var(--gray);font-weight:400;font-size:9px;">(opcional)</span></label>
+        <input class="form-input" type="number" id="f_diaria" placeholder="0">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Dias Pagos <span style="color:var(--gray);font-weight:400;font-size:9px;">(opcional)</span></label>
+        <input class="form-input" type="number" id="f_diasPagos" placeholder="0">
+      </div>
+    </div>
+    <div class="form-row full">
+      <div class="form-group">
+        <label class="form-label">Observações <span style="color:var(--gray);font-weight:400;font-size:9px;">(opcional)</span></label>
+        <input class="form-input" id="f_obs" placeholder="Café da manhã incluído...">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" id="btnSalvar" onclick="salvarHospede()">Cadastrar Hóspede</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL RESERVA -->
+<div class="modal-overlay" id="reservaModalOverlay">
+  <div class="modal">
+    <button class="modal-close" onclick="closeReservaModal()">✕</button>
+    <div class="modal-title" id="reservaModalTitle">📋 Nova Reserva</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Nome do Hóspede *</label>
+        <input class="form-input" id="r_nome" placeholder="João da Silva">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Quarto</label>
+        <input class="form-input" id="r_quarto" placeholder="101">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Telefone / Contato</label>
+        <input class="form-input" id="r_telefone" placeholder="(xx) 9xxxx-xxxx">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Origem</label>
+        <select class="form-select" id="r_origem">
+          <option value="Direto">Direto</option>
+          <option value="Booking">Booking.com</option>
+          <option value="Airbnb">Airbnb</option>
+          <option value="Indicação">Indicação</option>
+          <option value="Outro">Outro</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Data de Entrada</label>
+        <input class="form-input" type="date" id="r_checkin">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Data de Saída</label>
+        <input class="form-input" type="date" id="r_checkout">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Valor por Diária (R$)</label>
+        <input class="form-input" type="number" id="r_diaria" placeholder="150.00">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Status</label>
+        <select class="form-select" id="r_status">
+          <option value="confirmada">Confirmada</option>
+          <option value="pendente">Pendente</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row full">
+      <div class="form-group">
+        <label class="form-label">Observações</label>
+        <input class="form-input" id="r_obs" placeholder="Pedido especial, nº de pessoas...">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeReservaModal()">Cancelar</button>
+      <button class="btn btn-reserva" id="btnSalvarReserva" onclick="salvarReserva()">Salvar Reserva</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL REFEIÇÃO -->
+<div class="modal-overlay" id="refeicaoModalOverlay">
+  <div class="modal">
+    <button class="modal-close" onclick="closeRefeicaoModal()">✕</button>
+    <div class="modal-title">🍽️ Adicionar Refeição</div>
+    <div class="form-row full">
+      <div class="form-group">
+        <label class="form-label">Funcionário MBRF</label>
+        <select class="form-select" id="ref_funcionario"></select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Data</label>
+        <input class="form-input" type="date" id="ref_data">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Tipo</label>
+        <select class="form-select" id="ref_tipo">
+          <option value="almoco">🌞 Almoço</option>
+          <option value="jantar">🌙 Jantar</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row full">
+      <div class="form-group">
+        <label class="form-label">Observação</label>
+        <input class="form-input" id="ref_obs" placeholder="Restrição alimentar...">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeRefeicaoModal()">Cancelar</button>
+      <button class="btn btn-food" onclick="salvarRefeicao()">Registrar Refeição</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL QUARTO (criar/editar) -->
+<div class="modal-overlay" id="quartoModalOverlay">
+  <div class="modal">
+    <button class="modal-close" onclick="closeQuartoModal()">✕</button>
+    <div class="modal-title" id="quartoModalTitle">🚪 Novo Quarto</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Número do Quarto *</label>
+        <input class="form-input" id="q_numero" placeholder="101">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Andar</label>
+        <input class="form-input" id="q_andar" placeholder="1º Andar">
+      </div>
+    </div>
+    <div class="form-group" style="margin-bottom:14px;">
+      <label class="form-label" style="margin-bottom:8px;">Tipo do Quarto</label>
+      <div class="tipo-grid">
+        <button class="tipo-opt selected" data-tipo="Standard" onclick="selectTipo(this)"><span class="tipo-icon">🛏</span>Standard</button>
+        <button class="tipo-opt" data-tipo="Duplo" onclick="selectTipo(this)"><span class="tipo-icon">🛏🛏</span>Duplo</button>
+        <button class="tipo-opt" data-tipo="Suíte" onclick="selectTipo(this)"><span class="tipo-icon">👑</span>Suíte</button>
+        <button class="tipo-opt" data-tipo="Família" onclick="selectTipo(this)"><span class="tipo-icon">👨‍👩‍👧</span>Família</button>
+        <button class="tipo-opt" data-tipo="Executivo" onclick="selectTipo(this)"><span class="tipo-icon">💼</span>Executivo</button>
+        <button class="tipo-opt" data-tipo="BRF" onclick="selectTipo(this)"><span class="tipo-icon">🏢</span>BRF</button>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Capacidade (pessoas)</label>
+        <input class="form-input" type="number" id="q_capacidade" placeholder="2" min="1">
+      </div>
+      <div class="form-group" id="q_status_group">
+        <label class="form-label">Status Manual</label>
+        <select class="form-select" id="q_statusManual">
+          <option value="">Automático (via hóspedes)</option>
+          <option value="manutencao">🔧 Em Manutenção</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row full">
+      <div class="form-group">
+        <label class="form-label">Descrição do Quarto</label>
+        <input class="form-input" id="q_descricao" placeholder="Ar condicionado, TV a cabo, frigobar, vista para o jardim...">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeQuartoModal()">Cancelar</button>
+      <button class="btn btn-quarto" id="btnSalvarQuarto" onclick="salvarQuarto()">Cadastrar Quarto</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL DETALHE DO QUARTO -->
+<div class="modal-overlay" id="quartoDetailOverlay">
+  <div class="modal qd-modal">
+    <button class="modal-close" onclick="closeQuartoDetail()">✕</button>
+    <div class="qd-header">
+      <div class="qd-num-badge" id="qd_num">101</div>
+      <div>
+        <div class="qd-title" id="qd_title">Quarto Standard</div>
+        <div class="qd-sub" id="qd_sub">1º Andar</div>
+        <div style="margin-top:8px;" id="qd_statusBadge"></div>
+      </div>
+    </div>
+    <div class="qd-grid" id="qd_grid"></div>
+    <div id="qd_guestInfo" style="margin-bottom:16px;"></div>
+    <div id="qd_desc" style="margin-bottom:16px;"></div>
+    <div class="modal-footer" id="qd_footer"></div>
+  </div>
+</div>
+
+<!-- NOTIFICATION -->
+<div class="notif" id="notif">
+  <span id="notifIcon">✅</span>
+  <span id="notifMsg"></span>
+</div>
+
+<script>
+// ── FIREBASE FIRESTORE ENGINE ──
+// All data is stored in a single Firestore document: donpita/dados
+// Real-time sync: any change made on one device appears instantly on all others.
+
+const DB = {
+  _colName: 'donpita',
+  _docName: 'dados',
+  _keys: ['donpita_hotel','donpita_mbrf','donpita_reservas','donpita_refeicoes','donpita_historico','donpita_quartos'],
+
+  _getRef(){
+    return window._fbDoc(window._fbDb, this._colName, this._docName);
+  },
+
+  // Read a key from the local in-memory cache (kept in sync by onSnapshot)
+  get(key){
+    return window._fbCache ? (window._fbCache[key] || null) : null;
+  },
+
+  // Write a key — saves full cache to Firestore
+  async set(key, val){
+    if(!window._fbDb) return;
+    window._fbCache = window._fbCache || {};
+    window._fbCache[key] = val;
+    try {
+      await window._fbSetDoc(this._getRef(), window._fbCache);
+    } catch(e){
+      console.error('Firebase save error:', e);
+    }
+  },
+
+  isAvailable(){ return !!window._fbDb; }
+};
+
+// ── IN-MEMORY CACHE (updated by real-time listener) ──
+window._fbCache = {};
+
+// ── DATA ──
+let hospedes  = [];
+let mbrfs     = [];
+let reservas  = [];
+let refeicoes = [];
+let historico = [];
+let quartos   = [];
+
+let currentTab      = 'hotel';
+let editingId       = null;
+let editingReservaId= null;
+let editingQuartoId = null;
+let foodDate        = new Date().toISOString().split('T')[0];
+let quartoFilter    = 'todos';
+let quartoSearchVal = '';
+
+// pagamento
+let pgtoTarget = { cat: null, id: null };
+let pgtoForma  = '';
+
+// saída
+let saidaTarget = { cat: null, id: null };
+
+// quarto tipo selecionado
+let quartoTipoSel = 'Standard';
+
+// (seed data is handled inside seedDefaults(), called by initFirebase when doc doesn't exist)
+
+function saveHotel()    { DB.set('donpita_hotel',     hospedes); }
+function saveMbrf()     { DB.set('donpita_mbrf',      mbrfs); }
+function saveReservas() { DB.set('donpita_reservas',  reservas); }
+function saveRefeicoes(){ DB.set('donpita_refeicoes', refeicoes); }
+function saveHistorico(){ DB.set('donpita_historico', historico); }
+function saveQuartos()  { DB.set('donpita_quartos',   quartos); }
+
+// ── FIREBASE REAL-TIME LISTENER ──
+// Called once Firebase is ready. Sets up a live listener so any change
+// saved on another device instantly updates this screen.
+function initFirebase(){
+  const ref = window._fbDoc(window._fbDb, 'donpita', 'dados');
+
+  // Show loading indicator
+  const loadEl = document.getElementById('fbLoadingBar');
+  if(loadEl) loadEl.style.display = '';
+
+  window._fbOnSnapshot(ref, (snap) => {
+    if(snap.exists()){
+      const data = snap.data();
+      window._fbCache = data;
+
+      // Update local arrays from Firestore
+      hospedes  = data.donpita_hotel      || [];
+      mbrfs     = data.donpita_mbrf       || [];
+      reservas  = data.donpita_reservas   || [];
+      refeicoes = data.donpita_refeicoes  || [];
+      historico = data.donpita_historico  || [];
+      quartos   = data.donpita_quartos    || [];
+    } else {
+      // Document doesn't exist yet — seed with defaults if needed
+      window._fbCache = {};
+      hospedes  = []; mbrfs = []; reservas = [];
+      refeicoes = []; historico = []; quartos = [];
+      seedDefaults();
+    }
+
+    if(loadEl) loadEl.style.display = 'none';
+    const okEl = document.getElementById('fbSyncOk');
+    if(okEl){ okEl.style.display = ''; }
+    renderAll();
+  }, (err) => {
+    console.error('Firestore listener error:', err);
+    if(loadEl) loadEl.style.display = 'none';
+    showNotif('⚠️ Erro de conexão com o banco de dados!', 'danger');
+  });
+}
+
+function seedDefaults(){
+  let changed = false;
+  if (!hospedes.length) {
+    hospedes = [
+      { id:1, nome:'Carlos Mendes', quarto:'101', checkin:'2026-06-10', checkout:'2026-06-18', diaria:180, diasPagos:8, obs:'Café da manhã incluído', categoria:'hotel' },
+      { id:2, nome:'Ana Paula Souza', quarto:'205', checkin:'2026-06-13', checkout:'2026-06-20', diaria:200, diasPagos:4, obs:'', categoria:'hotel' },
+      { id:3, nome:'Roberto Lima', quarto:'310', checkin:'2026-06-05', checkout:'2026-06-16', diaria:150, diasPagos:11, obs:'Pediu quarto silencioso', categoria:'hotel' },
+    ];
+    changed = true;
+  }
+  if (!mbrfs.length) {
+    mbrfs = [
+      { id:1, nome:'Fernanda Costa', quarto:'402', matricula:'BRF-00421', setor:'Qualidade', checkin:'2026-06-08', checkout:'', diaria:130, diasPagos:6, obs:'', categoria:'mbrf' },
+      { id:2, nome:'Marcos Oliveira', quarto:'403', matricula:'BRF-00188', setor:'Produção',  checkin:'2026-06-12', checkout:'', diaria:130, diasPagos:2, obs:'', categoria:'mbrf' },
+    ];
+    changed = true;
+  }
+  if (!reservas.length) {
+    reservas = [
+      { id:1, nome:'Juliana Ferreira', quarto:'202', telefone:'(47) 99999-1234', origem:'Booking', checkin:'2026-06-20', checkout:'2026-06-24', diaria:180, status:'confirmada', obs:'Casal com criança' },
+      { id:2, nome:'Pedro Alves',      quarto:'305', telefone:'(47) 98888-5678', origem:'Direto',  checkin:'2026-06-22', checkout:'2026-06-25', diaria:150, status:'pendente',   obs:'' },
+    ];
+    changed = true;
+  }
+  if (!quartos.length) {
+    quartos = [
+      { id:1,  numero:'101', andar:'1º Andar', tipo:'Standard',  capacidade:2, statusManual:'', descricao:'Ar condicionado, TV a cabo, frigobar e banheiro privativo. Vista para o jardim.' },
+      { id:2,  numero:'102', andar:'1º Andar', tipo:'Standard',  capacidade:2, statusManual:'', descricao:'Ar condicionado, TV a cabo e banheiro privativo.' },
+      { id:3,  numero:'201', andar:'2º Andar', tipo:'Duplo',     capacidade:3, statusManual:'', descricao:'Duas camas de solteiro, ar condicionado, TV, frigobar.' },
+      { id:4,  numero:'202', andar:'2º Andar', tipo:'Standard',  capacidade:2, statusManual:'', descricao:'Vista para a rua, banheiro reformado.' },
+      { id:5,  numero:'205', andar:'2º Andar', tipo:'Executivo', capacidade:1, statusManual:'', descricao:'Escrivaninha, poltrona, TV 40", minibar, café expresso.' },
+      { id:6,  numero:'305', andar:'3º Andar', tipo:'Standard',  capacidade:2, statusManual:'', descricao:'Quarto padrão com ventilador e TV.' },
+      { id:7,  numero:'310', andar:'3º Andar', tipo:'Duplo',     capacidade:4, statusManual:'', descricao:'Quarto amplo para família, duas camas casal.' },
+      { id:8,  numero:'401', andar:'4º Andar', tipo:'Suíte',     capacidade:2, statusManual:'', descricao:'Suíte com banheira de hidromassagem, varanda e frigobar premium.' },
+      { id:9,  numero:'402', andar:'4º Andar', tipo:'BRF',       capacidade:1, statusManual:'', descricao:'Quarto destinado a funcionários BRF, com armário individual.' },
+      { id:10, numero:'403', andar:'4º Andar', tipo:'BRF',       capacidade:1, statusManual:'', descricao:'Quarto destinado a funcionários BRF, com armório individual.' },
+      { id:11, numero:'404', andar:'4º Andar', tipo:'Standard',  capacidade:2, statusManual:'manutencao', descricao:'Em reforma — troca de encanamento. Previsão: fim do mês.' },
+    ];
+    changed = true;
+  }
+  if(changed){
+    saveHotel(); saveMbrf(); saveReservas(); saveQuartos();
+  }
+}
+
+// ── UTILS ──
+function today()   { return new Date().toISOString().split('T')[0]; }
+function nowISO()  { return new Date().toISOString(); }
+function diffDays(a,b){ return Math.max(0, Math.round((new Date(b)-new Date(a))/86400000)); }
+function diasNoHotel(checkin){ return Math.max(1, Math.round((new Date()-new Date(checkin+'T12:00:00'))/86400000)); }
+function fmt(v){ return 'R$ '+Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2}); }
+function fmtDate(d){ if(!d) return '—'; const [y,m,dd]=d.split('-'); return `${dd}/${m}/${y}`; }
+function fmtDateFull(d){ if(!d) return ''; return new Date(d+'T12:00:00').toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'}); }
+function fmtDateTime(iso){ if(!iso) return '—'; const dt=new Date(iso); return dt.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'})+' às '+dt.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}); }
+function fmtDateTimeShort(iso){ if(!iso) return '—'; return new Date(iso).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'}); }
+function fmtTime(iso){ if(!iso) return ''; return new Date(iso).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}); }
+function initials(nome){ return nome.split(' ').slice(0,2).map(p=>p[0]).join('').toUpperCase(); }
+function statusPgto(h){
+  const dias=diasNoHotel(h.checkin), pago=h.diasPagos;
+  if(pago>=dias) return 'pago';
+  if(h.checkout && new Date(h.checkout)<new Date(today())) return 'vencido';
+  return 'pendente';
+}
+function cap(s){ return s.charAt(0).toUpperCase()+s.slice(1); }
+function pgtoIcon(forma){ const icons={Dinheiro:'💵',Pix:'📱','Débito':'💳','Crédito':'🏦',Faturado:'📄'}; return icons[forma]||'💰'; }
+
+// ── QUARTO STATUS LOGIC ──
+function getQuartoStatus(q){
+  if(q.statusManual === 'manutencao') return 'manutencao';
+  const ocupadoHotel = hospedes.find(h => h.quarto === q.numero);
+  if(ocupadoHotel) return 'ocupado';
+  const ocupadoMbrf  = mbrfs.find(h => h.quarto === q.numero);
+  if(ocupadoMbrf)  return 'mbrf';
+  return 'livre';
+}
+function getQuartoHospede(q){
+  const h = hospedes.find(x => x.quarto === q.numero);
+  if(h) return { nome: h.nome, sub: `Entrada: ${fmtDate(h.checkin)}${h.checkout?' | Saída: '+fmtDate(h.checkout):''}`, cat:'hotel', id:h.id };
+  const m = mbrfs.find(x => x.quarto === q.numero);
+  if(m) return { nome: m.nome, sub: `BRF ${m.matricula||''} — ${diasNoHotel(m.checkin)}d`, cat:'mbrf', id:m.id };
+  return null;
+}
+function statusLabel(s){
+  const map = { livre:'✅ Livre', ocupado:'🛏 Ocupado', mbrf:'🏢 BRF', manutencao:'🔧 Manutenção' };
+  return map[s] || s;
+}
+function tipoIcon(tipo){
+  const map = { Standard:'🛏', Duplo:'🛏🛏', Suíte:'👑', Família:'👨‍👩‍👧', Executivo:'💼', BRF:'🏢' };
+  return map[tipo] || '🚪';
+}
+
+// ── CLOCK ──
+function updateClock(){
+  const now=new Date();
+  document.getElementById('clock').textContent=now.toLocaleTimeString('pt-BR');
+  document.getElementById('dateDisplay').textContent=now.toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'long'});
+}
+setInterval(updateClock,1000); updateClock();
+
+// ── TABS ──
+function switchTab(t){
+  currentTab=t;
+  const tabs=['hotel','mbrf','reservas','refeicoes','quartos','historico'];
+  document.querySelectorAll('.tab').forEach((el,i)=>el.classList.toggle('active',tabs[i]===t));
+  tabs.forEach(tab=>{
+    const el=document.getElementById('tab-'+tab);
+    if(el) el.style.display=tab===t?'':'none';
+  });
+  renderAll();
+}
+
+// ── RENDER ALL ──
+function renderAll(){
+  renderTable('hotel');
+  renderTable('mbrf');
+  renderStats();
+  renderReservas();
+  renderRefeicoes();
+  renderQuartos();
+  renderHistorico();
+  document.getElementById('hotelBadge').textContent=hospedes.length;
+  document.getElementById('mbrfBadge').textContent=mbrfs.length;
+  document.getElementById('reservasBadge').textContent=reservas.length;
+  document.getElementById('refeicoesBadge').textContent=mbrfs.length;
+  document.getElementById('quartosBadge').textContent=quartos.length;
+  document.getElementById('historicoBadge').textContent=historico.length;
+}
+
+// ── RENDER TABLE ──
+function renderTable(cat, filter=''){
+  const data  = cat==='hotel' ? hospedes : mbrfs;
+  const tbody = document.getElementById('table'+cap(cat));
+  const rows  = data.filter(h=>!filter||h.nome.toLowerCase().includes(filter.toLowerCase())||String(h.quarto||'').includes(filter));
+  const isMbrf= cat==='mbrf';
+
+  if(!rows.length){
+    tbody.innerHTML=`<tr><td colspan="9" style="text-align:center;padding:48px 20px;color:#8A8F9E;">
+      <div style="font-size:36px;margin-bottom:10px;">🛏️</div>
+      <div style="font-weight:600;color:#1A2340;">Nenhum hóspede encontrado</div>
+      <div style="font-size:12px;margin-top:4px;">Cadastre um novo hóspede para começar</div>
+    </td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML=rows.map(h=>{
+    const dias=diasNoHotel(h.checkin);
+    const valorTotal=h.diaria*dias;
+    const valorPago=h.diaria*h.diasPagos;
+    const saldo=valorTotal-valorPago;
+    const status=statusPgto(h);
+    const pgtoLabel=h.ultimaPgtoForma?`<div style="font-size:10px;color:var(--gray);margin-top:2px;">${pgtoIcon(h.ultimaPgtoForma)} ${h.ultimaPgtoForma}</div>`:'';
+
+    if(isMbrf){
+      const saldoBadge=saldo>0
+        ?`<div style="font-weight:700;color:var(--red);">${fmt(saldo)}</div><div style="font-size:11px;color:#8A8F9E;">${dias-h.diasPagos}d em aberto</div>`
+        :`<div class="alert-paid"><span class="dot"></span> Quitado</div>`;
+      return `<tr>
+        <td>
+          <span class="guest-name" onclick="openInfoModal('mbrf',${h.id})">👤 ${h.nome}</span>
+          <div class="guest-room">🚪 Quarto ${h.quarto||'—'}</div>
+          ${h.obs?`<div style="font-size:11px;color:#8A8F9E;margin-top:2px;">📝 ${h.obs}</div>`:''}
+        </td>
+        <td><span class="badge-status badge-mbrf">${h.matricula||'—'}</span><div style="font-size:11px;color:#8A8F9E;margin-top:2px;">${h.setor||''}</div></td>
+        <td>${fmtDate(h.checkin)}</td>
+        <td><div style="font-weight:700;font-size:16px;color:var(--mbrf-purple);">${dias}d</div><div class="open-stay-badge">⏱ Em aberto</div></td>
+        <td><div style="font-weight:600;">${h.diasPagos} dias</div><div style="font-size:11px;color:#8A8F9E;">${fmt(valorPago)}</div>${pgtoLabel}</td>
+        <td><div style="font-weight:600;">${fmt(valorTotal)}</div><div style="font-size:11px;color:#8A8F9E;">${dias}d × ${fmt(h.diaria)}</div></td>
+        <td>${saldoBadge}</td>
+        <td>
+          <div class="actions">
+            <button class="btn-sm" onclick="openPgtoModal('mbrf',${h.id})">💰 Pagar</button>
+            <button class="btn-sm checkout-btn" onclick="openConfirmSaida('mbrf',${h.id})">🚪 Saída</button>
+            <button class="btn-sm" onclick="editHospede('mbrf',${h.id})">✏️</button>
+            <button class="btn-sm danger" onclick="removerHospede('mbrf',${h.id})">🗑️</button>
+          </div>
+        </td>
+      </tr>`;
+    } else {
+      const totalDias=h.checkout?diffDays(h.checkin,h.checkout):dias;
+      const pct=Math.min(100,totalDias?Math.round(dias/totalDias*100):0);
+      const statusBadge=status==='pago'
+        ?`<span class="badge-status badge-pago"><span class="dot"></span> PAGO ✓</span>`
+        :status==='vencido'
+        ?`<span class="badge-status badge-vencido"><span class="dot"></span> VENCIDO</span>`
+        :`<span class="badge-status badge-pendente"><span class="dot"></span> PENDENTE</span>`;
+      const alertaPago=status==='pago'?`<div class="alert-paid" style="margin-top:4px;"><span class="dot"></span> Quitada</div>`:'';
+      return `<tr>
+        <td>
+          <span class="guest-name" onclick="openInfoModal('hotel',${h.id})">👤 ${h.nome}</span>
+          <div class="guest-room">🚪 Quarto ${h.quarto||'—'}</div>
+          ${h.obs?`<div style="font-size:11px;color:#8A8F9E;margin-top:2px;">📝 ${h.obs}</div>`:''}
+        </td>
+        <td>${fmtDate(h.checkin)}</td>
+        <td>${fmtDate(h.checkout)||'<span style="color:var(--gray);font-size:12px;">Em aberto</span>'}</td>
+        <td>
+          <div class="dias-bar"><div class="bar-bg"><div class="bar-fill ${pct>=100?'over':''}" style="width:${pct}%"></div></div><span class="bar-text">${dias}d</span></div>
+          <div style="font-size:11px;color:#8A8F9E;margin-top:2px;">Prev. ${totalDias}d</div>
+        </td>
+        <td><div style="font-weight:600;">${h.diasPagos} dias</div><div style="font-size:11px;color:#8A8F9E;">${fmt(valorPago)}</div>${pgtoLabel}${alertaPago}</td>
+        <td><div style="font-weight:600;">${fmt(valorTotal)}</div>${saldo>0?`<div style="font-size:11px;color:#B07D1A;">Saldo: ${fmt(saldo)}</div>`:''}</td>
+        <td>${statusBadge}</td>
+        <td>
+          <div class="actions">
+            <button class="btn-sm" onclick="openPgtoModal('hotel',${h.id})">💰 Pagar</button>
+            <button class="btn-sm checkout-btn" onclick="openConfirmSaida('hotel',${h.id})">🚪 Saída</button>
+            <button class="btn-sm" onclick="editHospede('hotel',${h.id})">✏️</button>
+            <button class="btn-sm danger" onclick="removerHospede('hotel',${h.id})">🗑️</button>
+          </div>
+        </td>
+      </tr>`;
+    }
+  }).join('');
+}
+
+// ── STATS ──
+function renderStats(){
+  const pagos   = hospedes.filter(h=>statusPgto(h)==='pago').length;
+  const pendente = hospedes.filter(h=>statusPgto(h)!=='pago').length;
+  const receita  = hospedes.reduce((a,h)=>a+h.diaria*h.diasPagos,0);
+  document.getElementById('statsHotel').innerHTML=`
+    <div class="stat"><div class="stat-label">Hóspedes Ativos</div><div class="stat-value">${hospedes.length}</div><div class="stat-sub">no hotel agora</div></div>
+    <div class="stat green"><div class="stat-label">Pagamentos OK</div><div class="stat-value">${pagos}</div><div class="stat-sub">estadias quitadas</div></div>
+    <div class="stat red"><div class="stat-label">Pendentes</div><div class="stat-value">${pendente}</div><div class="stat-sub">aguardando pagamento</div></div>
+    <div class="stat"><div class="stat-label">Receita Recebida</div><div class="stat-value" style="font-size:18px;">${fmt(receita)}</div><div class="stat-sub">total em caixa</div></div>`;
+
+  const totalDevido=mbrfs.reduce((a,h)=>a+Math.max(0,h.diaria*diasNoHotel(h.checkin)-h.diaria*h.diasPagos),0);
+  const mrReceita=mbrfs.reduce((a,h)=>a+h.diaria*h.diasPagos,0);
+  document.getElementById('statsMbrf').innerHTML=`
+    <div class="stat purple"><div class="stat-label">Funcionários BRF</div><div class="stat-value">${mbrfs.length}</div><div class="stat-sub">hospedados agora</div></div>
+    <div class="stat green"><div class="stat-label">Pagamentos OK</div><div class="stat-value">${mbrfs.filter(h=>statusPgto(h)==='pago').length}</div><div class="stat-sub">quitados</div></div>
+    <div class="stat red"><div class="stat-label">Saldo Total BRF</div><div class="stat-value" style="font-size:16px;">${fmt(totalDevido)}</div><div class="stat-sub">a receber</div></div>
+    <div class="stat purple"><div class="stat-label">Faturado BRF</div><div class="stat-value" style="font-size:18px;">${fmt(mrReceita)}</div><div class="stat-sub">recebido</div></div>`;
+
+  const rc=reservas.filter(r=>r.status==='confirmada').length;
+  const rp=reservas.filter(r=>r.status==='pendente').length;
+  const rProx=reservas.filter(r=>diffDays(today(),r.checkin)<=7&&diffDays(today(),r.checkin)>=0).length;
+  document.getElementById('statsReservas').innerHTML=`
+    <div class="stat blue"><div class="stat-label">Total Reservas</div><div class="stat-value">${reservas.length}</div><div class="stat-sub">cadastradas</div></div>
+    <div class="stat green"><div class="stat-label">Confirmadas</div><div class="stat-value">${rc}</div><div class="stat-sub">garantidas</div></div>
+    <div class="stat red"><div class="stat-label">Pendentes</div><div class="stat-value">${rp}</div><div class="stat-sub">aguardando</div></div>
+    <div class="stat blue"><div class="stat-label">Próx. 7 dias</div><div class="stat-value">${rProx}</div><div class="stat-sub">chegando em breve</div></div>`;
+
+  const refHoje=refeicoes.filter(r=>r.data===today());
+  const totalMes=refeicoes.filter(r=>r.data.startsWith(today().slice(0,7))).length;
+  document.getElementById('statsRefeicoes').innerHTML=`
+    <div class="stat teal"><div class="stat-label">Funcionários BRF</div><div class="stat-value">${mbrfs.length}</div><div class="stat-sub">hospedados</div></div>
+    <div class="stat"><div class="stat-label">Almoços Hoje</div><div class="stat-value">${refHoje.filter(r=>r.tipo==='almoco').length}</div><div class="stat-sub">registrados</div></div>
+    <div class="stat"><div class="stat-label">Jantares Hoje</div><div class="stat-value">${refHoje.filter(r=>r.tipo==='jantar').length}</div><div class="stat-sub">registrados</div></div>
+    <div class="stat teal"><div class="stat-label">Total no Mês</div><div class="stat-value">${totalMes}</div><div class="stat-sub">refeições</div></div>`;
+
+  // Quartos stats
+  const qLivre = quartos.filter(q=>getQuartoStatus(q)==='livre').length;
+  const qOcup  = quartos.filter(q=>getQuartoStatus(q)==='ocupado').length;
+  const qMbrf  = quartos.filter(q=>getQuartoStatus(q)==='mbrf').length;
+  const qMan   = quartos.filter(q=>getQuartoStatus(q)==='manutencao').length;
+  document.getElementById('statsQuartos').innerHTML=`
+    <div class="stat green"><div class="stat-label">Livres</div><div class="stat-value">${qLivre}</div><div class="stat-sub">disponíveis</div></div>
+    <div class="stat"><div class="stat-label">Ocupados (Hotel)</div><div class="stat-value">${qOcup}</div><div class="stat-sub">hóspedes ativos</div></div>
+    <div class="stat purple"><div class="stat-label">Ocupados (BRF)</div><div class="stat-value">${qMbrf}</div><div class="stat-sub">funcionários</div></div>
+    <div class="stat red"><div class="stat-label">Manutenção</div><div class="stat-value">${qMan}</div><div class="stat-sub">indisponíveis</div></div>`;
+
+  const hTotal  = historico.length;
+  const hHotel  = historico.filter(x=>x.categoria==='hotel').length;
+  const hMbrf   = historico.filter(x=>x.categoria==='mbrf').length;
+  const hReceita= historico.reduce((a,x)=>a+(x.valorPago||0),0);
+  document.getElementById('statsHistorico').innerHTML=`
+    <div class="stat brown"><div class="stat-label">Total de Saídas</div><div class="stat-value">${hTotal}</div><div class="stat-sub">registradas</div></div>
+    <div class="stat"><div class="stat-label">Hóspedes Hotel</div><div class="stat-value">${hHotel}</div><div class="stat-sub">saídas hotel</div></div>
+    <div class="stat purple"><div class="stat-label">Funcionários BRF</div><div class="stat-value">${hMbrf}</div><div class="stat-sub">saídas BRF</div></div>
+    <div class="stat green"><div class="stat-label">Receita Histórica</div><div class="stat-value" style="font-size:16px;">${fmt(hReceita)}</div><div class="stat-sub">total recebido</div></div>`;
+}
+
+// ── QUARTOS RENDER ──
+function setQuartoFilter(f, btn){
+  quartoFilter = f;
+  document.querySelectorAll('.quarto-filter-btn').forEach(b=>{ b.classList.remove('active'); });
+  btn.classList.add('active');
+  renderQuartos();
+}
+
+function filterQuartos(val){
+  quartoSearchVal = val.toLowerCase();
+  renderQuartos();
+}
+
+function renderQuartos(){
+  const grid = document.getElementById('quartosGrid');
+  if(!grid) return;
+
+  let list = [...quartos];
+
+  // search
+  if(quartoSearchVal){
+    list = list.filter(q =>
+      String(q.numero).toLowerCase().includes(quartoSearchVal) ||
+      (q.tipo||'').toLowerCase().includes(quartoSearchVal) ||
+      (q.andar||'').toLowerCase().includes(quartoSearchVal) ||
+      (q.descricao||'').toLowerCase().includes(quartoSearchVal)
+    );
+  }
+
+  // filter
+  if(quartoFilter !== 'todos'){
+    list = list.filter(q => getQuartoStatus(q) === quartoFilter);
+  }
+
+  // sort by numero
+  list.sort((a,b)=> String(a.numero).localeCompare(String(b.numero), undefined, {numeric:true}));
+
+  if(!list.length){
+    grid.innerHTML=`<div class="empty-state" style="grid-column:1/-1;"><div class="empty-icon">🚪</div><h3>Nenhum quarto encontrado</h3><p>Cadastre quartos ou ajuste os filtros</p></div>`;
+    return;
+  }
+
+  grid.innerHTML = list.map(q => {
+    const status  = getQuartoStatus(q);
+    const hospede = getQuartoHospede(q);
+    const cap     = q.capacidade ? `👥 ${q.capacidade} pessoa${q.capacidade>1?'s':''}` : '';
+
+    let guestHtml = '';
+    if(status === 'manutencao'){
+      guestHtml = `<div class="quarto-empty-msg">🔧 Em manutenção</div>`;
+    } else if(hospede){
+      guestHtml = `<div class="quarto-guest">👤 ${hospede.nome}</div><div class="quarto-guest-sub">${hospede.sub}</div>`;
+    } else {
+      guestHtml = `<div class="quarto-empty-msg">Disponível para check-in</div>`;
+    }
+
+    return `<div class="quarto-card ${status}" onclick="openQuartoDetail(${q.id})">
+      <div class="quarto-top">
+        <div>
+          <div class="quarto-num">${q.numero}</div>
+          <div class="quarto-andar">${q.andar||''}</div>
+        </div>
+        <div class="quarto-tipo-tag">${tipoIcon(q.tipo)} ${q.tipo||'Standard'}</div>
+      </div>
+      <div class="quarto-status-badge ${status}"><span class="dot"></span>${statusLabel(status)}</div>
+      ${guestHtml}
+      ${q.descricao?`<div class="quarto-desc">📋 ${q.descricao}</div>`:''}
+      <div class="quarto-footer">
+        <div class="quarto-capacidade">${cap}</div>
+        <div class="quarto-actions-mini">
+          <button class="btn-sm" style="padding:3px 7px;font-size:10px;" onclick="event.stopPropagation();openQuartoModal(${q.id})">✏️</button>
+          <button class="btn-sm danger" style="padding:3px 7px;font-size:10px;" onclick="event.stopPropagation();removerQuarto(${q.id})">🗑️</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── MODAL QUARTO DETALHE ──
+function openQuartoDetail(id){
+  const q = quartos.find(x=>x.id===id);
+  if(!q) return;
+  const status  = getQuartoStatus(q);
+  const hospede = getQuartoHospede(q);
+
+  document.getElementById('qd_num').textContent   = q.numero;
+  document.getElementById('qd_title').textContent = `${tipoIcon(q.tipo)} Quarto ${q.tipo||'Standard'}`;
+  document.getElementById('qd_sub').textContent   = q.andar||'';
+
+  const badgeMap = {
+    livre:      `<span class="quarto-status-badge livre"><span class="dot"></span> Livre</span>`,
+    ocupado:    `<span class="quarto-status-badge ocupado"><span class="dot"></span> Ocupado — Hotel</span>`,
+    mbrf:       `<span class="quarto-status-badge mbrf"><span class="dot"></span> Ocupado — BRF</span>`,
+    manutencao: `<span class="quarto-status-badge manutencao"><span class="dot"></span> Em Manutenção</span>`,
+  };
+  document.getElementById('qd_statusBadge').innerHTML = badgeMap[status]||'';
+
+  document.getElementById('qd_grid').innerHTML = `
+    <div class="qd-card"><div class="qd-card-label">Tipo</div><div class="qd-card-value">${tipoIcon(q.tipo)} ${q.tipo||'Standard'}</div></div>
+    <div class="qd-card"><div class="qd-card-label">Capacidade</div><div class="qd-card-value">👥 ${q.capacidade||'—'} pessoa${(q.capacidade||0)>1?'s':''}</div></div>
+    <div class="qd-card"><div class="qd-card-label">Andar</div><div class="qd-card-value">${q.andar||'—'}</div></div>
+    <div class="qd-card"><div class="qd-card-label">Status</div><div class="qd-card-value">${statusLabel(status)}</div></div>
+  `;
+
+  if(hospede){
+    const arr = hospede.cat==='hotel' ? hospedes : mbrfs;
+    const h   = arr.find(x=>x.id===hospede.id);
+    if(h){
+      const dias = diasNoHotel(h.checkin);
+      const saldo= Math.max(0, h.diaria*dias - h.diaria*h.diasPagos);
+      document.getElementById('qd_guestInfo').innerHTML = `
+        <div style="background:var(--cream);border-radius:10px;padding:14px 16px;border:1px solid var(--border);">
+          <div style="font-size:11px;color:var(--gray);text-transform:uppercase;letter-spacing:1px;font-weight:600;margin-bottom:8px;">Hóspede Atual</div>
+          <div style="font-weight:700;font-size:15px;color:var(--navy);margin-bottom:6px;">👤 ${h.nome}</div>
+          <div style="font-size:12px;color:var(--gray);display:flex;gap:12px;flex-wrap:wrap;">
+            <span>📅 Check-in: ${fmtDate(h.checkin)}</span>
+            <span>🌙 ${dias} dias hospedado</span>
+            <span>💰 Saldo: <strong style="color:${saldo>0?'var(--red)':'var(--green)'};">${saldo>0?fmt(saldo):'Quitado ✓'}</strong></span>
+          </div>
+        </div>`;
+    }
+  } else {
+    document.getElementById('qd_guestInfo').innerHTML = '';
+  }
+
+  document.getElementById('qd_desc').innerHTML = q.descricao
+    ? `<div style="background:var(--cream);border-radius:10px;padding:14px 16px;border:1px solid var(--border);font-size:13px;color:var(--gray);line-height:1.6;">📋 ${q.descricao}</div>`
+    : '';
+
+  let footerBtns = `<button class="btn btn-outline" onclick="closeQuartoDetail()">Fechar</button>
+    <button class="btn btn-outline" onclick="closeQuartoDetail();openQuartoModal(${q.id})">✏️ Editar</button>`;
+
+  if(hospede){
+    footerBtns += `<button class="btn btn-primary" onclick="closeQuartoDetail();openInfoModal('${hospede.cat}',${hospede.id})">👤 Ver Hóspede</button>`;
+  } else if(status !== 'manutencao'){
+    footerBtns += `<button class="btn btn-primary" onclick="closeQuartoDetail();openModal('hotel')">+ Check-in</button>`;
+  }
+
+  document.getElementById('qd_footer').innerHTML = footerBtns;
+  document.getElementById('quartoDetailOverlay').classList.add('open');
+}
+function closeQuartoDetail(){ document.getElementById('quartoDetailOverlay').classList.remove('open'); }
+
+// ── MODAL QUARTO CRIAR/EDITAR ──
+function selectTipo(btn){
+  document.querySelectorAll('.tipo-opt').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+  quartoTipoSel = btn.dataset.tipo;
+}
+
+function openQuartoModal(id=null){
+  editingQuartoId = id;
+  quartoTipoSel   = 'Standard';
+  document.querySelectorAll('.tipo-opt').forEach(b=>b.classList.remove('selected'));
+  document.querySelector('.tipo-opt[data-tipo="Standard"]').classList.add('selected');
+  document.getElementById('quartoModalTitle').textContent  = id ? '🚪 Editar Quarto' : '🚪 Novo Quarto';
+  document.getElementById('btnSalvarQuarto').textContent   = id ? 'Salvar Alterações' : 'Cadastrar Quarto';
+
+  if(id){
+    const q = quartos.find(x=>x.id===id);
+    if(q){
+      document.getElementById('q_numero').value      = q.numero||'';
+      document.getElementById('q_andar').value       = q.andar||'';
+      document.getElementById('q_capacidade').value  = q.capacidade||'';
+      document.getElementById('q_descricao').value   = q.descricao||'';
+      document.getElementById('q_statusManual').value= q.statusManual||'';
+      quartoTipoSel = q.tipo||'Standard';
+      document.querySelectorAll('.tipo-opt').forEach(b=>b.classList.toggle('selected', b.dataset.tipo===quartoTipoSel));
+    }
+  } else {
+    ['q_numero','q_andar','q_descricao'].forEach(fid=>{ const el=document.getElementById(fid); if(el) el.value=''; });
+    document.getElementById('q_capacidade').value   = 2;
+    document.getElementById('q_statusManual').value = '';
+  }
+  document.getElementById('quartoModalOverlay').classList.add('open');
+}
+function closeQuartoModal(){ document.getElementById('quartoModalOverlay').classList.remove('open'); editingQuartoId=null; }
+
+function salvarQuarto(){
+  const numero = document.getElementById('q_numero').value.trim();
+  if(!numero){ showNotif('Informe o número do quarto!','warn'); return; }
+  // Check duplicado
+  const dup = quartos.find(q=>q.numero===numero && q.id!==editingQuartoId);
+  if(dup){ showNotif('Já existe um quarto com esse número!','warn'); return; }
+
+  const obj = {
+    numero,
+    andar:        document.getElementById('q_andar').value.trim(),
+    tipo:         quartoTipoSel,
+    capacidade:   parseInt(document.getElementById('q_capacidade').value)||2,
+    statusManual: document.getElementById('q_statusManual').value,
+    descricao:    document.getElementById('q_descricao').value.trim(),
+  };
+
+  if(editingQuartoId){
+    const q=quartos.find(x=>x.id===editingQuartoId);
+    if(q) Object.assign(q,obj);
+    showNotif('Quarto atualizado!');
+  } else {
+    quartos.push({ id: quartos.length ? Math.max(...quartos.map(x=>x.id))+1 : 1, ...obj });
+    showNotif('Quarto cadastrado!');
+  }
+  saveQuartos(); closeQuartoModal(); renderAll();
+}
+
+function removerQuarto(id){
+  quartos = quartos.filter(q=>q.id!==id);
+  saveQuartos(); renderAll();
+  showNotif('Quarto removido.','warn');
+}
+
+// ── MODAL CONFIRMAÇÃO SAÍDA ──
+function openConfirmSaida(cat, id){
+  const arr = cat==='hotel' ? hospedes : mbrfs;
+  const h   = arr.find(x=>x.id===id);
+  if(!h) return;
+  saidaTarget = { cat, id };
+  const dias  = diasNoHotel(h.checkin);
+  const saldo = Math.max(0, h.diaria*dias - h.diaria*h.diasPagos);
+  const valorPago = h.diaria*h.diasPagos;
+
+  document.getElementById('confirmTitle').textContent = `Saída de ${h.nome}`;
+  document.getElementById('confirmMsg').textContent   = cat==='mbrf'
+    ? 'O funcionário será removido do sistema ativo e registrado no Histórico com data e hora exatas.'
+    : 'O hóspede será removido do sistema ativo e registrado no Histórico com data e hora exatas.';
+
+  document.getElementById('confirmDetail').innerHTML=`
+    <div class="confirm-detail-row"><span class="label">Hóspede</span><span class="value">${h.nome}</span></div>
+    <div class="confirm-detail-row"><span class="label">Quarto</span><span class="value">${h.quarto||'—'}</span></div>
+    <div class="confirm-detail-row"><span class="label">Check-in</span><span class="value">${fmtDate(h.checkin)}</span></div>
+    <div class="confirm-detail-row"><span class="label">Dias hospedado</span><span class="value">${dias} dias</span></div>
+    <div class="confirm-detail-row"><span class="label">Valor pago</span><span class="value green">${fmt(valorPago)}</span></div>
+    <div class="confirm-detail-row"><span class="label">Saldo devedor</span><span class="value ${saldo>0?'red':'green'}">${saldo>0?fmt(saldo):'Quitado ✓'}</span></div>
+    <div class="confirm-detail-row"><span class="label">Saída em</span><span class="value">${new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})} — ${new Date().toLocaleDateString('pt-BR')}</span></div>
+  `;
+  document.getElementById('confirmSaidaOverlay').classList.add('open');
+}
+function closeConfirmSaida(){ document.getElementById('confirmSaidaOverlay').classList.remove('open'); saidaTarget={cat:null,id:null}; }
+
+function executarSaida(){
+  const { cat, id } = saidaTarget;
+  if(!cat||!id) return;
+  const arr = cat==='hotel' ? hospedes : mbrfs;
+  const h   = arr.find(x=>x.id===id);
+  if(!h) return;
+
+  const dias    = diasNoHotel(h.checkin);
+  const saldo   = Math.max(0, h.diaria*dias - h.diaria*h.diasPagos);
+  const saidaISO= nowISO();
+
+  historico.unshift({
+    id: Date.now(), nome: h.nome, quarto: h.quarto||'', categoria: cat,
+    matricula: h.matricula||'', setor: h.setor||'',
+    checkin: h.checkin, checkout: today(), saidaISO,
+    diasHospedado: dias, diaria: h.diaria, diasPagos: h.diasPagos,
+    valorPago: h.diaria*h.diasPagos, saldoDevedor: saldo,
+    ultimaForma: h.ultimaPgtoForma||'', obs: h.obs||''
+  });
+  saveHistorico();
+
+  if(cat==='hotel'){ hospedes=hospedes.filter(x=>x.id!==id); saveHotel(); }
+  else { mbrfs=mbrfs.filter(x=>x.id!==id); refeicoes=refeicoes.filter(r=>r.mbrfId!==id); saveMbrf(); saveRefeicoes(); }
+
+  closeConfirmSaida(); renderAll();
+  showNotif(`🚪 Saída de ${h.nome} registrada — ${dias} dias${saldo>0?' · Saldo: '+fmt(saldo):''}`, saldo>0?'warn':'ok');
+}
+
+// ── MODAL PAGAMENTO ──
+function openPgtoModal(cat, id){
+  pgtoTarget = { cat, id }; pgtoForma = '';
+  const arr = cat==='hotel' ? hospedes : mbrfs;
+  const h   = arr.find(x=>x.id===id);
+  if(!h) return;
+  document.querySelectorAll('.pgto-forma-btn').forEach(b=>b.classList.remove('selected'));
+  document.getElementById('pgto_dias').value = Math.max(0, diasNoHotel(h.checkin)-h.diasPagos);
+  document.getElementById('pgto_obs').value  = '';
+  updatePgtoResumo();
+  document.getElementById('pgtoModalOverlay').classList.add('open');
+}
+function closePgtoModal(){ document.getElementById('pgtoModalOverlay').classList.remove('open'); pgtoTarget={cat:null,id:null}; }
+function selectForma(btn){
+  document.querySelectorAll('.pgto-forma-btn').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected'); pgtoForma=btn.dataset.forma; updatePgtoResumo();
+}
+function updatePgtoResumo(){
+  const {cat,id}=pgtoTarget;
+  if(!cat||!id){ document.getElementById('pgtoResumo').innerHTML=''; return; }
+  const arr=cat==='hotel'?hospedes:mbrfs;
+  const h=arr.find(x=>x.id===id);
+  if(!h) return;
+  const dias  = diasNoHotel(h.checkin);
+  const add   = parseInt(document.getElementById('pgto_dias').value)||0;
+  const novoPago  = h.diasPagos+add;
+  const valorAdd  = add*h.diaria;
+  const novoSaldo = Math.max(0, h.diaria*dias - h.diaria*novoPago);
+  document.getElementById('pgtoResumo').innerHTML=`
+    <div class="pgto-resumo-row"><span class="r-label">Hóspede</span><span class="r-value">${h.nome} · Quarto ${h.quarto||'—'}</span></div>
+    <div class="pgto-resumo-row"><span class="r-label">Dias a pagar</span><span class="r-value">${add} dias</span></div>
+    <div class="pgto-resumo-row"><span class="r-label">Forma</span><span class="r-value">${pgtoForma?pgtoIcon(pgtoForma)+' '+pgtoForma:'<span style="color:#B07D1A;">⚠️ Selecione a forma</span>'}</span></div>
+    <div class="pgto-resumo-row total"><span class="r-label">Valor a receber</span><span class="r-value">${fmt(valorAdd)}</span></div>
+    <div class="pgto-resumo-row"><span class="r-label" style="font-size:11px;">Saldo após pagamento</span><span class="r-value" style="font-size:12px;color:${novoSaldo>0?'var(--red)':'var(--green)'};">${novoSaldo>0?fmt(novoSaldo):'Quitado ✓'}</span></div>`;
+}
+function confirmarPagamento(){
+  if(!pgtoForma){ showNotif('Selecione a forma de pagamento!','warn'); return; }
+  const {cat,id}=pgtoTarget;
+  const arr=cat==='hotel'?hospedes:mbrfs;
+  const h=arr.find(x=>x.id===id);
+  if(!h) return;
+  const add=parseInt(document.getElementById('pgto_dias').value)||0;
+  if(add<=0){ showNotif('Informe quantos dias pagar!','warn'); return; }
+  h.diasPagos+=add; h.ultimaPgtoForma=pgtoForma;
+  if(cat==='hotel') saveHotel(); else saveMbrf();
+  closePgtoModal(); renderAll();
+  const quitado=statusPgto(h)==='pago';
+  showNotif(`${pgtoIcon(pgtoForma)} ${add}d via ${pgtoForma} para ${h.nome}${quitado?' — Quitado! ✅':''}`);
+}
+
+// ── FICHA INFO ──
+function openInfoModal(cat, id){
+  const arr=cat==='hotel'?hospedes:mbrfs;
+  const h=arr.find(x=>x.id===id);
+  if(!h) return;
+  const dias=diasNoHotel(h.checkin);
+  const valorTotal=h.diaria*dias;
+  const valorPago=h.diaria*h.diasPagos;
+  const saldo=Math.max(0,valorTotal-valorPago);
+  const status=statusPgto(h);
+  const av=document.getElementById('infoAvatar');
+  av.textContent=initials(h.nome); av.className='info-avatar '+cat;
+  document.getElementById('infoName').textContent=h.nome;
+  document.getElementById('infoSub').innerHTML=`🚪 Quarto ${h.quarto||'—'}${h.matricula?` · <span style="color:var(--mbrf-purple);font-weight:600;">${h.matricula}</span>`:''}${h.setor?` · ${h.setor}`:''}`;
+  let totalDias=h.checkout?diffDays(h.checkin,h.checkout):dias;
+  const pct=totalDias?Math.min(100,Math.round(dias/totalDias*100)):0;
+  const statusLabel2=status==='pago'?'✅ Quitado':status==='vencido'?'⚠️ Vencido':'⏳ Pendente';
+  document.getElementById('infoGrid').innerHTML=`
+    <div class="info-card"><div class="info-card-label">Check-in</div><div class="info-card-value">${fmtDate(h.checkin)}</div><div class="info-card-sub">${dias} dias atrás</div></div>
+    <div class="info-card"><div class="info-card-label">${cat==='mbrf'?'Estadia':'Previsão Saída'}</div><div class="info-card-value">${cat==='mbrf'?'<span style="color:var(--mbrf-purple)">Em aberto ⏱</span>':fmtDate(h.checkout)}</div><div class="info-card-sub">${cat==='mbrf'?'Acumulando':'Restam '+(h.checkout?diffDays(today(),h.checkout):0)+'d'}</div></div>
+    <div class="info-card highlight"><div class="info-card-label">Dias Hospedado</div><div class="info-card-value">${dias} dias</div><div class="info-card-sub">desde o check-in</div></div>
+    <div class="info-card"><div class="info-card-label">Diária</div><div class="info-card-value">${fmt(h.diaria)}</div><div class="info-card-sub">por noite</div></div>
+    <div class="info-card ${saldo>0?'red-card':'green-card'}"><div class="info-card-label">Saldo Devedor</div><div class="info-card-value">${saldo>0?fmt(saldo):'R$ 0,00'}</div><div class="info-card-sub">${statusLabel2}${h.ultimaPgtoForma?' · '+pgtoIcon(h.ultimaPgtoForma)+' '+h.ultimaPgtoForma:''}</div></div>
+    <div class="info-card"><div class="info-card-label">Total Acumulado</div><div class="info-card-value">${fmt(valorTotal)}</div><div class="info-card-sub">${fmt(valorPago)} pago</div></div>`;
+  const pw=document.getElementById('infoProgressWrap');
+  const pctPago=Math.min(100,valorTotal>0?Math.round(valorPago/valorTotal*100):0);
+  if(cat==='hotel'&&h.checkout){
+    pw.innerHTML=`
+      <div class="info-progress-label"><span>Progresso da estadia</span><span>${dias}d de ${totalDias}d (${pct}%)</span></div>
+      <div class="info-progress-bar"><div class="info-progress-fill ${pct>=100?'over':''}" style="width:${pct}%"></div></div>
+      <div class="info-progress-label" style="margin-top:10px;"><span>Pagamento</span><span>${h.diasPagos} dias pagos (${pctPago}%)</span></div>
+      <div class="info-progress-bar"><div class="info-progress-fill paid" style="width:${pctPago}%"></div></div>`;
+    pw.style.display='';
+  } else if(cat==='mbrf'){
+    pw.innerHTML=`
+      <div class="info-progress-label"><span>Pagamento BRF</span><span>${h.diasPagos} de ${dias} dias pagos (${pctPago}%)</span></div>
+      <div class="info-progress-bar"><div class="info-progress-fill paid" style="width:${pctPago}%"></div></div>`;
+    pw.style.display='';
+  } else pw.style.display='none';
+  document.getElementById('infoObsWrap').innerHTML=h.obs?`<div class="info-obs">📝 <span>${h.obs}</span></div>`:'';
+  document.getElementById('infoFooter').innerHTML=`
+    <button class="btn btn-outline" onclick="closeInfoModal()">Fechar</button>
+    <button class="btn btn-outline" onclick="closeInfoModal();editHospede('${cat}',${h.id})">✏️ Editar</button>
+    <button class="btn btn-primary" onclick="closeInfoModal();openPgtoModal('${cat}',${h.id})">💰 Registrar Pagamento</button>
+    <button class="btn" style="background:var(--red-light);color:var(--red);border:1px solid #E8B0B0;" onclick="closeInfoModal();openConfirmSaida('${cat}',${h.id})">🚪 Dar Saída</button>`;
+  document.getElementById('infoModalOverlay').classList.add('open');
+}
+function closeInfoModal(){ document.getElementById('infoModalOverlay').classList.remove('open'); }
+
+// ── HISTÓRICO ──
+function renderHistorico(filter=''){
+  const list=document.getElementById('historicoList');
+  if(!list) return;
+  const data=[...historico].filter(x=>!filter||x.nome.toLowerCase().includes(filter.toLowerCase())||(x.quarto||'').includes(filter));
+  if(!data.length){
+    list.innerHTML=`<div class="empty-state"><div class="empty-icon">📁</div><h3>Nenhum registro de saída ainda</h3><p>Os hóspedes que receberem checkout aparecerão aqui com data e hora exatas</p></div>`;
+    return;
+  }
+  list.innerHTML=data.map(x=>{
+    const catColor=x.categoria==='mbrf'?'var(--mbrf-purple)':'var(--gold)';
+    return `<div class="hist-card">
+      <div class="hist-avatar ${x.categoria}">${initials(x.nome)}</div>
+      <div class="hist-info">
+        <div class="hist-name">${x.nome}<span style="font-size:11px;font-weight:700;padding:2px 7px;border-radius:5px;background:${x.categoria==='mbrf'?'var(--mbrf-light)':'var(--amber-light)'};color:${catColor};margin-left:6px;">${x.categoria==='mbrf'?'BRF':'Hotel'}</span></div>
+        <div class="hist-details">
+          <span>🚪 Quarto ${x.quarto||'—'}</span>
+          <span>📅 Check-in: ${fmtDate(x.checkin)}</span>
+          <span>🌙 ${x.diasHospedado} dias hospedado</span>
+          <span>💰 ${fmt(x.valorPago)} pago${x.ultimaForma?' ('+pgtoIcon(x.ultimaForma)+' '+x.ultimaForma+')':''}</span>
+          ${x.matricula?`<span>🏢 ${x.matricula}${x.setor?' · '+x.setor:''}</span>`:''}
+        </div>
+        ${x.obs?`<div style="font-size:11px;color:#8A8F9E;margin-top:4px;">📝 ${x.obs}</div>`:''}
+      </div>
+      <div class="hist-right">
+        <div class="hist-saida-date">${fmtDateTimeShort(x.saidaISO)}</div>
+        <div class="hist-saida-time">às ${fmtTime(x.saidaISO)}</div>
+        <div class="${x.saldoDevedor>0?'hist-pgto-badge pendente':'hist-pgto-badge quitado'}">${x.saldoDevedor>0?'⚠️ '+fmt(x.saldoDevedor)+' pendente':'✅ Quitado'}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+function filterHistorico(val){ renderHistorico(val); }
+
+// ── RESERVAS ──
+function renderReservas(filter=''){
+  const list=document.getElementById('reservasList');
+  const sorted=[...reservas].filter(r=>!filter||r.nome.toLowerCase().includes(filter.toLowerCase())||(r.quarto||'').includes(filter)).sort((a,b)=>a.checkin.localeCompare(b.checkin));
+  if(!sorted.length){ list.innerHTML=`<div class="empty-state"><div class="empty-icon">📋</div><h3>Nenhuma reserva encontrada</h3><p>Adicione novas reservas para controlar check-ins futuros</p></div>`; return; }
+  list.innerHTML=sorted.map(r=>{
+    const dt=new Date(r.checkin+'T12:00:00');
+    const day=String(dt.getDate()).padStart(2,'0');
+    const mon=dt.toLocaleDateString('pt-BR',{month:'short'}).replace('.','');
+    const nights=r.checkout?diffDays(r.checkin,r.checkout):0;
+    const total=nights>0?fmt(r.diaria*nights):'—';
+    const daysUntil=diffDays(today(),r.checkin);
+    const urgency=daysUntil<=2
+      ?`<span style="color:#B23B3B;font-weight:600;">⚡ ${daysUntil===0?'Hoje!':daysUntil===1?'Amanhã':'Em '+daysUntil+'d'}</span>`
+      :`<span>Em ${daysUntil}d</span>`;
+    const badge=r.status==='confirmada'?`<span class="badge-status badge-confirmada">✓ Confirmada</span>`:`<span class="badge-status badge-pendente">⏳ Pendente</span>`;
+    return `<div class="reserva-card">
+      <div class="reserva-date-badge"><div class="reserva-date-day">${day}</div><div class="reserva-date-mon">${mon}</div></div>
+      <div class="reserva-info">
+        <div class="reserva-name">${r.nome}</div>
+        <div class="reserva-details">
+          <span>🚪 Quarto ${r.quarto||'—'}</span>
+          ${nights>0?`<span>🌙 ${nights} noite${nights!==1?'s':''} · ${total}</span>`:''}
+          <span>📱 ${r.telefone||'—'}</span>
+          <span>🔗 ${r.origem||'Direto'}</span>
+          ${urgency}
+        </div>
+        ${r.obs?`<div style="font-size:11px;color:#8A8F9E;margin-top:4px;">📝 ${r.obs}</div>`:''}
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;">
+        ${badge}
+        <div style="display:flex;gap:6px;">
+          <button class="btn-sm" style="${r.status==='confirmada'?'opacity:0.4;pointer-events:none':''}" onclick="confirmarReserva(${r.id})">✓</button>
+          <button class="btn-sm" onclick="editReserva(${r.id})">✏️</button>
+          <button class="btn-sm" onclick="converterReserva(${r.id})" title="Converter para hóspede ativo">🏨</button>
+          <button class="btn-sm danger" onclick="removerReserva(${r.id})">🗑️</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+function filterReservas(val){ renderReservas(val); }
+function openReservaModal(id=null){
+  editingReservaId=id;
+  document.getElementById('reservaModalOverlay').classList.add('open');
+  document.getElementById('reservaModalTitle').textContent=id?'📋 Editar Reserva':'📋 Nova Reserva';
+  document.getElementById('btnSalvarReserva').textContent=id?'Salvar Alterações':'Salvar Reserva';
+  if(id){
+    const r=reservas.find(x=>x.id===id);
+    if(r){
+      document.getElementById('r_nome').value=r.nome;
+      document.getElementById('r_quarto').value=r.quarto||'';
+      document.getElementById('r_telefone').value=r.telefone||'';
+      document.getElementById('r_origem').value=r.origem||'Direto';
+      document.getElementById('r_checkin').value=r.checkin;
+      document.getElementById('r_checkout').value=r.checkout||'';
+      document.getElementById('r_diaria').value=r.diaria||'';
+      document.getElementById('r_status').value=r.status||'confirmada';
+      document.getElementById('r_obs').value=r.obs||'';
+    }
+  } else {
+    ['r_nome','r_quarto','r_telefone','r_checkin','r_checkout','r_diaria','r_obs'].forEach(fid=>{const el=document.getElementById(fid);if(el)el.value='';});
+    document.getElementById('r_origem').value='Direto';
+    document.getElementById('r_status').value='confirmada';
+  }
+}
+function closeReservaModal(){ document.getElementById('reservaModalOverlay').classList.remove('open'); editingReservaId=null; }
+function salvarReserva(){
+  const nome=document.getElementById('r_nome').value.trim();
+  const checkin=document.getElementById('r_checkin').value;
+  if(!nome){ showNotif('Preencha o nome do hóspede!','warn'); return; }
+  const obj={ nome, quarto:document.getElementById('r_quarto').value.trim(), telefone:document.getElementById('r_telefone').value.trim(), origem:document.getElementById('r_origem').value, checkin, checkout:document.getElementById('r_checkout').value, diaria:parseFloat(document.getElementById('r_diaria').value)||0, status:document.getElementById('r_status').value, obs:document.getElementById('r_obs').value.trim() };
+  if(editingReservaId){ const r=reservas.find(x=>x.id===editingReservaId); if(r) Object.assign(r,obj); showNotif('Reserva atualizada!'); }
+  else { reservas.push({id:(reservas.length?Math.max(...reservas.map(x=>x.id)):0)+1,...obj}); showNotif('Reserva cadastrada!'); }
+  saveReservas(); closeReservaModal(); renderAll();
+}
+function confirmarReserva(id){ const r=reservas.find(x=>x.id===id); if(r){r.status='confirmada';saveReservas();renderAll();showNotif('Reserva confirmada!');} }
+function converterReserva(id){
+  const r=reservas.find(x=>x.id===id); if(!r) return;
+  hospedes.push({id:(hospedes.length?Math.max(...hospedes.map(x=>x.id)):0)+1,nome:r.nome,quarto:r.quarto||'',checkin:r.checkin||today(),checkout:r.checkout||'',diaria:r.diaria||0,diasPagos:0,obs:r.obs||'',categoria:'hotel'});
+  reservas=reservas.filter(x=>x.id!==id);
+  saveHotel();saveReservas();renderAll();
+  showNotif(`${r.nome} movido para hóspedes ativos!`);
+}
+function editReserva(id){ openReservaModal(id); }
+function removerReserva(id){ reservas=reservas.filter(r=>r.id!==id); saveReservas(); renderAll(); showNotif('Reserva removida.','warn'); }
+
+// ── REFEIÇÕES ──
+function navDay(dir){ const d=new Date(foodDate+'T12:00:00'); d.setDate(d.getDate()+dir); foodDate=d.toISOString().split('T')[0]; renderRefeicoes(); }
+function renderRefeicoes(){
+  const display=document.getElementById('foodDateDisplay');
+  if(display) display.textContent=fmtDateFull(foodDate);
+  const list=document.getElementById('refeicoesList');
+  if(!list) return;
+  if(!mbrfs.length){ list.innerHTML=`<div class="empty-state"><div class="empty-icon">👥</div><h3>Nenhum funcionário BRF</h3><p>Cadastre funcionários na aba MBRF primeiro</p></div>`; return; }
+  const refDia=refeicoes.filter(r=>r.data===foodDate);
+  const almocos=refDia.filter(r=>r.tipo==='almoco');
+  const jantares=refDia.filter(r=>r.tipo==='jantar');
+  const makeList=(tipo,lista)=>mbrfs.map(f=>{
+    const m=lista.find(r=>r.mbrfId===f.id);
+    return `<div class="meal-person">
+      <div><div style="font-weight:500;">${f.nome}</div><div style="font-size:11px;color:#8A8F9E;">Quarto ${f.quarto||'—'}${f.setor?' · '+f.setor:''}</div></div>
+      <div class="meal-check ${m?'checked':''}" onclick="toggleRefeicao(${f.id},'${tipo}','${foodDate}')">${m?'✓':''}</div>
+    </div>`;
+  }).join('');
+  list.innerHTML=`<div class="meal-grid">
+    <div class="meal-card"><div class="meal-card-header almoco"><span>🌞 Almoço</span><span style="font-size:11px;">${almocos.length}/${mbrfs.length}</span></div><div class="meal-card-body">${makeList('almoco',almocos)}</div></div>
+    <div class="meal-card"><div class="meal-card-header jantar"><span>🌙 Jantar</span><span style="font-size:11px;">${jantares.length}/${mbrfs.length}</span></div><div class="meal-card-body">${makeList('jantar',jantares)}</div></div>
+  </div>`;
+}
+function toggleRefeicao(mbrfId,tipo,data){
+  const idx=refeicoes.findIndex(r=>r.mbrfId===mbrfId&&r.tipo===tipo&&r.data===data);
+  if(idx>=0) refeicoes.splice(idx,1);
+  else { const f=mbrfs.find(x=>x.id===mbrfId); refeicoes.push({id:Date.now(),mbrfId,nome:f?f.nome:'',tipo,data,obs:''}); }
+  saveRefeicoes(); renderRefeicoes(); renderStats();
+}
+function openRefeicaoModal(){
+  const sel=document.getElementById('ref_funcionario');
+  sel.innerHTML='<option value="">Selecione...</option>'+mbrfs.map(f=>`<option value="${f.id}">${f.nome} (Q.${f.quarto||'—'})</option>`).join('');
+  document.getElementById('ref_data').value=foodDate;
+  document.getElementById('ref_obs').value='';
+  document.getElementById('refeicaoModalOverlay').classList.add('open');
+}
+function closeRefeicaoModal(){ document.getElementById('refeicaoModalOverlay').classList.remove('open'); }
+function salvarRefeicao(){
+  const mbrfId=parseInt(document.getElementById('ref_funcionario').value);
+  const data=document.getElementById('ref_data').value;
+  const tipo=document.getElementById('ref_tipo').value;
+  const obs=document.getElementById('ref_obs').value.trim();
+  if(!mbrfId){ showNotif('Selecione um funcionário!','warn'); return; }
+  if(refeicoes.find(r=>r.mbrfId===mbrfId&&r.tipo===tipo&&r.data===data)){ showNotif('Já registrado!','warn'); return; }
+  const f=mbrfs.find(x=>x.id===mbrfId);
+  refeicoes.push({id:Date.now(),mbrfId,nome:f?f.nome:'',tipo,data,obs});
+  saveRefeicoes(); foodDate=data; closeRefeicaoModal(); renderAll();
+  showNotif(`Refeição registrada para ${f?f.nome:''}!`);
+}
+
+// ── MODAL HÓSPEDE / MBRF ──
+let modalCat='hotel';
+function openModal(cat,id=null){
+  modalCat=cat; editingId=id;
+  document.getElementById('modalOverlay').classList.add('open');
+  const isMbrf=cat==='mbrf';
+  document.getElementById('f_matricula_row').style.display=isMbrf?'grid':'none';
+  const cg=document.getElementById('f_checkout_group'); cg.style.opacity=isMbrf?'0.5':'1';
+  document.getElementById('f_checkout').placeholder=isMbrf?'Deixe em branco':'';
+  const icon=isMbrf?'🏢':'🏨';
+  document.getElementById('modalTitle').textContent=isMbrf?(id?`${icon} Editar Funcionário BRF`:`${icon} Novo Funcionário BRF`):(id?`${icon} Editar Hóspede`:`${icon} Novo Hóspede`);
+  document.getElementById('btnSalvar').textContent=id?'Salvar Alterações':(isMbrf?'Cadastrar Funcionário':'Cadastrar Hóspede');
+  if(id){
+    const arr=isMbrf?mbrfs:hospedes;
+    const h=arr.find(x=>x.id===id);
+    if(h){
+      document.getElementById('f_nome').value=h.nome||'';
+      document.getElementById('f_quarto').value=h.quarto||'';
+      document.getElementById('f_checkin').value=h.checkin||'';
+      document.getElementById('f_checkout').value=h.checkout||'';
+      document.getElementById('f_diaria').value=h.diaria||'';
+      document.getElementById('f_diasPagos').value=h.diasPagos||0;
+      document.getElementById('f_obs').value=h.obs||'';
+      document.getElementById('f_matricula').value=h.matricula||'';
+      document.getElementById('f_setor').value=h.setor||'';
+    }
+  } else {
+    ['f_nome','f_quarto','f_checkout','f_diaria','f_obs','f_matricula','f_setor'].forEach(fid=>{const el=document.getElementById(fid);if(el)el.value='';});
+    document.getElementById('f_checkin').value=today();
+    document.getElementById('f_diasPagos').value='0';
+  }
+}
+function closeModal(){ document.getElementById('modalOverlay').classList.remove('open'); editingId=null; }
+
+async function salvarHospede() {
+
+  const nome = document.getElementById('f_nome').value.trim();
+  const telefone = document.getElementById('f_telefone')?.value.trim() || '';
+  const quarto = document.getElementById('f_quarto').value.trim();
+
+  if (!nome) {
+    alert('Digite o nome');
+    return;
+  }
+
+  const hospede = {
+    id: Date.now(),
+    nome,
+    telefone,
+    quarto,
+    checkin: document.getElementById('f_checkin').value,
+    checkout: document.getElementById('f_checkout').value,
+    diaria: Number(document.getElementById('f_diaria').value || 0),
+    diasPagos: Number(document.getElementById('f_diasPagos').value || 0),
+    obs: document.getElementById('f_obs').value,
+    criadoEm: new Date().toISOString()
+  };
+
+  await salvarHospedeFirebase(hospede);
+
+  alert("Hóspede salvo com sucesso!");
+
+  closeModal();
+}
+
+function removerHospede(cat,id){
+  if(cat==='hotel'){ hospedes=hospedes.filter(h=>h.id!==id); saveHotel(); }
+  else { mbrfs=mbrfs.filter(h=>h.id!==id); saveMbrf(); }
+  renderAll(); showNotif('Hóspede removido.','warn');
+}
+function editHospede(cat,id){ openModal(cat,id); }
+
+// ── NOTIFICATION ──
+let notifTimer;
+function showNotif(msg,type='ok'){
+  const el=document.getElementById('notif');
+  document.getElementById('notifMsg').textContent=msg;
+  document.getElementById('notifIcon').textContent=type==='warn'?'⚠️':'✅';
+  el.className='notif show'+(type==='warn'?' warn':'')+(type==='danger'?' danger':'');
+  clearTimeout(notifTimer);
+  notifTimer=setTimeout(()=>el.className='notif',4000);
+}
+
+// ── CLOSE ON OVERLAY ──
+const overlayMap = {
+  'modalOverlay':          ()=>closeModal(),
+  'reservaModalOverlay':   ()=>closeReservaModal(),
+  'refeicaoModalOverlay':  ()=>closeRefeicaoModal(),
+  'infoModalOverlay':      ()=>closeInfoModal(),
+  'pgtoModalOverlay':      ()=>closePgtoModal(),
+  'confirmSaidaOverlay':   ()=>closeConfirmSaida(),
+  'quartoModalOverlay':    ()=>closeQuartoModal(),
+  'quartoDetailOverlay':   ()=>closeQuartoDetail(),
+};
+Object.entries(overlayMap).forEach(([oid, fn])=>{
+  const el=document.getElementById(oid);
+  if(el) el.addEventListener('click',function(e){ if(e.target===this) fn(); });
+});
+
+// ── INIT ──
+// Wait for Firebase module to initialize, then start real-time listener
+function startApp(){
+  if(window._firebaseReady && window._fbDb){
+    initFirebase();
+  } else {
+    window.addEventListener('firebaseReady', () => initFirebase(), { once: true });
+  }
+}
+startApp();
+
+// Storage check (now Firebase-based)
+setTimeout(()=>{
+  if(!window._fbDb){
+    const w=document.getElementById('storageWarn');
+    if(w) w.style.display='';
+    showNotif('⚠️ Firebase indisponível — verifique a conexão!','danger');
+  }
+}, 3000);
+</script>
+
+<script>
+async function salvarHospedeFirebase(hospede){
+
+  try{
+
+    const db = window._fbDb;
+
+    await window._fbSetDoc(
+      window._fbDoc(db, "hospedes", String(hospede.id)),
+      hospede
+    );
+
+    console.log("Salvo na Firebase");
+
+  }catch(e){
+
+    console.error("Erro Firebase:", e);
+    alert("Erro ao salvar na Firebase. Verifique as regras do Firestore.");
+
+  }
+
+}
+</script>
+
+
+<script>
+
+async function sincronizarFirebase(){
+
+  try{
+
+    const db = window._fbDb;
+
+    if(!db) return;
+
+    document.getElementById('fbLoadingBar').style.display = 'flex';
+
+    if(window.hospedes){
+
+      for(const hospede of hospedes){
+
+        await window._fbSetDoc(
+          window._fbDoc(db, "hospedes", String(hospede.id)),
+          hospede
+        );
+
+      }
+
+    }
+
+    document.getElementById('fbLoadingBar').style.display = 'none';
+    document.getElementById('fbSyncOk').style.display = 'flex';
+
+    console.log("Sincronização automática concluída");
+
+  }catch(e){
+
+    console.error("Erro sincronização:", e);
+
+    document.getElementById('fbLoadingBar').style.display = 'none';
+
+  }
+
+}
+
+setInterval(sincronizarFirebase, 5000);
+
+</script>
+
+</body>
+</html>
