@@ -339,7 +339,7 @@
   .pgto-resumo-row.total .r-value { color: var(--green); font-size: 15px; }
 
   /* INFO MODAL */
-  .info-modal { width: 500px; }
+  .info-modal { width: 620px; }
   .info-header { display: flex; align-items: center; gap: 16px; margin-bottom: 22px; padding-bottom: 18px; border-bottom: 1px solid var(--border); }
   .info-avatar { width: 56px; height: 56px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; flex-shrink: 0; }
   .info-avatar.hotel { background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%); color: var(--navy); }
@@ -366,6 +366,7 @@
   .info-progress-fill.paid { background: var(--green); }
   .info-obs { background: var(--amber-light); border: 1px solid #E0C87A; border-radius: 8px; padding: 10px 14px; font-size: 13px; color: var(--amber); margin-bottom: 16px; display: flex; gap: 8px; align-items: flex-start; }
   .info-footer { display: flex; gap: 8px; flex-wrap: wrap; padding-top: 14px; border-top: 1px solid var(--border); }
+  .info-footer-lock { display: flex; gap: 8px; padding-top: 10px; margin-top: 4px; border-top: 1px dashed var(--border); width: 100%; }
 
   /* SECTION HEADERS */
   .section-header { border-radius: 12px; padding: 20px 24px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; }
@@ -1003,7 +1004,8 @@
     <div class="form-row">
       <div class="form-group">
         <label class="form-label">Nome <span style="color:var(--red)">*</span></label>
-        <input class="form-input" id="f_nome" placeholder="João da Silva">
+        <input class="form-input" id="f_nome" placeholder="João da Silva" oninput="sugerirHistorico(this.value)" autocomplete="off">
+        <div id="historico_sugestoes" style="display:none;position:absolute;z-index:999;background:white;border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,0.12);max-height:200px;overflow-y:auto;min-width:260px;"></div>
       </div>
 
       <div class="form-group">
@@ -1012,8 +1014,10 @@
       </div>
 
       <div class="form-group">
-        <label class="form-label">Quarto <span style="color:var(--gray);font-weight:400;font-size:9px;">(opcional)</span></label>
-        <input class="form-input" id="f_quarto" placeholder="101">
+        <label class="form-label">Quarto <span style="color:var(--gray);font-weight:400;font-size:9px;">(disponíveis)</span></label>
+        <select class="form-select" id="f_quarto">
+          <option value="">— Selecione um quarto —</option>
+        </select>
       </div>
     </div>
     <div class="form-row" id="f_matricula_row" style="display:none">
@@ -2061,6 +2065,8 @@ function executarSaida(){
 
   const dias    = diasNoHotel(h.checkin);
   const saldo   = Math.max(0, h.diaria*dias - h.diaria*h.diasPagos);
+  const valorPago = h.diaria * h.diasPagos;
+  const valorTotal = h.diaria * dias;
   const saidaISO= nowISO();
 
   historico.unshift({
@@ -2068,7 +2074,7 @@ function executarSaida(){
     matricula: h.matricula||'', setor: h.setor||'', codigoFicha: h.codigoFicha||'',
     checkin: h.checkin, checkout: today(), saidaISO,
     diasHospedado: dias, diaria: h.diaria, diasPagos: h.diasPagos,
-    valorPago: h.diaria*h.diasPagos, saldoDevedor: saldo,
+    valorPago, saldoDevedor: saldo,
     ultimaForma: h.ultimaPgtoForma||'', obs: h.obs||''
   });
   saveHistorico();
@@ -2078,6 +2084,203 @@ function executarSaida(){
 
   closeConfirmSaida(); renderAll();
   showNotif(`🚪 Saída de ${h.nome} registrada — ${dias} dias${saldo>0?' · Saldo: '+fmt(saldo):''}`, saldo>0?'warn':'ok');
+
+  // Gera recibo PDF automático para funcionários BRF
+  if(cat === 'mbrf'){
+    gerarReciboBRF(h, dias, valorTotal, valorPago, saldo, saidaISO);
+  }
+}
+
+function gerarReciboBRF(h, dias, valorTotal, valorPago, saldo, saidaISO){
+  const saidaDT  = new Date(saidaISO);
+  const saidaData = saidaDT.toLocaleDateString('pt-BR', { timeZone: TZ, weekday:'long', day:'2-digit', month:'long', year:'numeric' });
+  const saidaHora = saidaDT.toLocaleTimeString('pt-BR', { timeZone: TZ, hour:'2-digit', minute:'2-digit', second:'2-digit' });
+  const checkinFmt = fmtDate(h.checkin);
+  const emissao   = new Date().toLocaleDateString('pt-BR',{timeZone:TZ,day:'2-digit',month:'2-digit',year:'numeric'})
+                  + ' às ' + new Date().toLocaleTimeString('pt-BR',{timeZone:TZ,hour:'2-digit',minute:'2-digit'});
+
+  // Consumo de produtos do hóspede
+  const consumo = [];
+  estoque.forEach(p => {
+    (p.movimentacoes||[]).forEach(m => {
+      if(m.tipo==='saida' && !m.venda) {
+        const ref = m.obs||'';
+        // Verifica se o obs tem o nome do funcionário ou referência
+        if(ref.toLowerCase().includes(h.nome.toLowerCase().split(' ')[0].toLowerCase())) {
+          consumo.push({ nome: p.nome, qtd: m.qtd, preco: p.preco, total: p.preco*m.qtd, unidade: p.unidade||'un' });
+        }
+      }
+    });
+  });
+  const totalConsumo = consumo.reduce((a,c)=>a+c.total, 0);
+  const totalGeral = valorTotal + totalConsumo;
+  const totalFinal = Math.max(0, totalGeral - valorPago);
+
+  const linhasConsumo = consumo.length
+    ? consumo.map(c=>`
+        <tr>
+          <td>${c.nome}</td>
+          <td style="text-align:center;">${c.qtd} ${c.unidade}</td>
+          <td style="text-align:right;">${fmt(c.preco)}</td>
+          <td style="text-align:right;font-weight:700;">${fmt(c.total)}</td>
+        </tr>`).join('')
+    : `<tr><td colspan="4" style="color:#aaa;font-style:italic;text-align:center;">Nenhum produto registrado</td></tr>`;
+
+  const w = window.open('','_blank','width=750,height:900');
+  w.document.write(`<!DOCTYPE html><html lang="pt-BR"><head>
+  <meta charset="UTF-8">
+  <title>Recibo de Saída BRF — ${h.nome}</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;500;600;700&display=swap');
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'Inter',Arial,sans-serif;background:#fff;color:#111;padding:32px 40px;max-width:680px;margin:0 auto;}
+    .header{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #1A2340;padding-bottom:18px;margin-bottom:24px;}
+    .hotel-logo{display:flex;align-items:center;gap:12px;}
+    .logo-box{width:48px;height:48px;background:linear-gradient(135deg,#C9A84C,#E8C97A);border-radius:12px;display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:18px;color:#1A2340;font-weight:700;}
+    .hotel-name{font-family:'Playfair Display',serif;font-size:20px;color:#1A2340;font-weight:700;}
+    .hotel-sub{font-size:10px;color:#888;letter-spacing:2.5px;text-transform:uppercase;margin-top:3px;}
+    .doc-info{text-align:right;}
+    .doc-title{font-family:'Playfair Display',serif;font-size:17px;color:#5B3A8C;font-weight:700;margin-bottom:4px;}
+    .doc-num{font-size:11px;color:#888;}
+    .doc-emissao{font-size:11px;color:#555;margin-top:3px;}
+
+    .saida-destaque{background:linear-gradient(135deg,#5B3A8C,#3D2760);border-radius:14px;padding:20px 24px;margin-bottom:24px;color:white;display:flex;justify-content:space-between;align-items:center;}
+    .saida-label{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;opacity:0.7;margin-bottom:4px;}
+    .saida-data{font-size:17px;font-weight:700;text-transform:capitalize;}
+    .saida-hora{font-size:28px;font-weight:700;font-family:'Playfair Display',serif;color:#E8C97A;letter-spacing:1px;}
+    .saida-dia{font-size:12px;opacity:0.75;margin-top:3px;}
+
+    .secao{margin-bottom:22px;}
+    .secao-titulo{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#888;border-bottom:1px solid #eee;padding-bottom:6px;margin-bottom:12px;}
+    .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+    .info-item{background:#F9F6EF;border-radius:10px;padding:12px 14px;border:1px solid #E2DED4;}
+    .info-label{font-size:10px;color:#888;text-transform:uppercase;letter-spacing:1px;font-weight:700;margin-bottom:3px;}
+    .info-value{font-size:14px;font-weight:700;color:#1A2340;}
+    .info-value.purple{color:#5B3A8C;}
+    .info-value.green{color:#2E7D52;}
+    .info-value.red{color:#B23B3B;}
+
+    table{width:100%;border-collapse:collapse;font-size:12px;}
+    th{background:#1A2340;color:white;padding:8px 10px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:0.8px;}
+    td{padding:8px 10px;border-bottom:1px solid #eee;}
+    tr:nth-child(even) td{background:#fafafa;}
+
+    .totais-box{background:#1A2340;border-radius:12px;padding:18px 22px;margin-top:20px;color:white;}
+    .tot-row{display:flex;justify-content:space-between;padding:5px 0;font-size:13px;border-bottom:1px solid rgba(255,255,255,0.08);}
+    .tot-row:last-child{border:none;font-size:18px;font-weight:700;padding-top:12px;margin-top:4px;}
+    .tot-row:last-child .tv{color:#E8C97A;font-family:'Playfair Display',serif;}
+    .tot-row .tl{color:rgba(255,255,255,0.65);}
+    .tot-row .tv{font-weight:600;}
+    .status-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700;margin-top:16px;}
+    .status-badge.quitado{background:#EAF5EF;color:#2E7D52;border:1px solid #A8D8BC;}
+    .status-badge.pendente{background:#FBF0F0;color:#B23B3B;border:1px solid #E8B0B0;}
+
+    .assinatura{display:flex;gap:40px;margin-top:48px;}
+    .ass-item{flex:1;border-top:1.5px solid #333;padding-top:8px;font-size:11px;color:#555;text-align:center;}
+
+    .footer{text-align:center;font-size:10px;color:#bbb;margin-top:32px;padding-top:14px;border-top:1px solid #eee;}
+    .btn-print{display:block;margin:24px auto 0;background:#5B3A8C;color:white;border:none;padding:13px 36px;border-radius:9px;font-size:14px;cursor:pointer;font-weight:700;font-family:'Inter',sans-serif;}
+    @media print{.btn-print{display:none!important;}body{padding:20px;}}
+  </style></head><body>
+
+  <div class="header">
+    <div class="hotel-logo">
+      <div class="logo-box">DP</div>
+      <div>
+        <div class="hotel-name">Don Pita Hotel</div>
+        <div class="hotel-sub">Recibo de Saída · BRF</div>
+      </div>
+    </div>
+    <div class="doc-info">
+      <div class="doc-title">🏢 Fechamento BRF</div>
+      <div class="doc-num">${h.matricula ? 'Matrícula: ' + h.matricula : 'Sem matrícula'}</div>
+      <div class="doc-emissao">Emitido em ${emissao}</div>
+    </div>
+  </div>
+
+  <div class="saida-destaque">
+    <div>
+      <div class="saida-label">Data de Saída</div>
+      <div class="saida-data">${saidaData}</div>
+      <div class="saida-dia">${h.setor ? '🏭 ' + h.setor : ''}</div>
+    </div>
+    <div style="text-align:right;">
+      <div class="saida-label">Horário Exato</div>
+      <div class="saida-hora">${saidaHora}</div>
+    </div>
+  </div>
+
+  <div class="secao">
+    <div class="secao-titulo">Dados do Funcionário</div>
+    <div class="info-grid">
+      <div class="info-item" style="grid-column:1/-1;">
+        <div class="info-label">Nome</div>
+        <div class="info-value" style="font-size:17px;">${h.nome}</div>
+      </div>
+      <div class="info-item">
+        <div class="info-label">Matrícula BRF</div>
+        <div class="info-value purple">${h.matricula||'—'}</div>
+      </div>
+      <div class="info-item">
+        <div class="info-label">Setor</div>
+        <div class="info-value">${h.setor||'—'}</div>
+      </div>
+      <div class="info-item">
+        <div class="info-label">Quarto</div>
+        <div class="info-value">${h.quarto||'—'}</div>
+      </div>
+      <div class="info-item">
+        <div class="info-label">Check-in</div>
+        <div class="info-value">${checkinFmt}</div>
+      </div>
+      <div class="info-item">
+        <div class="info-label">Total de Dias Hospedado</div>
+        <div class="info-value">${dias} dia${dias!==1?'s':''}</div>
+      </div>
+      <div class="info-item">
+        <div class="info-label">Diária</div>
+        <div class="info-value">${fmt(h.diaria)}/dia</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="secao">
+    <div class="secao-titulo">Produtos Consumidos</div>
+    <table>
+      <thead><tr>
+        <th>Produto</th>
+        <th style="text-align:center;">Qtd</th>
+        <th style="text-align:right;">Unit.</th>
+        <th style="text-align:right;">Total</th>
+      </tr></thead>
+      <tbody>${linhasConsumo}</tbody>
+    </table>
+  </div>
+
+  <div class="totais-box">
+    <div class="tot-row"><span class="tl">🛏 Hospedagem (${dias}d × ${fmt(h.diaria)})</span><span class="tv">${fmt(valorTotal)}</span></div>
+    ${totalConsumo>0?`<div class="tot-row"><span class="tl">📦 Produtos consumidos</span><span class="tv">${fmt(totalConsumo)}</span></div>`:''}
+    <div class="tot-row"><span class="tl">✅ Valor pago (${h.diasPagos} dias)</span><span class="tv" style="color:#7ddfaa;">− ${fmt(valorPago)}</span></div>
+    <div class="tot-row"><span class="tl">💰 VALOR FINAL</span><span class="tv">${fmt(totalFinal)}</span></div>
+  </div>
+
+  <div style="text-align:center;">
+    <span class="status-badge ${saldo<=0&&totalConsumo===0?'quitado':'pendente'}">
+      ${saldo<=0&&totalConsumo===0 ? '✅ Conta Quitada' : '⚠️ Saldo Devedor: ' + fmt(totalFinal)}
+    </span>
+  </div>
+
+  ${h.obs?`<div style="background:#FDF5E0;border:1px solid #E0C87A;border-radius:8px;padding:10px 14px;margin-top:16px;font-size:12px;color:#7A5A00;">📝 Obs: ${h.obs}</div>`:''}
+
+  <div class="assinatura">
+    <div class="ass-item">Assinatura do Funcionário</div>
+    <div class="ass-item">Responsável Don Pita Hotel</div>
+  </div>
+
+  <button class="btn-print" onclick="window.print()">🖨️ Imprimir Recibo</button>
+  <div class="footer">Don Pita Hotel — Sistema de Gestão · Recibo gerado automaticamente em ${emissao}</div>
+  </body></html>`);
+  w.document.close();
 }
 
 // ── MODAL PAGAMENTO ──
@@ -2228,12 +2431,192 @@ function openInfoModal(cat, id){
     <button class="btn btn-outline" onclick="closeInfoModal()">Fechar</button>
     <button class="btn btn-outline" onclick="closeInfoModal();editHospede('${cat}',${h.id})">✏️ Editar</button>
     <button class="btn btn-primary" onclick="closeInfoModal();openPgtoModal('${cat}',${h.id})">💰 Pagamento</button>
-    <button class="btn btn-estoque" onclick="closeInfoModal();openMovModalCliente('${cat}',${h.id})">📦 Lançar Produto</button>
-    <button class="btn" style="background:var(--red-light);color:var(--red);border:1px solid #E8B0B0;" onclick="closeInfoModal();openConfirmSaida('${cat}',${h.id})">🚪 Dar Saída</button>`;
+    <button class="btn btn-estoque" onclick="closeInfoModal();openMovModalCliente('${cat}',${h.id})">📦 Produto</button>
+    <button class="btn" style="background:var(--red-light);color:var(--red);border:1px solid #E8B0B0;" onclick="closeInfoModal();openConfirmSaida('${cat}',${h.id})">🚪 Saída</button>
+    <div class="info-footer-lock">
+      <button class="btn" style="width:100%;justify-content:center;background:linear-gradient(135deg,#1A4A7A,#2260A8);color:white;font-size:14px;padding:12px 18px;box-shadow:0 3px 12px rgba(26,74,122,0.35);" onclick="imprimirFichaHospede('${cat}',${h.id})">🔒 Travar Ficha e Imprimir</button>
+    </div>`;
 
   document.getElementById('infoModalOverlay').classList.add('open');
 }
 function closeInfoModal(){ document.getElementById('infoModalOverlay').classList.remove('open'); }
+
+function imprimirFichaHospede(cat, id){
+  const arr = cat==='hotel' ? hospedes : mbrfs;
+  const h   = arr.find(x=>x.id===id);
+  if(!h) return;
+
+  const dias         = diasNoHotel(h.checkin);
+  const valorQuarto  = h.diaria * dias;
+  const valorPago    = h.diaria * h.diasPagos;
+  const saldo        = Math.max(0, valorQuarto - valorPago);
+  const consumo      = getConsumoHospede(cat, id);
+  const valorConsumo = consumo.reduce((a,c)=>a+c.total, 0);
+  const totalGeral   = valorQuarto + valorConsumo;
+  const totalDevido  = Math.max(0, totalGeral - valorPago);
+  const emissao      = new Date().toLocaleDateString('pt-BR',{timeZone:TZ,day:'2-digit',month:'2-digit',year:'numeric'})
+                     + ' às ' + new Date().toLocaleTimeString('pt-BR',{timeZone:TZ,hour:'2-digit',minute:'2-digit'});
+  const statusTxt    = saldo<=0 ? 'QUITADO ✅' : `SALDO: ${fmt(totalDevido)} ⚠️`;
+  const isMbrf       = cat==='mbrf';
+
+  const linhasConsumo = consumo.length
+    ? consumo.map(c=>`<tr>
+        <td>${c.nome}${c.codigo?'<br><span style="font-size:10px;color:#888;">'+c.codigo+'</span>':''}</td>
+        <td style="text-align:center;">${c.qtd} ${c.unidade}</td>
+        <td style="text-align:right;">${fmt(c.preco)}</td>
+        <td style="text-align:right;font-weight:700;">${fmt(c.total)}</td>
+      </tr>`).join('')
+    : `<tr><td colspan="4" style="color:#aaa;text-align:center;font-style:italic;">Nenhum produto registrado</td></tr>`;
+
+  const w = window.open('','_blank','width=780,height=1000');
+  w.document.write(`<!DOCTYPE html><html lang="pt-BR"><head>
+  <meta charset="UTF-8">
+  <title>Ficha — ${h.nome}</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;500;600;700&display=swap');
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'Inter',Arial,sans-serif;background:#fff;color:#111;padding:32px 40px;max-width:720px;margin:0 auto;}
+    .top{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #1A2340;padding-bottom:18px;margin-bottom:22px;}
+    .logo-wrap{display:flex;align-items:center;gap:12px;}
+    .logo-box{width:48px;height:48px;background:linear-gradient(135deg,#C9A84C,#E8C97A);border-radius:12px;display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:18px;color:#1A2340;font-weight:700;}
+    .hotel-name{font-family:'Playfair Display',serif;font-size:20px;color:#1A2340;font-weight:700;}
+    .hotel-sub{font-size:9px;color:#888;letter-spacing:2.5px;text-transform:uppercase;margin-top:3px;}
+    .doc-right{text-align:right;}
+    .doc-title{font-family:'Playfair Display',serif;font-size:15px;color:#1A4A7A;font-weight:700;margin-bottom:3px;}
+    .doc-lock{display:inline-block;background:#1A4A7A;color:white;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;}
+    .doc-ficha{font-size:12px;color:#555;margin-top:2px;}
+    .name-banner{background:linear-gradient(135deg,#1A2340,#253054);border-radius:12px;padding:16px 22px;margin-bottom:18px;display:flex;justify-content:space-between;align-items:center;color:white;}
+    .nb-nome{font-family:'Playfair Display',serif;font-size:20px;font-weight:700;}
+    .nb-quarto{font-size:12px;opacity:0.7;margin-top:4px;}
+    .nb-badge{background:rgba(201,168,76,0.2);border:1px solid #C9A84C;color:#E8C97A;padding:5px 14px;border-radius:20px;font-size:11px;font-weight:700;}
+    .section{margin-bottom:20px;}
+    .sec-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#888;border-bottom:1px solid #eee;padding-bottom:6px;margin-bottom:12px;}
+    .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+    .info-item{background:#F9F6EF;border-radius:8px;padding:10px 12px;border:1px solid #E2DED4;}
+    .info-label{font-size:9px;color:#888;text-transform:uppercase;letter-spacing:1px;font-weight:700;margin-bottom:2px;}
+    .info-value{font-size:13px;font-weight:700;color:#1A2340;}
+    table{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:10px;}
+    th{background:#1A2340;color:white;padding:8px 10px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:0.8px;}
+    td{padding:7px 10px;border-bottom:1px solid #eee;}
+    tr:nth-child(even) td{background:#fafafa;}
+    .totais{background:#1A2340;border-radius:12px;padding:16px 20px;color:white;margin-top:16px;}
+    .tot-row{display:flex;justify-content:space-between;padding:5px 0;font-size:12px;border-bottom:1px solid rgba(255,255,255,0.08);}
+    .tot-row:last-child{border:none;font-size:16px;font-weight:700;padding-top:10px;margin-top:4px;}
+    .tot-row:last-child .tv{color:#E8C97A;font-family:'Playfair Display',serif;}
+    .tl{color:rgba(255,255,255,0.65);}
+    .tv{font-weight:600;}
+    .status-box{text-align:center;margin:16px 0;}
+    .status-pill{display:inline-flex;align-items:center;gap:8px;padding:8px 22px;border-radius:30px;font-size:13px;font-weight:700;border:2px solid;}
+    .status-pago{background:#EAF5EF;color:#2E7D52;border-color:#A8D8BC;}
+    .status-dev{background:#FBF0F0;color:#B23B3B;border-color:#E8B0B0;}
+    .assinatura{display:flex;gap:40px;margin-top:50px;}
+    .ass-item{flex:1;border-top:1.5px solid #333;padding-top:8px;font-size:11px;color:#555;text-align:center;}
+    .footer{text-align:center;font-size:10px;color:#bbb;margin-top:28px;padding-top:12px;border-top:1px solid #eee;}
+    .duracao-box{background:#E6EFF8;border-radius:10px;padding:12px 18px;border:1px solid #B0CCED;display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;}
+    .dur-item{text-align:center;}
+    .dur-label{font-size:9px;text-transform:uppercase;letter-spacing:1px;font-weight:700;color:#1A4A7A;margin-bottom:3px;}
+    .dur-val{font-size:18px;font-weight:700;color:#1A2340;font-family:'Playfair Display',serif;}
+    .dur-sub{font-size:10px;color:#555;margin-top:1px;}
+    @media print{button{display:none!important;}body{padding:16px;}}
+  </style></head><body>
+
+  <div class="top">
+    <div class="logo-wrap">
+      <div class="logo-box">DP</div>
+      <div>
+        <div class="hotel-name">Don Pita Hotel</div>
+        <div class="hotel-sub">Ficha do Hóspede</div>
+      </div>
+    </div>
+    <div class="doc-right">
+      <div class="doc-lock">🔒 Ficha Travada</div>
+      <div class="doc-title">Resumo de Estadia</div>
+      ${h.codigoFicha?`<div class="doc-ficha">📋 Ficha Nº ${h.codigoFicha}</div>`:''}
+      <div style="font-size:11px;color:#555;margin-top:4px;">Emitido em ${emissao}</div>
+    </div>
+  </div>
+
+  <div class="name-banner">
+    <div>
+      <div class="nb-nome">👤 ${h.nome}</div>
+      <div class="nb-quarto">🚪 Quarto ${h.quarto||'—'}${isMbrf&&h.matricula?' · '+h.matricula:''}${isMbrf&&h.setor?' · '+h.setor:''}</div>
+    </div>
+    <div class="nb-badge">${isMbrf?'🏢 BRF':'🏨 Hotel'}</div>
+  </div>
+
+  <div class="duracao-box">
+    <div class="dur-item">
+      <div class="dur-label">Check-in</div>
+      <div class="dur-val" style="font-size:14px;">${fmtDate(h.checkin)}</div>
+    </div>
+    <div class="dur-item">
+      <div class="dur-label">Dias Hospedado</div>
+      <div class="dur-val">${dias}</div>
+      <div class="dur-sub">dia${dias!==1?'s':''}</div>
+    </div>
+    <div class="dur-item">
+      <div class="dur-label">Diária</div>
+      <div class="dur-val" style="font-size:14px;">${fmt(h.diaria)}</div>
+    </div>
+    <div class="dur-item">
+      <div class="dur-label">Total Quarto</div>
+      <div class="dur-val" style="font-size:14px;">${fmt(valorQuarto)}</div>
+    </div>
+    ${!isMbrf&&h.checkout?`<div class="dur-item">
+      <div class="dur-label">Previsão Saída</div>
+      <div class="dur-val" style="font-size:14px;">${fmtDate(h.checkout)}</div>
+    </div>`:''}
+  </div>
+
+  <div class="section">
+    <div class="sec-title">Dados da Hospedagem</div>
+    <div class="info-grid">
+      <div class="info-item"><div class="info-label">Nome</div><div class="info-value">${h.nome}</div></div>
+      <div class="info-item"><div class="info-label">Quarto</div><div class="info-value">${h.quarto||'—'}</div></div>
+      ${isMbrf?`
+      <div class="info-item"><div class="info-label">Matrícula</div><div class="info-value">${h.matricula||'—'}</div></div>
+      <div class="info-item"><div class="info-label">Setor</div><div class="info-value">${h.setor||'—'}</div></div>`:`
+      <div class="info-item"><div class="info-label">Check-out Previsto</div><div class="info-value">${h.checkout?fmtDate(h.checkout):'Em aberto'}</div></div>
+      <div class="info-item"><div class="info-label">Dias Pagos</div><div class="info-value">${h.diasPagos} dias</div></div>`}
+      ${h.codigoFicha?`<div class="info-item"><div class="info-label">Código da Ficha</div><div class="info-value">${h.codigoFicha}</div></div>`:''}
+      ${h.obs?`<div class="info-item" style="grid-column:1/-1;"><div class="info-label">Observações</div><div class="info-value">${h.obs}</div></div>`:''}
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="sec-title">Produtos / Consumo</div>
+    <table>
+      <thead><tr>
+        <th>Produto</th><th style="text-align:center;">Qtd</th><th style="text-align:right;">Unit.</th><th style="text-align:right;">Total</th>
+      </tr></thead>
+      <tbody>${linhasConsumo}</tbody>
+    </table>
+  </div>
+
+  <div class="totais">
+    <div class="tot-row"><span class="tl">🛏 Quarto (${dias}d × ${fmt(h.diaria)})</span><span class="tv">${fmt(valorQuarto)}</span></div>
+    ${valorConsumo>0?`<div class="tot-row"><span class="tl">📦 Produtos consumidos</span><span class="tv">${fmt(valorConsumo)}</span></div>`:''}
+    <div class="tot-row"><span class="tl">✅ Valor pago (${h.diasPagos}d ${h.ultimaPgtoForma?'· '+h.ultimaPgtoForma:''})</span><span class="tv" style="color:#7ddfaa;">− ${fmt(valorPago)}</span></div>
+    <div class="tot-row"><span class="tl">💰 TOTAL A PAGAR</span><span class="tv">${fmt(totalDevido)}</span></div>
+  </div>
+
+  <div class="status-box">
+    <span class="status-pill ${totalDevido<=0?'status-pago':'status-dev'}">${totalDevido<=0?'✅ Conta Quitada':'⚠️ Saldo Devedor: '+fmt(totalDevido)}</span>
+  </div>
+
+  <div class="assinatura">
+    <div class="ass-item">Assinatura do Hóspede</div>
+    <div class="ass-item">Responsável Don Pita Hotel</div>
+  </div>
+
+  <div style="text-align:center;margin-top:28px;">
+    <button onclick="window.print()" style="background:#1A2340;color:white;border:none;padding:12px 32px;border-radius:8px;font-size:14px;cursor:pointer;font-weight:700;">🖨️ Imprimir Ficha</button>
+  </div>
+  <div class="footer">Don Pita Hotel — Sistema de Gestão · Ficha gerada em ${emissao}</div>
+  </body></html>`);
+  w.document.close();
+  closeInfoModal();
+}
 
 // Abre modal de movimentação já com o cliente pré-selecionado
 function openMovModalCliente(cat, id){
@@ -2392,10 +2775,13 @@ function salvarReserva(){
 function confirmarReserva(id){ const r=reservas.find(x=>x.id===id); if(r){r.status='confirmada';saveReservas();renderAll();showNotif('Reserva confirmada!');} }
 function converterReserva(id){
   const r=reservas.find(x=>x.id===id); if(!r) return;
-  hospedes.push({id:(hospedes.length?Math.max(...hospedes.map(x=>x.id)):0)+1,nome:r.nome,quarto:r.quarto||'',checkin:r.checkin||today(),checkout:r.checkout||'',diaria:r.diaria||0,diasPagos:0,obs:r.obs||'',categoria:'hotel'});
+  // Gera código de ficha automaticamente
+  const emUso=new Set(); [...hospedes,...mbrfs].forEach(h=>{if(h.codigoFicha)emUso.add(h.codigoFicha);});
+  let cod=null; for(let n=10000;n<=99999;n++){if(!emUso.has(String(n))){cod=String(n);break;}} if(!cod) cod=String(Math.floor(Math.random()*90000)+10000);
+  hospedes.push({id:(hospedes.length?Math.max(...hospedes.map(x=>x.id)):0)+1,nome:r.nome,quarto:r.quarto||'',checkin:r.checkin||today(),checkout:r.checkout||'',diaria:r.diaria||0,diasPagos:0,obs:r.obs||'',categoria:'hotel',codigoFicha:cod,telefone:r.telefone||''});
   reservas=reservas.filter(x=>x.id!==id);
   saveHotel();saveReservas();renderAll();
-  showNotif(`${r.nome} movido para hóspedes ativos!`);
+  showNotif(`${r.nome} movido para hóspedes ativos! Ficha: ${cod}`);
 }
 function editReserva(id){ openReservaModal(id); }
 function removerReserva(id){ reservas=reservas.filter(r=>r.id!==id); saveReservas(); renderAll(); showNotif('Reserva removida.','warn'); }
@@ -2452,6 +2838,62 @@ function salvarRefeicao(){
 
 // ── MODAL HÓSPEDE / MBRF ──
 let modalCat='hotel';
+
+function populateQuartosSelect(cat, currentQuarto=''){
+  const sel = document.getElementById('f_quarto');
+  if(!sel) return;
+  const disponíveis = quartos
+    .filter(q => {
+      const st = getQuartoStatus(q);
+      if(st === 'manutencao') return false;
+      if(q.numero === currentQuarto) return true;
+      return st === 'livre';
+    })
+    .sort((a,b) => String(a.numero).localeCompare(String(b.numero), undefined, {numeric:true}));
+  sel.innerHTML = '<option value="">— Selecione um quarto —</option>'
+    + disponíveis.map(q => {
+        const label = `Quarto ${q.numero}${q.andar?' · '+q.andar:''} — ${q.tipo||'Standard'}${q.capacidade?' · '+q.capacidade+'p':''}`;
+        return `<option value="${q.numero}"${q.numero===currentQuarto?' selected':''}>${label}</option>`;
+      }).join('');
+}
+
+function sugerirHistorico(val){
+  const box = document.getElementById('historico_sugestoes');
+  if(!box) return;
+  const termo = val.trim().toLowerCase();
+  if(termo.length < 2){ box.style.display='none'; return; }
+  const achados = historico.filter(x => x.nome.toLowerCase().includes(termo));
+  if(!achados.length){ box.style.display='none'; return; }
+  const uniq = {};
+  achados.forEach(x => { if(!uniq[x.nome]||x.saidaISO>uniq[x.nome].saidaISO) uniq[x.nome]=x; });
+  const lista = Object.values(uniq).slice(0,6);
+  box.innerHTML = lista.map(x => `
+    <div onclick="preencherDoHistorico(${x.id})"
+      style="padding:10px 14px;cursor:pointer;border-bottom:1px solid #F3F0EA;font-size:13px;transition:background 0.12s;"
+      onmouseover="this.style.background='#FDF5E0'" onmouseout="this.style.background='white'">
+      <div style="font-weight:600;color:var(--navy);">🔄 ${x.nome}</div>
+      <div style="font-size:11px;color:var(--gray);margin-top:2px;">
+        Último quarto: ${x.quarto||'—'} · Saída: ${fmtDateTimeShort(x.saidaISO)} · ${x.categoria==='mbrf'?'BRF':'Hotel'}
+      </div>
+    </div>`).join('');
+  box.style.display = '';
+}
+
+function preencherDoHistorico(histId){
+  const box = document.getElementById('historico_sugestoes');
+  if(box) box.style.display='none';
+  const h = historico.find(x=>x.id===histId);
+  if(!h) return;
+  document.getElementById('f_nome').value = h.nome;
+  const sel = document.getElementById('f_quarto');
+  if(sel){ const opt=[...sel.options].find(o=>o.value===h.quarto); if(opt) sel.value=h.quarto; }
+  if(h.diaria) document.getElementById('f_diaria').value = h.diaria;
+  if(h.matricula) document.getElementById('f_matricula').value = h.matricula||'';
+  if(h.setor) document.getElementById('f_setor').value = h.setor||'';
+  if(h.obs) document.getElementById('f_obs').value = h.obs||'';
+  showNotif(`📋 Dados de ${h.nome} carregados do histórico!`);
+}
+
 function openModal(cat,id=null){
   modalCat=cat; editingId=id;
   document.getElementById('modalOverlay').classList.add('open');
@@ -2462,12 +2904,13 @@ function openModal(cat,id=null){
   const icon=isMbrf?'🏢':'🏨';
   document.getElementById('modalTitle').textContent=isMbrf?(id?`${icon} Editar Funcionário BRF`:`${icon} Novo Funcionário BRF`):(id?`${icon} Editar Hóspede`:`${icon} Novo Hóspede`);
   document.getElementById('btnSalvar').textContent=id?'Salvar Alterações':(isMbrf?'Cadastrar Funcionário':'Cadastrar Hóspede');
+  const sugestoes=document.getElementById('historico_sugestoes'); if(sugestoes) sugestoes.style.display='none';
   if(id){
     const arr=isMbrf?mbrfs:hospedes;
     const h=arr.find(x=>x.id===id);
     if(h){
       document.getElementById('f_nome').value=h.nome||'';
-      document.getElementById('f_quarto').value=h.quarto||'';
+      document.getElementById('f_telefone').value=h.telefone||'';
       document.getElementById('f_checkin').value=h.checkin||'';
       document.getElementById('f_checkout').value=h.checkout||'';
       document.getElementById('f_diaria').value=h.diaria||'';
@@ -2476,19 +2919,28 @@ function openModal(cat,id=null){
       document.getElementById('f_matricula').value=h.matricula||'';
       document.getElementById('f_setor').value=h.setor||'';
       document.getElementById('f_codigoFicha').value=h.codigoFicha||'';
+      populateQuartosSelect(cat, h.quarto||'');
     }
   } else {
-    ['f_nome','f_quarto','f_checkout','f_diaria','f_obs','f_matricula','f_setor','f_codigoFicha'].forEach(fid=>{const el=document.getElementById(fid);if(el)el.value='';});
+    ['f_nome','f_telefone','f_checkout','f_diaria','f_obs','f_matricula','f_setor','f_codigoFicha'].forEach(fid=>{const el=document.getElementById(fid);if(el)el.value='';});
     document.getElementById('f_checkin').value=today();
     document.getElementById('f_diasPagos').value='0';
+    populateQuartosSelect(cat, '');
   }
 }
 function gerarCodigoFicha(){
-  const n=nowBR();
-  const ano=n.getFullYear();
-  const mes=String(n.getMonth()+1).padStart(2,'0');
-  const seq=String(Math.floor(Math.random()*900)+100);
-  document.getElementById('f_codigoFicha').value=`F-${ano}${mes}-${seq}`;
+  // Coleta todos os códigos em uso (ativos + histórico)
+  const emUso = new Set();
+  [...hospedes, ...mbrfs].forEach(h => { if(h.codigoFicha) emUso.add(h.codigoFicha); });
+  // NÃO bloqueamos os do histórico — eles podem ser reutilizados
+  // Encontra o menor número de 5 dígitos disponível (10000–99999)
+  let proximo = null;
+  for(let n = 10000; n <= 99999; n++){
+    const cod = String(n);
+    if(!emUso.has(cod)){ proximo = cod; break; }
+  }
+  if(!proximo) proximo = String(Math.floor(Math.random()*90000)+10000);
+  document.getElementById('f_codigoFicha').value = proximo;
 }
 function closeModal(){ document.getElementById('modalOverlay').classList.remove('open'); editingId=null; }
 
@@ -2522,10 +2974,16 @@ async function salvarHospede() {
   } else {
     const arr = isMbrf ? mbrfs : hospedes;
     const newId = arr.length ? Math.max(...arr.map(x => x.id)) + 1 : 1;
+    // Auto-gera código de ficha se não foi informado
+    if(!obj.codigoFicha){
+      const emUso=new Set(); [...hospedes,...mbrfs].forEach(h=>{if(h.codigoFicha)emUso.add(h.codigoFicha);});
+      let cod=null; for(let n=10000;n<=99999;n++){if(!emUso.has(String(n))){cod=String(n);break;}} if(!cod) cod=String(Math.floor(Math.random()*90000)+10000);
+      obj.codigoFicha=cod;
+    }
     const novo  = { id: newId, criadoEm: new Date().toISOString(), ...obj };
     arr.push(novo);
     if (isMbrf) saveMbrf(); else saveHotel();
-    showNotif(`${isMbrf ? 'Funcionário' : 'Hóspede'} ${nome} cadastrado!`);
+    showNotif(`${isMbrf ? 'Funcionário' : 'Hóspede'} ${nome} cadastrado! Ficha: ${obj.codigoFicha}`);
   }
 
   closeModal();
