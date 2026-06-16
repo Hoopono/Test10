@@ -63,13 +63,26 @@
     background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%);
     border-radius: 12px; display: flex; align-items: center; justify-content: center;
     font-family: 'Playfair Display', serif; font-size: 17px; color: var(--navy); font-weight: 700;
-    box-shadow: 0 2px 8px rgba(201,168,76,0.4);
+    box-shadow: 0 2px 8px rgba(201,168,76,0.4); flex-shrink: 0;
   }
   .logo-text { font-family: 'Playfair Display', serif; font-size: 20px; color: var(--white); letter-spacing: 0.3px; }
   .logo-sub { font-size: 10px; color: var(--gold-light); letter-spacing: 2.5px; text-transform: uppercase; margin-top: 2px; }
-  .header-right { display: flex; align-items: center; gap: 20px; }
+  .header-right { display: flex; align-items: center; gap: 12px; }
   .header-date { font-size: 12px; color: rgba(255,255,255,0.55); text-align: right; }
   .header-date span { display: block; color: var(--gold-light); font-weight: 600; font-size: 13px; }
+  @media (max-width: 480px) {
+    header { height: 58px; padding: 0 12px; }
+    .logo-icon { width: 34px; height: 34px; font-size: 13px; border-radius: 9px; }
+    .logo-text { font-size: 15px; }
+    .logo-sub { display: none; }
+    .header-right { gap: 8px; }
+    .header-date { font-size: 10px; }
+    .header-date span { font-size: 11px; }
+    #fbSyncOk { padding: 4px 8px; font-size: 11px; }
+    #fbSyncOk .sync-label { display: none; }
+    #storageWarn { font-size: 10px; padding: 4px 8px; max-width: 90px; }
+    #fbLoadingBar { padding: 4px 8px; font-size: 10px; }
+  }
 
   /* TABS */
   .tabs {
@@ -561,7 +574,7 @@
       <span style="animation:spin 1s linear infinite;display:inline-block;">🔄</span> Sincronizando...
     </div>
     <div id="fbSyncOk" style="display:none;background:rgba(46,125,82,0.15);border:1px solid rgba(46,125,82,0.35);border-radius:8px;padding:6px 12px;font-size:11px;color:#7ddfaa;">
-      ☁️ Nuvem ativa
+      <span class="sync-icon">☁️</span><span class="sync-label"> Nuvem ativa</span>
     </div>
     <div class="header-date">
       <span id="clock"></span>
