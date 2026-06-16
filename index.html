@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Achadinhos da Shopee 🛍️</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --laranja: #FF6B35;
+    --laranja-deep: #E8501A;
+    --amarelo: #FFD700;
+    --bg: #0D0D0D;
+    --bg2: #161616;
+    --bg3: #1E1E1E;
+    --card: #1A1A1A;
+    --borda: #2A2A2A;
+    --texto: #F0F0F0;
+    --subtexto: #999;
+    --verde: #10B981;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--texto); min-height: 100vh; }
+
+  /* HEADER */
+  header {
+    background: var(--bg2);
+    border-bottom: 1px solid var(--borda);
+    padding: 0 20px;
+    position: sticky; top: 0; z-index: 100;
+  }
+  .header-inner {
+    max-width: 1100px; margin: 0 auto;
+    display: flex; align-items: center; gap: 14px;
+    height: 62px; flex-wrap: wrap; padding: 8px 0;
+  }
+  .logo {
+    font-family: 'Syne', sans-serif; font-size: 21px; font-weight: 800;
+    color: var(--laranja); text-decoration: none; white-space: nowrap;
+  }
+  .logo span { color: var(--amarelo); }
+  .search-bar { flex: 1; display: flex; gap: 8px; min-width: 180px; }
+  .search-bar input {
+    flex: 1; background: var(--bg3); border: 1px solid var(--borda);
+    border-radius: 10px; padding: 10px 14px; color: var(--texto);
+    font-family: 'DM Sans', sans-serif; font-size: 14px; outline: none;
+    transition: border 0.2s;
+  }
+  .search-bar input:focus { border-color: var(--laranja); }
+  .search-bar button {
+    background: var(--laranja); border: none; border-radius: 10px;
+    padding: 10px 18px; color: #fff; font-weight: 600; cursor: pointer;
+    font-size: 14px; transition: background 0.2s; white-space: nowrap;
+  }
+  .search-bar button:hover { background: var(--laranja-deep); }
+  .header-icons { display: flex; gap: 10px; }
+  .icon-btn {
+    width: 40px; height: 40px; border-radius: 10px;
+    background: var(--bg3); border: none; color: var(--texto);
+    font-size: 18px; cursor: pointer; transition: all 0.2s;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .icon-btn:hover { background: var(--laranja); color: #fff; }
+  .icon-btn:disabled, .icon-btn.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: var(--bg3) !important;
+  }
+
+  /* HERO */
+  .hero {
+    background: linear-gradient(135deg, #1a0a00 0%, #0D0D0D 60%, #1a0f00 100%);
+    padding: 44px 24px 32px; text-align: center; position: relative; overflow: hidden;
+  }
+  .hero::before {
+    content: ''; position: absolute; top: -60px; left: 50%;
+    transform: translateX(-50%); width: 500px; height: 300px;
+    background: radial-gradient(ellipse, rgba(255,107,53,0.18) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero h1 {
+    font-family: 'Syne', sans-serif; font-size: clamp(26px, 5vw, 50px);
+    font-weight: 800; line-height: 1.1; margin-bottom: 10px;
+  }
+  .hero h1 em { color: var(--laranja); font-style: normal; }
+  .hero p { color: var(--subtexto); font-size: 15px; }
+
+  /* CATS NAV */
+  .cats-nav {
+    max-width: 1100px; margin: 28px auto 0; padding: 0 20px;
+    display: flex; gap: 10px; flex-wrap: wrap;
+  }
+  .cat-btn {
+    display: flex; align-items: center; gap: 7px;
+    background: var(--bg3); border: 1px solid var(--borda);
+    border-radius: 50px; padding: 9px 18px;
+    color: var(--subtexto); font-weight: 600; font-size: 13px;
+    cursor: pointer; transition: all 0.2s; text-decoration: none;
+  }
+  .cat-btn:hover, .cat-btn.active {
+    background: var(--laranja); border-color: var(--laranja); color: #fff;
+  }
+
+  /* MAIN */
+  main { max-width: 1100px; margin: 0 auto; padding: 28px 20px 64px; }
+
+  .cat-section { margin-bottom: 44px; display: none; }
+  .cat-section.visible { display: block; }
+
+  .cat-header {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 18px; padding-bottom: 12px;
+    border-bottom: 2px solid var(--borda);
+  }
+  .cat-header .icon {
+    width: 42px; height: 42px;
+    background: linear-gradient(135deg, var(--laranja), var(--laranja-deep));
+    border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px;
+  }
+  .cat-header h2 { font-family: 'Syne', sans-serif; font-size: 21px; font-weight: 700; }
+
+  /* GRID */
+  .products-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    gap: 14px;
+  }
+
+  /* CARD */
+  .product-card {
+    background: var(--card); border: 1px solid var(--borda);
+    border-radius: 16px; overflow: hidden;
+    transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+    display: flex; flex-direction: column;
+  }
+  .product-card:hover {
+    transform: translateY(-4px); border-color: var(--laranja);
+    box-shadow: 0 8px 30px rgba(255,107,53,0.15);
+  }
+
+  .product-thumb {
+    width: 100%; height: 180px;
+    background: var(--bg3);
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden; flex-shrink: 0; position: relative;
+  }
+  .product-thumb img {
+    width: 100%; height: 100%; object-fit: cover;
+    transition: transform 0.3s;
+  }
+  .product-card:hover .product-thumb img { transform: scale(1.04); }
+  .product-thumb .no-img { font-size: 52px; }
+
+  .product-body { padding: 12px 14px; flex: 1; display: flex; flex-direction: column; gap: 7px; }
+  .product-name { font-weight: 600; font-size: 13px; line-height: 1.4; color: var(--texto); }
+  .product-code {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: var(--bg3); border: 1px solid var(--borda);
+    border-radius: 6px; padding: 3px 9px; font-size: 11px;
+    font-family: monospace; color: var(--laranja);
+    cursor: pointer; width: fit-content; transition: background 0.2s; user-select: none;
+  }
+  .product-code:hover { background: rgba(255,107,53,0.12); }
+
+  .product-footer { padding: 0 14px 13px; }
+  .btn-shopee {
+    display: block; width: 100%;
+    background: linear-gradient(90deg, var(--laranja), var(--laranja-deep));
+    color: #fff; text-align: center; padding: 10px;
+    border-radius: 10px; font-weight: 700; font-size: 13px;
+    text-decoration: none; transition: opacity 0.2s;
+  }
+  .btn-shopee:hover { opacity: 0.88; }
+
+  /* EMPTY */
+  .empty-state { text-align: center; padding: 40px 20px; color: var(--subtexto); }
+  .empty-state .emo { font-size: 44px; margin-bottom: 10px; }
+
+  /* MODAL */
+  .modal {
+    display: none; position: fixed; top: 0; left: 0;
+    width: 100%; height: 100%; background: rgba(0,0,0,0.8);
+    z-index: 200; align-items: center; justify-content: center;
+  }
+  .modal.active { display: flex; }
+  .modal-content {
+    background: var(--card); border: 1px solid var(--borda);
+    border-radius: 16px; padding: 28px; max-width: 500px;
+    width: 90%; max-height: 90vh; overflow-y: auto;
+  }
+  .modal-header {
+    font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700;
+    margin-bottom: 20px; display: flex;
+    justify-content: space-between; align-items: center;
+  }
+  .modal-close {
+    background: none; border: none; color: var(--subtexto);
+    font-size: 24px; cursor: pointer;
+  }
+
+  .form-group {
+    margin-bottom: 14px;
+  }
+  .form-group label {
+    display: block; font-size: 11px; color: var(--subtexto);
+    margin-bottom: 5px; font-weight: 600; text-transform: uppercase;
+  }
+  .form-group input, .form-group textarea {
+    width: 100%; background: var(--bg3); border: 1px solid var(--borda);
+    border-radius: 10px; padding: 9px 12px; color: var(--texto);
+    font-family: 'DM Sans', sans-serif; font-size: 13px; outline: none; transition: border 0.2s;
+  }
+  .form-group input:focus, .form-group textarea:focus { border-color: var(--laranja); }
+  .form-group textarea { resize: vertical; min-height: 80px; }
+
+  .btn {
+    border: none; border-radius: 10px; padding: 10px 18px; font-weight: 700;
+    font-size: 13px; cursor: pointer; transition: all 0.2s; font-family: 'DM Sans', sans-serif;
+  }
+  .btn-primary { background: var(--laranja); color: #fff; }
+  .btn-primary:hover { background: var(--laranja-deep); }
+
+  /* TOAST */
+  .toast {
+    position: fixed; bottom: 22px; right: 22px;
+    background: #222; color: #fff; padding: 11px 18px;
+    border-radius: 12px; font-size: 13px;
+    border-left: 3px solid var(--verde);
+    opacity: 0; transform: translateY(10px);
+    transition: all 0.3s; pointer-events: none; z-index: 999;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+
+  /* SUPORTE PÚBLICO */
+  .support-thread {
+    background: var(--card); border: 1px solid var(--borda);
+    border-radius: 12px; padding: 14px; margin-bottom: 12px;
+  }
+  .support-thread-header {
+    display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;
+  }
+  .support-thread-name { font-weight: 700; color: var(--laranja); }
+  .support-thread-phone { font-size: 11px; color: var(--subtexto); margin-top: 2px; }
+  .support-thread-badge { font-size: 11px; padding: 3px 8px; border-radius: 6px; background: rgba(16,185,129,0.15); color: var(--verde); }
+  .support-thread-badge.pending { background: rgba(255,107,53,0.15); color: var(--laranja); }
+  .support-thread-message { font-size: 13px; line-height: 1.4; margin-top: 8px; padding: 10px; background: var(--bg3); border-radius: 8px; }
+  .support-thread-date { font-size: 11px; color: var(--subtexto); margin-top: 8px; }
+  .support-responses { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--borda); }
+  .response-item { background: var(--bg3); padding: 10px; border-radius: 8px; margin-bottom: 8px; font-size: 12px; }
+  .response-from { font-weight: 700; margin-bottom: 4px; color: var(--texto); }
+  .response-from.admin { color: var(--laranja); }
+
+  footer {
+    text-align: center; padding: 20px; color: var(--subtexto); font-size: 12px;
+    border-top: 1px solid var(--borda); margin-top: 40px;
+  }
+
+  @media(max-width: 768px) {
+    .header-inner { flex-wrap: wrap; height: auto; gap: 10px; padding: 10px 0; }
+    .search-bar { order: 3; width: 100%; min-width: 100%; }
+    .products-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="header-inner">
+    <a href="/" class="logo">Achadi<span>nhos</span> 🛍️</a>
+    <div class="search-bar">
+      <input type="text" id="searchInput" placeholder="Buscar produto ou código..." />
+      <button onclick="doSearch()">🔍</button>
+    </div>
+    <div class="header-icons">
+      <button class="icon-btn" id="supportBtn" onclick="openSupportModal()" title="Suporte">💬</button>
+      <button class="icon-btn" onclick="viewSupportHistory()" title="Histórico de Suportes">📋</button>
+    </div>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+  <h1>Encontre os <em>Melhores Deals</em> da Shopee</h1>
+  <p>Produtos organizados por categoria para você economizar tempo</p>
+</section>
+
+<!-- CATS NAV -->
+<nav class="cats-nav" id="catsNav"></nav>
+
+<!-- MAIN -->
+<main>
+  <div id="cat-search" class="cat-section">
+    <div class="cat-header">
+      <div class="icon">🔎</div>
+      <h2 id="search-title">Resultados da Busca</h2>
+    </div>
+    <div class="products-grid" id="grid-search"></div>
+  </div>
+  <div id="all-categories-sections"></div>
+</main>
+
+<!-- MODAL SUPORTE - ENVIAR -->
+<div class="modal" id="supportModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <span>💬 Enviar Suporte</span>
+      <button class="modal-close" onclick="closeSupportModal()">✕</button>
+    </div>
+    <div class="form-group">
+      <label>Nome</label>
+      <input type="text" id="supportName" placeholder="Seu nome" />
+    </div>
+    <div class="form-group">
+      <label>Celular / WhatsApp</label>
+      <input type="tel" id="supportPhone" placeholder="(11) 99999-9999" />
+    </div>
+    <div class="form-group">
+      <label>Mensagem</label>
+      <textarea id="supportMessage" placeholder="Descreva seu problema ou dúvida..."></textarea>
+    </div>
+    <div class="form-group">
+      <label>📸 Foto do Produto (Opcional)</label>
+      <input type="file" id="supportImage" accept="image/*" placeholder="Selecione uma imagem" />
+      <div id="imagePreview" style="margin-top: 10px;"></div>
+    </div>
+    <button class="btn btn-primary" style="width:100%; margin-top:14px;" onclick="sendSupport()">📤 Enviar</button>
+  </div>
+</div>
+
+<!-- MODAL SUPORTE - VER E RESPONDER -->
+<div class="modal" id="publicSupportModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <span>📋 Central de Suporte</span>
+      <button class="modal-close" onclick="closePublicSupport()">✕</button>
+    </div>
+    <div id="publicSupportList" style="max-height: 60vh; overflow-y: auto;"></div>
+  </div>
+</div>
+
+<!-- MODAL HISTÓRICO DE SUPORTES -->
+<div class="modal" id="historyModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <span>📋 Histórico de Suportes</span>
+      <button class="modal-close" onclick="closeHistoryModal()">✕</button>
+    </div>
+    
+    <div id="supportHistoryList" style="max-height: 400px; overflow-y: auto;"></div>
+  </div>
+</div>
+
+<!-- MODAL RESPONDER SUPORTE -->
+<div class="modal" id="replyModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <span>💬 Chat de Suporte</span>
+      <button class="modal-close" onclick="closeReplyModal()">✕</button>
+    </div>
+    
+    <!-- HISTÓRICO DE MENSAGENS -->
+    <div id="replyThreadDisplay" style="background: var(--bg3); border-radius: 12px; padding: 14px; margin-bottom: 16px; max-height: 280px; overflow-y: auto; border: 1px solid var(--borda);"></div>
+    
+    <!-- FORMULÁRIO DE RESPOSTA -->
+    <div class="form-group">
+      <label>Sua Mensagem</label>
+      <textarea id="replyText" placeholder="Digite sua resposta ou pergunta..." style="min-height: 80px; resize: none;"></textarea>
+    </div>
+    
+    <button class="btn btn-primary" style="width:100%;" id="sendReplyButton" onclick="sendReply()">📤 Enviar Mensagem</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<footer>
+  <div style="max-width: 1100px; margin: 0 auto; padding: 24px 20px;">
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+      <!-- NOTA 1: PAGAMENTO -->
+      <div style="background: var(--bg3); border: 1px solid var(--borda); border-radius: 12px; padding: 16px; border-left: 3px solid var(--laranja);">
+        <div style="font-weight: 700; font-size: 13px; margin-bottom: 8px;">💳 Pagamento</div>
+        <div style="font-size: 12px; color: var(--subtexto); line-height: 1.6;">
+          O pagamento é feito <strong>direto na Shopee</strong>. Esta página é apenas um catálogo para você encontrar produtos facilmente.
+        </div>
+      </div>
+
+      <!-- NOTA 2: SUPORTE -->
+      <div style="background: var(--bg3); border: 1px solid var(--borda); border-radius: 12px; padding: 16px; border-left: 3px solid #10B981;">
+        <div style="font-weight: 700; font-size: 13px; margin-bottom: 8px;">💬 Suporte</div>
+        <div style="font-size: 12px; color: var(--subtexto); line-height: 1.6;">
+          Não achou o produto? Envie uma foto e a gente procura pra você e te manda o link da Shopee!
+        </div>
+      </div>
+    </div>
+
+    <div style="border-top: 1px solid var(--borda); padding-top: 16px; text-align: center; color: var(--subtexto); font-size: 12px;">
+      © 2025 Achadinhos da Shopee · Feito com ❤️
+    </div>
+  </div>
+</footer>
+
+<script>
+const DEFAULT_CATEGORIES = {
+  masculino: { name: 'Masculino', emoji: '👔', order: 1 },
+  feminino: { name: 'Feminino', emoji: '👗', order: 2 },
+  crianca: { name: 'Criança', emoji: '🧒', order: 3 },
+  tenis: { name: 'Tênis', emoji: '👟', order: 4 }
+};
+
+const DEFAULT_PRODUCTS = {
+  masculino: [{ name:"Camiseta Oversized Básica", link:"https://shope.ee/exemplo", emoji:"👔", img:"" }],
+  feminino:  [{ name:"Vestido Floral Midi",       link:"https://shope.ee/exemplo", emoji:"👗", img:"" }],
+  crianca:   [{ name:"Conjunto Infantil Divertido",link:"https://shope.ee/exemplo", emoji:"🧒", img:"" }],
+  tenis:     [{ name:"Tênis Chunky Tendência",     link:"https://shope.ee/exemplo", emoji:"👟", img:"" }]
+};
+
+let currentReplyIndex = null;
+
+function loadProducts() {
+  try { return JSON.parse(localStorage.getItem('achadinhos_products') || 'null') || DEFAULT_PRODUCTS; }
+  catch(e) { return DEFAULT_PRODUCTS; }
+}
+
+function loadCategories() {
+  try { return JSON.parse(localStorage.getItem('achadinhos_categories') || 'null') || DEFAULT_CATEGORIES; }
+  catch(e) { return DEFAULT_CATEGORIES; }
+}
+
+function loadSupport() {
+  try { return JSON.parse(localStorage.getItem('achadinhos_support') || '[]'); }
+  catch(e) { return []; }
+}
+
+function saveSupport(data) {
+  localStorage.setItem('achadinhos_support', JSON.stringify(data));
+}
+
+function genCode(catKey, i) {
+  const prefix = catKey.substring(0, 3).toUpperCase();
+  return prefix + String(i+1).padStart(3, '0');
+}
+
+function thumb(p) {
+  if (p.img) return `<img src="${p.img}" alt="${p.name}" loading="lazy">`;
+  return `<div class="no-img">${p.emoji||'🛍️'}</div>`;
+}
+
+function loadClicks() {
+  try { return JSON.parse(localStorage.getItem('achadinhos_clicks') || '{}'); }
+  catch(e) { return {}; }
+}
+function saveClicks(c) { localStorage.setItem('achadinhos_clicks', JSON.stringify(c)); }
+
+function loadClicksDetailed() {
+  try { return JSON.parse(localStorage.getItem('achadinhos_clicks_detailed') || '[]'); }
+  catch(e) { return []; }
+}
+function saveClicksDetailed(arr) { localStorage.setItem('achadinhos_clicks_detailed', JSON.stringify(arr)); }
+
+function trackClick(catKey, idx) {
+  const key = catKey + '_' + idx;
+  // Objeto simples (contador)
+  const clicks = loadClicks();
+  clicks[key] = (clicks[key] || 0) + 1;
+  saveClicks(clicks);
+  // Detalhado com timestamp
+  const detailed = loadClicksDetailed();
+  detailed.push({ key, ts: new Date().toISOString() });
+  saveClicksDetailed(detailed);
+  // Navegação feita pelo <a href> nativo — sem window.open
+}
+
+function buildCard(p, code, catKey, idx) {
+  const shopeeLink = p.link && p.link.trim() ? p.link : '#';
+  const isClickable = shopeeLink !== '#';
+  const clicks = loadClicks();
+  const clickCount = clicks[catKey + '_' + idx] || 0;
+  const clickBadge = clickCount > 0 ? `<span style="font-size:10px; color:var(--subtexto); margin-left:6px;">👆 ${clickCount}</span>` : '';
+
+  if (isClickable) {
+    // Wrapper <a> cobre o card inteiro — 1 clique = 1 evento, sem bubbling duplicado
+    return `
+    <div class="product-card" style="cursor:pointer;">
+      <a href="${shopeeLink}" target="_blank" rel="noopener noreferrer"
+         onclick="trackClick('${catKey}',${idx})"
+         style="text-decoration:none;color:inherit;display:contents;">
+        <div class="product-thumb">${thumb(p)}</div>
+        <div class="product-body">
+          <div class="product-name">${p.name}</div>
+          <div class="product-code" onclick="event.stopPropagation();event.preventDefault();copyCode('${code}')">${code} 📋</div>
+        </div>
+        <div class="product-footer">
+          <div class="btn-shopee">🛒 Ver na Shopee${clickBadge}</div>
+        </div>
+      </a>
+    </div>`;
+  }
+
+  return `
+    <div class="product-card">
+      <div class="product-thumb">${thumb(p)}</div>
+      <div class="product-body">
+        <div class="product-name">${p.name}</div>
+        <div class="product-code" onclick="copyCode('${code}')">${code} 📋</div>
+      </div>
+      <div class="product-footer"></div>
+    </div>`;
+}
+
+function renderCategories() {
+  const data = loadProducts();
+  const categories = loadCategories();
+  
+  let navHtml = '<a class="cat-btn active" onclick="filterCat(\'all\',this)">🏠 Todos</a>';
+  const sorted = Object.entries(categories)
+    .sort((a, b) => (a[1].order||0) - (b[1].order||0));
+  
+  sorted.forEach(([key, cat]) => {
+    navHtml += `<a class="cat-btn" onclick="filterCat('${key}',this)">${cat.emoji} ${cat.name}</a>`;
+  });
+  document.getElementById('catsNav').innerHTML = navHtml;
+  
+  let sectionsHtml = '';
+  sorted.forEach(([key, cat]) => {
+    const items = data[key]||[];
+    let gridHtml = '';
+    if (items.length === 0) {
+      gridHtml = `<div class="empty-state"><div class="emo">📦</div><p>Nenhum produto ainda</p></div>`;
+    } else {
+      gridHtml = items.map((p, i) => buildCard(p, genCode(key, i), key, i)).join('');
+    }
+    
+    sectionsHtml += `
+      <div class="cat-section visible" id="cat-${key}">
+        <div class="cat-header">
+          <div class="icon">${cat.emoji}</div>
+          <h2>${cat.name}</h2>
+        </div>
+        <div class="products-grid" id="grid-${key}">${gridHtml}</div>
+      </div>`;
+  });
+  
+  document.getElementById('all-categories-sections').innerHTML = sectionsHtml;
+}
+
+function filterCat(catKey, el) {
+  document.getElementById('cat-search').classList.remove('visible');
+  document.getElementById('searchInput').value = '';
+  
+  const sections = document.querySelectorAll('.cat-section:not(#cat-search)');
+  if (catKey === 'all') {
+    sections.forEach(s => s.classList.add('visible'));
+  } else {
+    sections.forEach(s => s.classList.remove('visible'));
+    const target = document.getElementById('cat-' + catKey);
+    if (target) target.classList.add('visible');
+  }
+
+  document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+  if(el) el.classList.add('active');
+}
+
+function doSearch() {
+  const q = document.getElementById('searchInput').value.trim().toLowerCase();
+  if (!q) { filterCat('all', document.querySelector('.cat-btn')); return; }
+  
+  const data = loadProducts();
+  let res = [];
+
+  Object.entries(data).forEach(([catKey, items]) => {
+    (items||[]).forEach((p, i) => {
+      const code = genCode(catKey, i);
+      if (p.name.toLowerCase().includes(q) || code.toLowerCase().includes(q)) {
+        res.push({ p, code, catKey, idx: i });
+      }
+    });
+  });
+
+  document.querySelectorAll('.cat-section:not(#cat-search)').forEach(s => s.classList.remove('visible'));
+  document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+  
+  document.getElementById('search-title').textContent = `"${q}" — ${res.length} resultado(s)`;
+  document.getElementById('grid-search').innerHTML = res.length
+    ? res.map(r => buildCard(r.p, r.code, r.catKey, r.idx)).join('')
+    : `<div class="empty-state"><div class="emo">🔎</div><p>Nenhum produto encontrado</p></div>`;
+  document.getElementById('cat-search').classList.add('visible');
+}
+
+function copyCode(code) {
+  navigator.clipboard.writeText(code).catch(() => {});
+  const t = document.getElementById('toast');
+  t.textContent = '✅ Código ' + code + ' copiado!';
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// SUPORTE
+function openSupportModal() {
+  // Verificar se há suporte pendente (não resolvido)
+  const support = loadSupport();
+  const hasPendingSupport = support.some(s => s.status !== 'respondido');
+  
+  if (hasPendingSupport) {
+    showToast('⚠️ Você já tem um suporte aberto. Aguarde o admin resolver.', true);
+    return;
+  }
+  
+  document.getElementById('supportName').value = '';
+  document.getElementById('supportPhone').value = '';
+  document.getElementById('supportMessage').value = '';
+  document.getElementById('supportImage').value = '';
+  document.getElementById('imagePreview').innerHTML = '';
+  document.getElementById('supportModal').classList.add('active');
+}
+
+// Pré-visualizar imagem
+document.addEventListener('DOMContentLoaded', function() {
+  const imageInput = document.getElementById('supportImage');
+  if (imageInput) {
+    imageInput.addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      const preview = document.getElementById('imagePreview');
+      
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+          preview.innerHTML = `<img src="${event.target.result}" style="max-width: 100%; max-height: 200px; border-radius: 8px; margin-top: 10px;">`;
+          // Armazenar a imagem em base64
+          document.getElementById('supportImage').dataset.base64 = event.target.result;
+        };
+        reader.readAsDataURL(file);
+      } else {
+        preview.innerHTML = '';
+      }
+    });
+  }
+});
+
+// Função para atualizar estado do botão de suporte
+function updateSupportButtonStatus() {
+  const support = loadSupport();
+  const hasPendingSupport = support.some(s => s.status !== 'respondido');
+  const btn = document.getElementById('supportBtn');
+  
+  if (hasPendingSupport) {
+    btn.classList.add('disabled');
+    btn.disabled = true;
+    btn.title = '🔒 Você tem um suporte aberto. Aguarde a resolução.';
+  } else {
+    btn.classList.remove('disabled');
+    btn.disabled = false;
+    btn.title = 'Suporte';
+  }
+}
+
+// HISTÓRICO DE SUPORTES
+function viewSupportHistory() {
+  const support = loadSupport();
+  
+  // Filtrar apenas os suportes abertos (não resolvidos)
+  const openSupport = support.filter(s => s.status !== 'respondido');
+  
+  if (openSupport.length === 0) {
+    showToast('✅ Você não tem suportes abertos', false);
+    return;
+  }
+  
+  let html = '';
+  support.forEach((s, i) => {
+    // Pular os resolvidos
+    if (s.status === 'respondido') return;
+    
+    const hasAdminResponse = s.responses && s.responses.some(r => r.admin);
+    
+    let statusBadge = '';
+    if (hasAdminResponse) {
+      statusBadge = '<span style="background: #FF6B35; color: white; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600;">🏢 Admin Respondeu</span>';
+    } else {
+      statusBadge = '<span style="background: #FFA500; color: white; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600;">⏳ Aguardando</span>';
+    }
+    
+    html += `
+      <div style="background: var(--bg3); border: 1px solid var(--borda); border-radius: 12px; padding: 14px; margin-bottom: 12px;">
+        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
+          <div>
+            <div style="font-weight: 700; font-size: 13px;">${s.name}</div>
+            <div style="font-size: 12px; color: var(--subtexto);">📱 ${s.phone}</div>
+          </div>
+          ${statusBadge}
+        </div>
+        
+        <div style="background: var(--bg2); padding: 10px; border-radius: 8px; margin-bottom: 10px; font-size: 12px; line-height: 1.5; border-left: 3px solid var(--laranja);">
+          ${s.message}
+        </div>
+        
+        ${s.responses && s.responses.length > 0 ? `
+          <div style="font-size: 11px; color: var(--subtexto); margin-bottom: 10px;">
+            💬 ${s.responses.length} mensagem(ns)
+          </div>
+        ` : ''}
+        
+        <div style="font-size: 11px; color: var(--subtexto); margin-bottom: 10px;">
+          📅 ${s.date}
+        </div>
+        
+        <button class="btn btn-primary" style="padding: 8px 12px; font-size: 12px; width: 100%;" onclick="openHistorySupportDetail(${i})">
+          💬 Ver Conversa
+        </button>
+      </div>
+    `;
+  });
+  
+  document.getElementById('supportHistoryList').innerHTML = html;
+  document.getElementById('historyModal').classList.add('active');
+}
+
+function closeHistoryModal() {
+  document.getElementById('historyModal').classList.remove('active');
+}
+
+function openHistorySupportDetail(idx) {
+  closeHistoryModal();
+  openReplyModal(idx);
+}
+
+function closeSupportModal() {
+  document.getElementById('supportModal').classList.remove('active');
+}
+
+function sendSupport() {
+  const name = document.getElementById('supportName').value.trim();
+  const phone = document.getElementById('supportPhone').value.trim();
+  const message = document.getElementById('supportMessage').value.trim();
+  const imageInput = document.getElementById('supportImage');
+  const image = imageInput.dataset.base64 || null; // Imagem em base64
+
+  if (!name || !phone || !message) {
+    showToast('⚠️ Preencha todos os campos!', true);
+    return;
+  }
+
+  const support = loadSupport();
+  support.push({
+    id: Date.now(),
+    name,
+    phone,
+    message,
+    image, // Salvar imagem em base64
+    date: new Date().toLocaleString('pt-BR'),
+    status: 'novo',
+    responses: []
+  });
+
+  saveSupport(support);
+  showToast('✅ Mensagem enviada! Abra o chat abaixo.');
+  closeSupportModal();
+  
+  // Limpar campos
+  document.getElementById('supportName').value = '';
+  document.getElementById('supportPhone').value = '';
+  document.getElementById('supportMessage').value = '';
+  document.getElementById('supportImage').value = '';
+  document.getElementById('imagePreview').innerHTML = '';
+  
+  // Atualizar status do botão de suporte
+  updateSupportButtonStatus();
+  
+  // Abrir modal de conversa automaticamente
+  setTimeout(() => {
+    openReplyModal(support.length - 1);
+    updateSupportButtonStatus();
+  }, 300);
+}
+
+// VISUALIZAR SUPORTE PÚBLICO
+function viewPublicSupport() {
+  document.getElementById('publicSupportModal').classList.add('active');
+  renderPublicSupport();
+}
+
+function closePublicSupport() {
+  document.getElementById('publicSupportModal').classList.remove('active');
+}
+
+function renderPublicSupport() {
+  const support = loadSupport();
+  const list = document.getElementById('publicSupportList');
+  
+  if (support.length === 0) {
+    list.innerHTML = '<div style="text-align: center; color: var(--subtexto); padding: 30px 20px;">📭 Nenhuma mensagem ainda</div>';
+    return;
+  }
+  
+  let html = '';
+  support.forEach((s, i) => {
+    const badge = s.status === 'novo' 
+      ? '<span class="support-thread-badge pending">⏳ Aguardando Resposta</span>' 
+      : '<span class="support-thread-badge">✅ Respondido</span>';
+    
+    let responsesHtml = '';
+    if (s.responses && s.responses.length > 0) {
+      responsesHtml = '<div class="support-responses"><strong>Respostas:</strong>' +
+        s.responses.map(r => `
+          <div class="response-item">
+            <div class="response-from ${r.admin ? 'admin' : ''}">
+              ${r.admin ? '🏢 Administrador' : '👤 Você'}
+            </div>
+            <div>${r.text}</div>
+            <div style="font-size: 10px; margin-top: 4px; color: var(--subtexto);">${r.date}</div>
+          </div>
+        `).join('') + '</div>';
+    }
+    
+    html += `
+      <div class="support-thread">
+        <div class="support-thread-header">
+          <div>
+            <div class="support-thread-name">${s.name}</div>
+            <div class="support-thread-phone">📱 ${s.phone}</div>
+          </div>
+          ${badge}
+        </div>
+        <div class="support-thread-message">"${s.message}"</div>
+        <div class="support-thread-date">${s.date}</div>
+        ${responsesHtml}
+        <div style="margin-top: 12px;">
+          <button class="btn btn-primary" style="padding: 8px 12px; font-size: 12px;" onclick="openReplyModal(${i})">💬 Responder/Perguntar</button>
+        </div>
+      </div>
+    `;
+  });
+  
+  list.innerHTML = html;
+}
+
+function openReplyModal(idx) {
+  currentReplyIndex = idx;
+  const support = loadSupport();
+  const s = support[idx];
+  
+  // Mostrar mensagem inicial
+  let displayHtml = `
+    <div style="margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--borda);">
+      <div style="font-weight: 700; font-size: 13px; margin-bottom: 4px;">👤 ${s.name}</div>
+      <div style="font-size: 12px; color: var(--subtexto); margin-bottom: 8px;">${s.date}</div>
+      <div style="line-height: 1.5;">${s.message}</div>
+      ${s.image ? `<img src="${s.image}" style="max-width: 100%; max-height: 200px; border-radius: 8px; margin-top: 10px;">` : ''}
+    </div>
+  `;
+  
+  // Mostrar TODO o histórico de respostas
+  if (s.responses && s.responses.length > 0) {
+    s.responses.forEach(r => {
+      displayHtml += `
+        <div style="margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid var(--borda);">
+          <div style="font-weight: 700; font-size: 12px; margin-bottom: 4px; color: ${r.admin ? '#FF6B35' : '#10B981'};">
+            ${r.admin ? '🏢 Administrador' : '👤 Você'}
+          </div>
+          <div style="font-size: 13px; line-height: 1.5;">${r.text}</div>
+          ${r.image ? `<img src="${r.image}" style="max-width: 100%; max-height: 200px; border-radius: 8px; margin-top: 8px;">` : ''}
+          <div style="font-size: 11px; color: var(--subtexto); margin-top: 4px;">${r.date}</div>
+        </div>
+      `;
+    });
+  }
+  
+  document.getElementById('replyThreadDisplay').innerHTML = displayHtml;
+  document.getElementById('replyText').value = '';
+  
+  // Verificar se o admin já respondeu
+  const adminResponded = s.responses && s.responses.some(r => r.admin);
+  const sendButton = document.getElementById('sendReplyButton');
+  const replyTextarea = document.getElementById('replyText');
+  
+  if (adminResponded) {
+    // Bloquear respostas do usuário
+    replyTextarea.disabled = true;
+    replyTextarea.placeholder = 'Admin já respondeu. Aguarde uma nova mensagem.';
+    sendButton.disabled = true;
+    sendButton.textContent = '✅ Suporte em Atendimento';
+    sendButton.style.opacity = '0.5';
+    sendButton.style.cursor = 'not-allowed';
+  } else {
+    // Permitir respostas
+    replyTextarea.disabled = false;
+    replyTextarea.placeholder = 'Digite sua resposta ou pergunta...';
+    sendButton.disabled = false;
+    sendButton.textContent = '📤 Enviar Mensagem';
+    sendButton.style.opacity = '1';
+    sendButton.style.cursor = 'pointer';
+  }
+  
+  document.getElementById('replyModal').classList.add('active');
+}
+
+function closeReplyModal() {
+  document.getElementById('replyModal').classList.remove('active');
+  currentReplyIndex = null;
+  updateSupportButtonStatus();
+}
+
+function sendReply() {
+  const text = document.getElementById('replyText').value.trim();
+  if (!text) {
+    showToast('⚠️ Digite sua mensagem!', true);
+    return;
+  }
+  
+  const support = loadSupport();
+  const s = support[currentReplyIndex];
+  if (!s.responses) s.responses = [];
+  
+  s.responses.push({
+    text,
+    admin: false,
+    date: new Date().toLocaleString('pt-BR')
+  });
+  
+  saveSupport(support);
+  showToast('✅ Mensagem enviada!');
+  // Reabrir o modal com o novo histórico
+  openReplyModal(currentReplyIndex);
+}
+
+function showToast(msg, isError = false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  if(isError) t.style.borderLeftColor = '#DC2626';
+  else t.style.borderLeftColor = '#10B981';
+  setTimeout(() => t.classList.remove('show'), 2300);
+}
+
+document.getElementById('searchInput').addEventListener('keydown', e => { if(e.key==='Enter') doSearch(); });
+window.addEventListener('storage', e => { if(e.key==='achadinhos_products' || e.key==='achadinhos_categories') renderCategories(); });
+
+renderCategories();
+updateSupportButtonStatus();
+</script>
+</body>
+</html>
