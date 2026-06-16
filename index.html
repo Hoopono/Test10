@@ -3,940 +3,1627 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Achadinhos da Shopee 🛍️</title>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<title>Don Pita Hotel — Sistema de Hóspedes</title>
 <style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@300;400;500;600&display=swap');
+
   :root {
-    --laranja: #FF6B35;
-    --laranja-deep: #E8501A;
-    --amarelo: #FFD700;
-    --bg: #0D0D0D;
-    --bg2: #161616;
-    --bg3: #1E1E1E;
-    --card: #1A1A1A;
-    --borda: #2A2A2A;
-    --texto: #F0F0F0;
-    --subtexto: #999;
-    --verde: #10B981;
+    --gold: #C9A84C;
+    --gold-light: #E8C97A;
+    --navy: #1A2340;
+    --navy-mid: #253054;
+    --navy-light: #2E3D6B;
+    --cream: #F9F6EF;
+    --white: #FFFFFF;
+    --green: #2E7D52;
+    --green-light: #EAF5EF;
+    --red: #B23B3B;
+    --red-light: #FBF0F0;
+    --amber: #B07D1A;
+    --amber-light: #FDF5E0;
+    --gray: #8A8F9E;
+    --border: #E2DED4;
+    --mbrf-purple: #5B3A8C;
+    --mbrf-light: #F2EDF9;
+    --food-teal: #1A7A6E;
+    --food-light: #E6F4F2;
+    --reserva-blue: #1A4A7A;
+    --reserva-light: #E6EFF8;
   }
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--texto); min-height: 100vh; }
 
-  /* HEADER */
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--cream);
+    color: var(--navy);
+    min-height: 100vh;
+  }
+
   header {
-    background: var(--bg2);
-    border-bottom: 1px solid var(--borda);
-    padding: 0 20px;
-    position: sticky; top: 0; z-index: 100;
+    background: var(--navy);
+    padding: 0 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 68px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 16px rgba(26,35,64,0.18);
   }
-  .header-inner {
-    max-width: 1100px; margin: 0 auto;
-    display: flex; align-items: center; gap: 14px;
-    height: 62px; flex-wrap: wrap; padding: 8px 0;
-  }
-  .logo {
-    font-family: 'Syne', sans-serif; font-size: 21px; font-weight: 800;
-    color: var(--laranja); text-decoration: none; white-space: nowrap;
-  }
-  .logo span { color: var(--amarelo); }
-  .search-bar { flex: 1; display: flex; gap: 8px; min-width: 180px; }
-  .search-bar input {
-    flex: 1; background: var(--bg3); border: 1px solid var(--borda);
-    border-radius: 10px; padding: 10px 14px; color: var(--texto);
-    font-family: 'DM Sans', sans-serif; font-size: 14px; outline: none;
-    transition: border 0.2s;
-  }
-  .search-bar input:focus { border-color: var(--laranja); }
-  .search-bar button {
-    background: var(--laranja); border: none; border-radius: 10px;
-    padding: 10px 18px; color: #fff; font-weight: 600; cursor: pointer;
-    font-size: 14px; transition: background 0.2s; white-space: nowrap;
-  }
-  .search-bar button:hover { background: var(--laranja-deep); }
-  .header-icons { display: flex; gap: 10px; }
-  .icon-btn {
-    width: 40px; height: 40px; border-radius: 10px;
-    background: var(--bg3); border: none; color: var(--texto);
-    font-size: 18px; cursor: pointer; transition: all 0.2s;
+  .logo { display: flex; align-items: center; gap: 12px; }
+  .logo-icon {
+    width: 40px; height: 40px;
+    background: var(--gold);
+    border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
+    font-family: 'Playfair Display', serif;
+    font-size: 18px;
+    color: var(--navy);
+    font-weight: 700;
   }
-  .icon-btn:hover { background: var(--laranja); color: #fff; }
-  .icon-btn:disabled, .icon-btn.disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    background: var(--bg3) !important;
-  }
+  .logo-text { font-family: 'Playfair Display', serif; font-size: 20px; color: var(--white); }
+  .logo-sub { font-size: 11px; color: var(--gold-light); letter-spacing: 2px; text-transform: uppercase; margin-top: 1px; }
+  .header-date { font-size: 13px; color: var(--gray); text-align: right; }
+  .header-date span { display: block; color: var(--gold-light); font-weight: 500; }
 
-  /* HERO */
-  .hero {
-    background: linear-gradient(135deg, #1a0a00 0%, #0D0D0D 60%, #1a0f00 100%);
-    padding: 44px 24px 32px; text-align: center; position: relative; overflow: hidden;
+  .tabs {
+    background: var(--navy-mid);
+    display: flex;
+    gap: 0;
+    padding: 0 32px;
+    border-bottom: 2px solid var(--navy-light);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
   }
-  .hero::before {
-    content: ''; position: absolute; top: -60px; left: 50%;
-    transform: translateX(-50%); width: 500px; height: 300px;
-    background: radial-gradient(ellipse, rgba(255,107,53,0.18) 0%, transparent 70%);
-    pointer-events: none;
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab {
+    padding: 14px 22px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: var(--gray);
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+    flex-shrink: 0;
   }
-  .hero h1 {
-    font-family: 'Syne', sans-serif; font-size: clamp(26px, 5vw, 50px);
-    font-weight: 800; line-height: 1.1; margin-bottom: 10px;
+  .tab:hover { color: var(--gold-light); }
+  .tab.active { color: var(--gold); border-bottom-color: var(--gold); }
+  .tab .badge {
+    background: var(--mbrf-purple);
+    color: white;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-weight: 600;
   }
-  .hero h1 em { color: var(--laranja); font-style: normal; }
-  .hero p { color: var(--subtexto); font-size: 15px; }
+  .tab.active .badge { background: var(--gold); color: var(--navy); }
+  .tab .badge-teal { background: var(--food-teal); color: white; }
+  .tab.active .badge-teal { background: var(--gold); color: var(--navy); }
+  .tab .badge-blue { background: var(--reserva-blue); color: white; }
+  .tab.active .badge-blue { background: var(--gold); color: var(--navy); }
 
-  /* CATS NAV */
-  .cats-nav {
-    max-width: 1100px; margin: 28px auto 0; padding: 0 20px;
-    display: flex; gap: 10px; flex-wrap: wrap;
-  }
-  .cat-btn {
-    display: flex; align-items: center; gap: 7px;
-    background: var(--bg3); border: 1px solid var(--borda);
-    border-radius: 50px; padding: 9px 18px;
-    color: var(--subtexto); font-weight: 600; font-size: 13px;
-    cursor: pointer; transition: all 0.2s; text-decoration: none;
-  }
-  .cat-btn:hover, .cat-btn.active {
-    background: var(--laranja); border-color: var(--laranja); color: #fff;
-  }
+  main { padding: 28px 32px; max-width: 1300px; margin: 0 auto; }
 
-  /* MAIN */
-  main { max-width: 1100px; margin: 0 auto; padding: 28px 20px 64px; }
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px; }
+  .stat {
+    background: var(--white);
+    border-radius: 10px;
+    padding: 20px 24px;
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--gold);
+  }
+  .stat.green { border-left-color: var(--green); }
+  .stat.red { border-left-color: var(--red); }
+  .stat.purple { border-left-color: var(--mbrf-purple); }
+  .stat.teal { border-left-color: var(--food-teal); }
+  .stat.blue { border-left-color: var(--reserva-blue); }
+  .stat-label { font-size: 11px; color: var(--gray); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+  .stat-value { font-size: 28px; font-weight: 700; color: var(--navy); font-family: 'Playfair Display', serif; }
+  .stat-sub { font-size: 12px; color: var(--gray); margin-top: 2px; }
 
-  .cat-section { margin-bottom: 44px; display: none; }
-  .cat-section.visible { display: block; }
-
-  .cat-header {
-    display: flex; align-items: center; gap: 12px;
-    margin-bottom: 18px; padding-bottom: 12px;
-    border-bottom: 2px solid var(--borda);
+  .toolbar { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; flex-wrap: wrap; }
+  .toolbar-title { font-family: 'Playfair Display', serif; font-size: 22px; color: var(--navy); flex: 1; }
+  .search-input {
+    padding: 9px 14px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 13px;
+    font-family: 'Inter', sans-serif;
+    width: 220px;
+    background: var(--white);
+    color: var(--navy);
+    outline: none;
   }
-  .cat-header .icon {
-    width: 42px; height: 42px;
-    background: linear-gradient(135deg, var(--laranja), var(--laranja-deep));
-    border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px;
-  }
-  .cat-header h2 { font-family: 'Syne', sans-serif; font-size: 21px; font-weight: 700; }
-
-  /* GRID */
-  .products-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
-    gap: 14px;
-  }
-
-  /* CARD */
-  .product-card {
-    background: var(--card); border: 1px solid var(--borda);
-    border-radius: 16px; overflow: hidden;
-    transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
-    display: flex; flex-direction: column;
-  }
-  .product-card:hover {
-    transform: translateY(-4px); border-color: var(--laranja);
-    box-shadow: 0 8px 30px rgba(255,107,53,0.15);
-  }
-
-  .product-thumb {
-    width: 100%; height: 180px;
-    background: var(--bg3);
-    display: flex; align-items: center; justify-content: center;
-    overflow: hidden; flex-shrink: 0; position: relative;
-  }
-  .product-thumb img {
-    width: 100%; height: 100%; object-fit: cover;
-    transition: transform 0.3s;
-  }
-  .product-card:hover .product-thumb img { transform: scale(1.04); }
-  .product-thumb .no-img { font-size: 52px; }
-
-  .product-body { padding: 12px 14px; flex: 1; display: flex; flex-direction: column; gap: 7px; }
-  .product-name { font-weight: 600; font-size: 13px; line-height: 1.4; color: var(--texto); }
-  .product-code {
-    display: inline-flex; align-items: center; gap: 5px;
-    background: var(--bg3); border: 1px solid var(--borda);
-    border-radius: 6px; padding: 3px 9px; font-size: 11px;
-    font-family: monospace; color: var(--laranja);
-    cursor: pointer; width: fit-content; transition: background 0.2s; user-select: none;
-  }
-  .product-code:hover { background: rgba(255,107,53,0.12); }
-
-  .product-footer { padding: 0 14px 13px; }
-  .btn-shopee {
-    display: block; width: 100%;
-    background: linear-gradient(90deg, var(--laranja), var(--laranja-deep));
-    color: #fff; text-align: center; padding: 10px;
-    border-radius: 10px; font-weight: 700; font-size: 13px;
-    text-decoration: none; transition: opacity 0.2s;
-  }
-  .btn-shopee:hover { opacity: 0.88; }
-
-  /* EMPTY */
-  .empty-state { text-align: center; padding: 40px 20px; color: var(--subtexto); }
-  .empty-state .emo { font-size: 44px; margin-bottom: 10px; }
-
-  /* MODAL */
-  .modal {
-    display: none; position: fixed; top: 0; left: 0;
-    width: 100%; height: 100%; background: rgba(0,0,0,0.8);
-    z-index: 200; align-items: center; justify-content: center;
-  }
-  .modal.active { display: flex; }
-  .modal-content {
-    background: var(--card); border: 1px solid var(--borda);
-    border-radius: 16px; padding: 28px; max-width: 500px;
-    width: 90%; max-height: 90vh; overflow-y: auto;
-  }
-  .modal-header {
-    font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700;
-    margin-bottom: 20px; display: flex;
-    justify-content: space-between; align-items: center;
-  }
-  .modal-close {
-    background: none; border: none; color: var(--subtexto);
-    font-size: 24px; cursor: pointer;
-  }
-
-  .form-group {
-    margin-bottom: 14px;
-  }
-  .form-group label {
-    display: block; font-size: 11px; color: var(--subtexto);
-    margin-bottom: 5px; font-weight: 600; text-transform: uppercase;
-  }
-  .form-group input, .form-group textarea {
-    width: 100%; background: var(--bg3); border: 1px solid var(--borda);
-    border-radius: 10px; padding: 9px 12px; color: var(--texto);
-    font-family: 'DM Sans', sans-serif; font-size: 13px; outline: none; transition: border 0.2s;
-  }
-  .form-group input:focus, .form-group textarea:focus { border-color: var(--laranja); }
-  .form-group textarea { resize: vertical; min-height: 80px; }
+  .search-input:focus { border-color: var(--gold); }
 
   .btn {
-    border: none; border-radius: 10px; padding: 10px 18px; font-weight: 700;
-    font-size: 13px; cursor: pointer; transition: all 0.2s; font-family: 'DM Sans', sans-serif;
+    padding: 9px 18px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
   }
-  .btn-primary { background: var(--laranja); color: #fff; }
-  .btn-primary:hover { background: var(--laranja-deep); }
+  .btn-primary { background: var(--gold); color: var(--navy); }
+  .btn-primary:hover { background: var(--gold-light); }
+  .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--navy); }
+  .btn-outline:hover { border-color: var(--gold); color: var(--gold); }
+  .btn-mbrf { background: var(--mbrf-purple); color: white; }
+  .btn-mbrf:hover { opacity: 0.88; }
+  .btn-food { background: var(--food-teal); color: white; }
+  .btn-food:hover { opacity: 0.88; }
+  .btn-reserva { background: var(--reserva-blue); color: white; }
+  .btn-reserva:hover { opacity: 0.88; }
 
-  /* TOAST */
-  .toast {
-    position: fixed; bottom: 22px; right: 22px;
-    background: #222; color: #fff; padding: 11px 18px;
-    border-radius: 12px; font-size: 13px;
-    border-left: 3px solid var(--verde);
-    opacity: 0; transform: translateY(10px);
-    transition: all 0.3s; pointer-events: none; z-index: 999;
+  .table-wrap {
+    background: var(--white);
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+    box-shadow: 0 2px 12px rgba(26,35,64,0.06);
   }
-  .toast.show { opacity: 1; transform: translateY(0); }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  thead { background: var(--navy); }
+  th {
+    padding: 13px 16px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--gold-light);
+    white-space: nowrap;
+  }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: #F5F3EE; }
+  td { padding: 13px 16px; color: var(--navy); vertical-align: middle; }
 
-  /* SUPORTE PÚBLICO */
-  .support-thread {
-    background: var(--card); border: 1px solid var(--borda);
-    border-radius: 12px; padding: 14px; margin-bottom: 12px;
+  /* Clickable guest name */
+  .guest-name {
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    color: var(--navy);
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    transition: color 0.15s;
+    border-bottom: 1px dashed transparent;
   }
-  .support-thread-header {
-    display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;
-  }
-  .support-thread-name { font-weight: 700; color: var(--laranja); }
-  .support-thread-phone { font-size: 11px; color: var(--subtexto); margin-top: 2px; }
-  .support-thread-badge { font-size: 11px; padding: 3px 8px; border-radius: 6px; background: rgba(16,185,129,0.15); color: var(--verde); }
-  .support-thread-badge.pending { background: rgba(255,107,53,0.15); color: var(--laranja); }
-  .support-thread-message { font-size: 13px; line-height: 1.4; margin-top: 8px; padding: 10px; background: var(--bg3); border-radius: 8px; }
-  .support-thread-date { font-size: 11px; color: var(--subtexto); margin-top: 8px; }
-  .support-responses { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--borda); }
-  .response-item { background: var(--bg3); padding: 10px; border-radius: 8px; margin-bottom: 8px; font-size: 12px; }
-  .response-from { font-weight: 700; margin-bottom: 4px; color: var(--texto); }
-  .response-from.admin { color: var(--laranja); }
+  .guest-name:hover { color: var(--gold); border-bottom-color: var(--gold); }
+  .guest-room { color: var(--gray); font-size: 12px; margin-top: 2px; }
 
-  footer {
-    text-align: center; padding: 20px; color: var(--subtexto); font-size: 12px;
-    border-top: 1px solid var(--borda); margin-top: 40px;
+  .badge-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .badge-pago { background: var(--green-light); color: var(--green); }
+  .badge-pendente { background: var(--amber-light); color: var(--amber); }
+  .badge-vencido { background: var(--red-light); color: var(--red); }
+  .badge-mbrf { background: var(--mbrf-light); color: var(--mbrf-purple); }
+  .badge-reserva { background: var(--reserva-light); color: var(--reserva-blue); }
+  .badge-confirmada { background: var(--green-light); color: var(--green); }
+  .badge-pendente-r { background: var(--amber-light); color: var(--amber); }
+
+  .dias-bar { display: flex; align-items: center; gap: 8px; }
+  .bar-bg { flex: 1; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; max-width: 80px; }
+  .bar-fill { height: 100%; border-radius: 3px; background: var(--gold); transition: width 0.4s; }
+  .bar-fill.over { background: var(--red); }
+  .bar-text { font-size: 12px; color: var(--gray); white-space: nowrap; }
+
+  .actions { display: flex; gap: 6px; flex-wrap: wrap; }
+  .btn-sm {
+    padding: 5px 10px;
+    font-size: 11px;
+    border-radius: 6px;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: white;
+    color: var(--navy);
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    transition: all 0.15s;
+  }
+  .btn-sm:hover { border-color: var(--gold); color: var(--gold); }
+  .btn-sm.danger:hover { border-color: var(--red); color: var(--red); }
+  .btn-sm.success:hover { border-color: var(--green); color: var(--green); }
+  .btn-sm.checkout-btn:hover { border-color: var(--red); color: var(--red); background: var(--red-light); }
+
+  .alert-paid {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--green-light);
+    color: var(--green);
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 6px;
+  }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; display: inline-block; }
+
+  /* ── MODALS ── */
+  .modal-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(26,35,64,0.55);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--white);
+    border-radius: 14px;
+    width: 520px;
+    max-width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 32px;
+    box-shadow: 0 20px 60px rgba(26,35,64,0.25);
+    position: relative;
+  }
+  .modal-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    color: var(--navy);
+    margin-bottom: 22px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+  .form-row.full { grid-template-columns: 1fr; }
+  .form-group { display: flex; flex-direction: column; gap: 5px; }
+  .form-label { font-size: 11px; font-weight: 600; color: var(--gray); text-transform: uppercase; letter-spacing: 0.8px; }
+  .form-input, .form-select {
+    padding: 9px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 13px;
+    font-family: 'Inter', sans-serif;
+    color: var(--navy);
+    background: white;
+    outline: none;
+  }
+  .form-input:focus, .form-select:focus { border-color: var(--gold); }
+  .modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--border); }
+  .modal-close {
+    position: absolute; top: 16px; right: 16px;
+    background: none; border: none; font-size: 20px;
+    cursor: pointer; color: var(--gray); line-height: 1;
+  }
+  .modal-close:hover { color: var(--navy); }
+
+  /* ── GUEST INFO MODAL ── */
+  .info-modal {
+    width: 480px;
+  }
+  .info-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .info-avatar {
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .info-avatar.hotel { background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%); color: var(--navy); }
+  .info-avatar.mbrf { background: linear-gradient(135deg, var(--mbrf-purple) 0%, #7B55B8 100%); color: white; }
+  .info-name { font-family: 'Playfair Display', serif; font-size: 20px; color: var(--navy); }
+  .info-sub { font-size: 12px; color: var(--gray); margin-top: 3px; }
+
+  .info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 20px;
+  }
+  .info-card {
+    background: var(--cream);
+    border-radius: 10px;
+    padding: 14px 16px;
+    border: 1px solid var(--border);
+  }
+  .info-card-label { font-size: 10px; color: var(--gray); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+  .info-card-value { font-size: 16px; font-weight: 700; color: var(--navy); }
+  .info-card-sub { font-size: 11px; color: var(--gray); margin-top: 2px; }
+  .info-card.highlight { background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%); border-color: var(--gold); }
+  .info-card.highlight .info-card-label { color: rgba(26,35,64,0.65); }
+  .info-card.highlight .info-card-value { color: var(--navy); }
+  .info-card.highlight .info-card-sub { color: rgba(26,35,64,0.65); }
+  .info-card.red-card { background: var(--red-light); border-color: #E8B0B0; }
+  .info-card.red-card .info-card-value { color: var(--red); }
+  .info-card.green-card { background: var(--green-light); border-color: #A8D8BC; }
+  .info-card.green-card .info-card-value { color: var(--green); }
+
+  .info-progress-wrap {
+    margin-bottom: 20px;
+    background: var(--cream);
+    border-radius: 10px;
+    padding: 14px 16px;
+    border: 1px solid var(--border);
+  }
+  .info-progress-label { font-size: 11px; color: var(--gray); margin-bottom: 8px; display: flex; justify-content: space-between; }
+  .info-progress-bar { height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
+  .info-progress-fill { height: 100%; border-radius: 4px; background: var(--gold); transition: width 0.5s; }
+  .info-progress-fill.over { background: var(--red); }
+  .info-progress-fill.paid { background: var(--green); }
+
+  .info-obs {
+    background: var(--amber-light);
+    border: 1px solid #E0C87A;
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 13px;
+    color: var(--amber);
+    margin-bottom: 16px;
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
   }
 
-  @media(max-width: 768px) {
-    .header-inner { flex-wrap: wrap; height: auto; gap: 10px; padding: 10px 0; }
-    .search-bar { order: 3; width: 100%; min-width: 100%; }
-    .products-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+  .info-footer {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+  }
+
+  /* ── SECTION ── */
+  .section-header {
+    border-radius: 10px;
+    padding: 20px 24px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .section-header.mbrf { background: linear-gradient(135deg, var(--mbrf-purple) 0%, #3D2760 100%); }
+  .section-header.food { background: linear-gradient(135deg, var(--food-teal) 0%, #0F5449 100%); }
+  .section-header.reserva { background: linear-gradient(135deg, var(--reserva-blue) 0%, #102E55 100%); }
+  .section-header-text h2 { font-family: 'Playfair Display', serif; font-size: 20px; color: white; }
+  .section-header-text p { font-size: 12px; color: rgba(255,255,255,0.65); margin-top: 2px; }
+  .section-logo { font-size: 28px; font-weight: 900; color: white; letter-spacing: -1px; opacity: 0.85; }
+
+  /* ── REFEIÇÕES ── */
+  .meal-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+  .meal-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 1px 6px rgba(26,35,64,0.05);
+  }
+  .meal-card-header {
+    padding: 10px 14px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    justify-content: space-between;
+  }
+  .meal-card-header.almoco { background: #FFF8E6; color: var(--amber); border-bottom: 1px solid #F0E0BB; }
+  .meal-card-header.jantar { background: #EDF2FB; color: var(--reserva-blue); border-bottom: 1px solid #C5D5EC; }
+  .meal-card-body { padding: 10px 14px; }
+  .meal-person {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 0;
+    border-bottom: 1px solid #F0EDE8;
+    font-size: 13px;
+  }
+  .meal-person:last-child { border-bottom: none; }
+  .meal-person-name { font-weight: 500; }
+  .meal-person-room { font-size: 11px; color: var(--gray); }
+  .meal-check {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px;
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+  .meal-check.checked { background: var(--green); border-color: var(--green); color: white; }
+
+  /* ── RESERVAS ── */
+  .reserva-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    box-shadow: 0 1px 6px rgba(26,35,64,0.05);
+    transition: box-shadow 0.15s;
+  }
+  .reserva-card:hover { box-shadow: 0 4px 16px rgba(26,35,64,0.1); }
+  .reserva-date-badge {
+    background: var(--reserva-blue);
+    color: white;
+    border-radius: 10px;
+    padding: 10px 14px;
+    text-align: center;
+    min-width: 58px;
+    flex-shrink: 0;
+  }
+  .reserva-date-day { font-size: 22px; font-weight: 700; font-family: 'Playfair Display', serif; line-height: 1; }
+  .reserva-date-mon { font-size: 10px; letter-spacing: 1px; text-transform: uppercase; opacity: 0.8; margin-top: 2px; }
+  .reserva-info { flex: 1; }
+  .reserva-name { font-weight: 600; font-size: 15px; color: var(--navy); }
+  .reserva-details { font-size: 12px; color: var(--gray); margin-top: 3px; display: flex; gap: 12px; flex-wrap: wrap; }
+  .reserva-actions { display: flex; gap: 6px; flex-shrink: 0; }
+
+  .empty-state { text-align: center; padding: 60px 20px; color: var(--gray); }
+  .empty-icon { font-size: 48px; margin-bottom: 12px; }
+  .empty-state h3 { font-size: 16px; color: var(--navy); margin-bottom: 6px; }
+
+  .notif {
+    position: fixed;
+    bottom: 24px; right: 24px;
+    background: var(--green);
+    color: white;
+    padding: 14px 20px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 500;
+    box-shadow: 0 8px 24px rgba(46,125,82,0.35);
+    z-index: 300;
+    display: none;
+    align-items: center;
+    gap: 10px;
+    animation: slideUp 0.3s ease;
+    max-width: calc(100vw - 48px);
+  }
+  .notif.show { display: flex; }
+  .notif.warn { background: var(--amber); box-shadow: 0 8px 24px rgba(176,125,26,0.3); }
+  .notif.danger { background: var(--red); box-shadow: 0 8px 24px rgba(178,59,59,0.3); }
+  @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+  .date-nav {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+  }
+  .date-nav-btn {
+    width: 34px; height: 34px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: white;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+    color: var(--navy);
+  }
+  .date-nav-btn:hover { border-color: var(--gold); color: var(--gold); }
+  .date-display {
+    font-weight: 600;
+    font-size: 15px;
+    color: var(--navy);
+    min-width: 180px;
+    text-align: center;
+  }
+
+  /* BRF badge - sem checkout fixo */
+  .open-stay-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--mbrf-light);
+    color: var(--mbrf-purple);
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 6px;
+  }
+
+  @media (max-width: 900px) {
+    main { padding: 16px; }
+    .stats { grid-template-columns: 1fr 1fr; }
+    header { padding: 0 16px; }
+    .tabs { padding: 0 8px; }
+    .tab { padding: 12px 14px; font-size: 11px; gap: 5px; }
+    th, td { padding: 10px 10px; }
+    .meal-grid { grid-template-columns: 1fr; }
+    .form-row { grid-template-columns: 1fr; }
+    .reserva-card { flex-wrap: wrap; }
+    .info-grid { grid-template-columns: 1fr; }
   }
 </style>
 </head>
 <body>
 
-<!-- HEADER -->
 <header>
-  <div class="header-inner">
-    <a href="/" class="logo">Achadi<span>nhos</span> 🛍️</a>
-    <div class="search-bar">
-      <input type="text" id="searchInput" placeholder="Buscar produto ou código..." />
-      <button onclick="doSearch()">🔍</button>
+  <div class="logo">
+    <div class="logo-icon">DP</div>
+    <div>
+      <div class="logo-text">Don Pita Hotel</div>
+      <div class="logo-sub">Sistema de Hóspedes</div>
     </div>
-    <div class="header-icons">
-      <button class="icon-btn" id="supportBtn" onclick="openSupportModal()" title="Suporte">💬</button>
-      <button class="icon-btn" onclick="viewSupportHistory()" title="Histórico de Suportes">📋</button>
-    </div>
+  </div>
+  <div class="header-date">
+    <span id="clock"></span>
+    <span id="dateDisplay"></span>
   </div>
 </header>
 
-<!-- HERO -->
-<section class="hero">
-  <h1>Encontre os <em>Melhores Deals</em> da Shopee</h1>
-  <p>Produtos organizados por categoria para você economizar tempo</p>
-</section>
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('hotel')">🏨 Hotel</div>
+  <div class="tab" onclick="switchTab('mbrf')">🏢 MBRF <span class="badge" id="mbrfBadge">0</span></div>
+  <div class="tab" onclick="switchTab('reservas')">📋 Reservas <span class="badge badge-blue" id="reservasBadge">0</span></div>
+  <div class="tab" onclick="switchTab('refeicoes')">🍽️ Refeições <span class="badge badge-teal" id="refeicoesBadge">0</span></div>
+</div>
 
-<!-- CATS NAV -->
-<nav class="cats-nav" id="catsNav"></nav>
-
-<!-- MAIN -->
 <main>
-  <div id="cat-search" class="cat-section">
-    <div class="cat-header">
-      <div class="icon">🔎</div>
-      <h2 id="search-title">Resultados da Busca</h2>
+
+  <!-- HOTEL TAB -->
+  <div id="tab-hotel">
+    <div class="stats" id="statsHotel"></div>
+    <div class="toolbar">
+      <div class="toolbar-title">Hóspedes Ativos</div>
+      <input class="search-input" type="text" placeholder="🔍 Buscar hóspede..." oninput="filterTable(this.value,'hotel')">
+      <button class="btn btn-outline" onclick="openModal('hotel')">+ Novo Hóspede</button>
     </div>
-    <div class="products-grid" id="grid-search"></div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Hóspede / Quarto</th>
+            <th>Check-in</th>
+            <th>Previsão Saída</th>
+            <th>Dias no Hotel</th>
+            <th>Dias Pagos</th>
+            <th>Valor Total</th>
+            <th>Status</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="tableHotel"></tbody>
+      </table>
+    </div>
   </div>
-  <div id="all-categories-sections"></div>
+
+  <!-- MBRF TAB -->
+  <div id="tab-mbrf" style="display:none">
+    <div class="section-header mbrf">
+      <div class="section-header-text">
+        <h2>Categoria MBRF</h2>
+        <p>Funcionários BRF — dias acumulando automaticamente, sem data de saída fixa</p>
+      </div>
+      <div class="section-logo">BRF</div>
+    </div>
+    <div class="stats" id="statsMbrf"></div>
+    <div class="toolbar">
+      <div class="toolbar-title">Funcionários BRF</div>
+      <input class="search-input" type="text" placeholder="🔍 Buscar funcionário..." oninput="filterTable(this.value,'mbrf')">
+      <button class="btn btn-mbrf" onclick="openModal('mbrf')">+ Novo Funcionário BRF</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Funcionário / Quarto</th>
+            <th>Matrícula BRF</th>
+            <th>Data Entrada</th>
+            <th>Dias Hospedado</th>
+            <th>Dias Pagos</th>
+            <th>Valor Total</th>
+            <th>Saldo Devedor</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="tableMbrf"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- RESERVAS TAB -->
+  <div id="tab-reservas" style="display:none">
+    <div class="section-header reserva">
+      <div class="section-header-text">
+        <h2>Reservas Futuras</h2>
+        <p>Pré-reservas e check-ins agendados</p>
+      </div>
+      <div class="section-logo">📋</div>
+    </div>
+    <div class="stats" id="statsReservas"></div>
+    <div class="toolbar">
+      <div class="toolbar-title">Reservas</div>
+      <input class="search-input" type="text" placeholder="🔍 Buscar reserva..." oninput="filterReservas(this.value)">
+      <button class="btn btn-reserva" onclick="openReservaModal()">+ Nova Reserva</button>
+    </div>
+    <div id="reservasList"></div>
+  </div>
+
+  <!-- REFEIÇÕES TAB -->
+  <div id="tab-refeicoes" style="display:none">
+    <div class="section-header food">
+      <div class="section-header-text">
+        <h2>Refeições MBRF</h2>
+        <p>Controle de almoço e jantar dos funcionários BRF</p>
+      </div>
+      <div class="section-logo">🍽️</div>
+    </div>
+    <div class="stats" id="statsRefeicoes"></div>
+    <div class="date-nav">
+      <button class="date-nav-btn" onclick="navDay(-1)">‹</button>
+      <div class="date-display" id="foodDateDisplay"></div>
+      <button class="date-nav-btn" onclick="navDay(1)">›</button>
+      <button class="btn btn-food" style="margin-left:auto" onclick="openRefeicaoModal()">+ Adicionar Refeição</button>
+    </div>
+    <div id="refeicoesList"></div>
+  </div>
+
 </main>
 
-<!-- MODAL SUPORTE - ENVIAR -->
-<div class="modal" id="supportModal">
-  <div class="modal-content">
-    <div class="modal-header">
-      <span>💬 Enviar Suporte</span>
-      <button class="modal-close" onclick="closeSupportModal()">✕</button>
-    </div>
-    <div class="form-group">
-      <label>Nome</label>
-      <input type="text" id="supportName" placeholder="Seu nome" />
-    </div>
-    <div class="form-group">
-      <label>Celular / WhatsApp</label>
-      <input type="tel" id="supportPhone" placeholder="(11) 99999-9999" />
-    </div>
-    <div class="form-group">
-      <label>Mensagem</label>
-      <textarea id="supportMessage" placeholder="Descreva seu problema ou dúvida..."></textarea>
-    </div>
-    <div class="form-group">
-      <label>📸 Foto do Produto (Opcional)</label>
-      <input type="file" id="supportImage" accept="image/*" placeholder="Selecione uma imagem" />
-      <div id="imagePreview" style="margin-top: 10px;"></div>
-    </div>
-    <button class="btn btn-primary" style="width:100%; margin-top:14px;" onclick="sendSupport()">📤 Enviar</button>
-  </div>
-</div>
-
-<!-- MODAL SUPORTE - VER E RESPONDER -->
-<div class="modal" id="publicSupportModal">
-  <div class="modal-content">
-    <div class="modal-header">
-      <span>📋 Central de Suporte</span>
-      <button class="modal-close" onclick="closePublicSupport()">✕</button>
-    </div>
-    <div id="publicSupportList" style="max-height: 60vh; overflow-y: auto;"></div>
-  </div>
-</div>
-
-<!-- MODAL HISTÓRICO DE SUPORTES -->
-<div class="modal" id="historyModal">
-  <div class="modal-content">
-    <div class="modal-header">
-      <span>📋 Histórico de Suportes</span>
-      <button class="modal-close" onclick="closeHistoryModal()">✕</button>
-    </div>
-    
-    <div id="supportHistoryList" style="max-height: 400px; overflow-y: auto;"></div>
-  </div>
-</div>
-
-<!-- MODAL RESPONDER SUPORTE -->
-<div class="modal" id="replyModal">
-  <div class="modal-content">
-    <div class="modal-header">
-      <span>💬 Chat de Suporte</span>
-      <button class="modal-close" onclick="closeReplyModal()">✕</button>
-    </div>
-    
-    <!-- HISTÓRICO DE MENSAGENS -->
-    <div id="replyThreadDisplay" style="background: var(--bg3); border-radius: 12px; padding: 14px; margin-bottom: 16px; max-height: 280px; overflow-y: auto; border: 1px solid var(--borda);"></div>
-    
-    <!-- FORMULÁRIO DE RESPOSTA -->
-    <div class="form-group">
-      <label>Sua Mensagem</label>
-      <textarea id="replyText" placeholder="Digite sua resposta ou pergunta..." style="min-height: 80px; resize: none;"></textarea>
-    </div>
-    
-    <button class="btn btn-primary" style="width:100%;" id="sendReplyButton" onclick="sendReply()">📤 Enviar Mensagem</button>
-  </div>
-</div>
-
-<div class="toast" id="toast"></div>
-
-<footer>
-  <div style="max-width: 1100px; margin: 0 auto; padding: 24px 20px;">
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
-      <!-- NOTA 1: PAGAMENTO -->
-      <div style="background: var(--bg3); border: 1px solid var(--borda); border-radius: 12px; padding: 16px; border-left: 3px solid var(--laranja);">
-        <div style="font-weight: 700; font-size: 13px; margin-bottom: 8px;">💳 Pagamento</div>
-        <div style="font-size: 12px; color: var(--subtexto); line-height: 1.6;">
-          O pagamento é feito <strong>direto na Shopee</strong>. Esta página é apenas um catálogo para você encontrar produtos facilmente.
-        </div>
-      </div>
-
-      <!-- NOTA 2: SUPORTE -->
-      <div style="background: var(--bg3); border: 1px solid var(--borda); border-radius: 12px; padding: 16px; border-left: 3px solid #10B981;">
-        <div style="font-weight: 700; font-size: 13px; margin-bottom: 8px;">💬 Suporte</div>
-        <div style="font-size: 12px; color: var(--subtexto); line-height: 1.6;">
-          Não achou o produto? Envie uma foto e a gente procura pra você e te manda o link da Shopee!
-        </div>
+<!-- ── MODAL FICHA DO HÓSPEDE (INFO) ── -->
+<div class="modal-overlay" id="infoModalOverlay">
+  <div class="modal info-modal">
+    <button class="modal-close" onclick="closeInfoModal()">✕</button>
+    <div class="info-header">
+      <div class="info-avatar" id="infoAvatar">A</div>
+      <div>
+        <div class="info-name" id="infoName">—</div>
+        <div class="info-sub" id="infoSub">—</div>
       </div>
     </div>
+    <div class="info-grid" id="infoGrid"></div>
+    <div class="info-progress-wrap" id="infoProgressWrap"></div>
+    <div id="infoObsWrap"></div>
+    <div class="info-footer" id="infoFooter"></div>
+  </div>
+</div>
 
-    <div style="border-top: 1px solid var(--borda); padding-top: 16px; text-align: center; color: var(--subtexto); font-size: 12px;">
-      © 2025 Achadinhos da Shopee · Feito com ❤️
+<!-- MODAL HÓSPEDE / MBRF -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal-title" id="modalTitle">Novo Hóspede</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Nome Completo</label>
+        <input class="form-input" id="f_nome" placeholder="João da Silva">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Quarto</label>
+        <input class="form-input" id="f_quarto" placeholder="101">
+      </div>
+    </div>
+    <div class="form-row" id="f_matricula_row" style="display:none">
+      <div class="form-group">
+        <label class="form-label">Matrícula BRF</label>
+        <input class="form-input" id="f_matricula" placeholder="BRF-00000">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Setor / Cargo</label>
+        <input class="form-input" id="f_setor" placeholder="Produção">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Data Check-in</label>
+        <input class="form-input" type="date" id="f_checkin">
+      </div>
+      <div class="form-group" id="f_checkout_group">
+        <label class="form-label">Data Check-out (previsto)</label>
+        <input class="form-input" type="date" id="f_checkout">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Valor por Diária (R$)</label>
+        <input class="form-input" type="number" id="f_diaria" placeholder="150.00">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Dias Pagos</label>
+        <input class="form-input" type="number" id="f_diasPagos" placeholder="0">
+      </div>
+    </div>
+    <div class="form-row full">
+      <div class="form-group">
+        <label class="form-label">Observações</label>
+        <input class="form-input" id="f_obs" placeholder="Café da manhã incluído, alérgico a frutos do mar...">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" id="btnSalvar" onclick="salvarHospede()">Cadastrar Hóspede</button>
     </div>
   </div>
-</footer>
+</div>
+
+<!-- MODAL RESERVA -->
+<div class="modal-overlay" id="reservaModalOverlay">
+  <div class="modal">
+    <button class="modal-close" onclick="closeReservaModal()">✕</button>
+    <div class="modal-title" id="reservaModalTitle">Nova Reserva</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Nome do Hóspede</label>
+        <input class="form-input" id="r_nome" placeholder="João da Silva">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Quarto</label>
+        <input class="form-input" id="r_quarto" placeholder="101">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Telefone / Contato</label>
+        <input class="form-input" id="r_telefone" placeholder="(xx) 9xxxx-xxxx">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Origem</label>
+        <select class="form-select" id="r_origem">
+          <option value="Direto">Direto</option>
+          <option value="Booking">Booking.com</option>
+          <option value="Airbnb">Airbnb</option>
+          <option value="Indicação">Indicação</option>
+          <option value="Outro">Outro</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Data de Entrada</label>
+        <input class="form-input" type="date" id="r_checkin">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Data de Saída</label>
+        <input class="form-input" type="date" id="r_checkout">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Valor por Diária (R$)</label>
+        <input class="form-input" type="number" id="r_diaria" placeholder="150.00">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Status</label>
+        <select class="form-select" id="r_status">
+          <option value="confirmada">Confirmada</option>
+          <option value="pendente">Pendente</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row full">
+      <div class="form-group">
+        <label class="form-label">Observações</label>
+        <input class="form-input" id="r_obs" placeholder="Pedido especial, nº de pessoas...">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeReservaModal()">Cancelar</button>
+      <button class="btn btn-reserva" id="btnSalvarReserva" onclick="salvarReserva()">Salvar Reserva</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL REFEIÇÃO -->
+<div class="modal-overlay" id="refeicaoModalOverlay">
+  <div class="modal">
+    <button class="modal-close" onclick="closeRefeicaoModal()">✕</button>
+    <div class="modal-title">Adicionar Refeição Manual</div>
+    <div class="form-row full">
+      <div class="form-group">
+        <label class="form-label">Funcionário MBRF</label>
+        <select class="form-select" id="ref_funcionario">
+          <option value="">Selecione...</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Data</label>
+        <input class="form-input" type="date" id="ref_data">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Tipo</label>
+        <select class="form-select" id="ref_tipo">
+          <option value="almoco">🌞 Almoço</option>
+          <option value="jantar">🌙 Jantar</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row full">
+      <div class="form-group">
+        <label class="form-label">Observação</label>
+        <input class="form-input" id="ref_obs" placeholder="Restrição alimentar, pedido especial...">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeRefeicaoModal()">Cancelar</button>
+      <button class="btn btn-food" onclick="salvarRefeicao()">Registrar Refeição</button>
+    </div>
+  </div>
+</div>
+
+<!-- NOTIFICATION -->
+<div class="notif" id="notif">
+  <span id="notifIcon">✅</span>
+  <span id="notifMsg"></span>
+</div>
 
 <script>
-const DEFAULT_CATEGORIES = {
-  masculino: { name: 'Masculino', emoji: '👔', order: 1 },
-  feminino: { name: 'Feminino', emoji: '👗', order: 2 },
-  crianca: { name: 'Criança', emoji: '🧒', order: 3 },
-  tenis: { name: 'Tênis', emoji: '👟', order: 4 }
-};
+// ── DATA ──
+let hospedes = JSON.parse(localStorage.getItem('donpita_hotel') || '[]');
+let mbrfs = JSON.parse(localStorage.getItem('donpita_mbrf') || '[]');
+let reservas = JSON.parse(localStorage.getItem('donpita_reservas') || '[]');
+let refeicoes = JSON.parse(localStorage.getItem('donpita_refeicoes') || '[]');
+let currentTab = 'hotel';
+let editingId = null;
+let editingReservaId = null;
+let foodDate = new Date().toISOString().split('T')[0];
 
-const DEFAULT_PRODUCTS = {
-  masculino: [{ name:"Camiseta Oversized Básica", link:"https://shope.ee/exemplo", emoji:"👔", img:"" }],
-  feminino:  [{ name:"Vestido Floral Midi",       link:"https://shope.ee/exemplo", emoji:"👗", img:"" }],
-  crianca:   [{ name:"Conjunto Infantil Divertido",link:"https://shope.ee/exemplo", emoji:"🧒", img:"" }],
-  tenis:     [{ name:"Tênis Chunky Tendência",     link:"https://shope.ee/exemplo", emoji:"👟", img:"" }]
-};
-
-let currentReplyIndex = null;
-
-function loadProducts() {
-  try { return JSON.parse(localStorage.getItem('achadinhos_products') || 'null') || DEFAULT_PRODUCTS; }
-  catch(e) { return DEFAULT_PRODUCTS; }
+// ── SEED DATA ──
+if (!hospedes.length) {
+  hospedes = [
+    { id: 1, nome: 'Carlos Mendes', quarto: '101', checkin: '2026-06-10', checkout: '2026-06-18', diaria: 180, diasPagos: 8, obs: 'Café da manhã incluído', categoria: 'hotel' },
+    { id: 2, nome: 'Ana Paula Souza', quarto: '205', checkin: '2026-06-13', checkout: '2026-06-20', diaria: 200, diasPagos: 4, obs: '', categoria: 'hotel' },
+    { id: 3, nome: 'Roberto Lima', quarto: '310', checkin: '2026-06-05', checkout: '2026-06-16', diaria: 150, diasPagos: 11, obs: 'Pediu quarto silencioso', categoria: 'hotel' },
+  ];
+  saveHotel();
+}
+if (!mbrfs.length) {
+  // BRF sem checkout fixo — campo checkout omitido ou vazio
+  mbrfs = [
+    { id: 1, nome: 'Fernanda Costa', quarto: '402', matricula: 'BRF-00421', setor: 'Qualidade', checkin: '2026-06-08', checkout: '', diaria: 130, diasPagos: 6, obs: '', categoria: 'mbrf' },
+    { id: 2, nome: 'Marcos Oliveira', quarto: '403', matricula: 'BRF-00188', setor: 'Produção', checkin: '2026-06-12', checkout: '', diaria: 130, diasPagos: 2, obs: '', categoria: 'mbrf' },
+  ];
+  saveMbrf();
+}
+if (!reservas.length) {
+  reservas = [
+    { id: 1, nome: 'Juliana Ferreira', quarto: '202', telefone: '(47) 99999-1234', origem: 'Booking', checkin: '2026-06-20', checkout: '2026-06-24', diaria: 180, status: 'confirmada', obs: 'Casal com criança' },
+    { id: 2, nome: 'Pedro Alves', quarto: '305', telefone: '(47) 98888-5678', origem: 'Direto', checkin: '2026-06-22', checkout: '2026-06-25', diaria: 150, status: 'pendente', obs: '' },
+  ];
+  saveReservas();
 }
 
-function loadCategories() {
-  try { return JSON.parse(localStorage.getItem('achadinhos_categories') || 'null') || DEFAULT_CATEGORIES; }
-  catch(e) { return DEFAULT_CATEGORIES; }
+function saveHotel() { localStorage.setItem('donpita_hotel', JSON.stringify(hospedes)); }
+function saveMbrf() { localStorage.setItem('donpita_mbrf', JSON.stringify(mbrfs)); }
+function saveReservas() { localStorage.setItem('donpita_reservas', JSON.stringify(reservas)); }
+function saveRefeicoes() { localStorage.setItem('donpita_refeicoes', JSON.stringify(refeicoes)); }
+
+// ── UTILS ──
+function today() { return new Date().toISOString().split('T')[0]; }
+function diffDays(a, b) { return Math.max(0, Math.round((new Date(b) - new Date(a)) / 86400000)); }
+function diasNoHotel(checkin) { return Math.max(1, Math.round((new Date() - new Date(checkin + 'T12:00:00')) / 86400000)); }
+function fmt(v) { return 'R$ ' + Number(v).toLocaleString('pt-BR', {minimumFractionDigits:2}); }
+function fmtDate(d) {
+  if (!d) return '—';
+  const [y,m,dd] = d.split('-');
+  return `${dd}/${m}/${y}`;
+}
+function fmtDateFull(d) {
+  if (!d) return '';
+  const dt = new Date(d + 'T12:00:00');
+  return dt.toLocaleDateString('pt-BR', {weekday:'long', day:'2-digit', month:'long', year:'numeric'});
+}
+function initials(nome) {
+  return nome.split(' ').slice(0,2).map(p=>p[0]).join('').toUpperCase();
+}
+function statusPgto(hospede) {
+  const dias = diasNoHotel(hospede.checkin);
+  const pago = hospede.diasPagos;
+  if (pago >= dias) return 'pago';
+  if (hospede.checkout && new Date(hospede.checkout) < new Date(today())) return 'vencido';
+  return 'pendente';
 }
 
-function loadSupport() {
-  try { return JSON.parse(localStorage.getItem('achadinhos_support') || '[]'); }
-  catch(e) { return []; }
+// ── CLOCK ──
+function updateClock() {
+  const now = new Date();
+  document.getElementById('clock').textContent = now.toLocaleTimeString('pt-BR');
+  document.getElementById('dateDisplay').textContent = now.toLocaleDateString('pt-BR', {weekday:'short', day:'2-digit', month:'long'});
+}
+setInterval(updateClock, 1000); updateClock();
+
+// ── TABS ──
+function switchTab(t) {
+  currentTab = t;
+  const tabs = ['hotel','mbrf','reservas','refeicoes'];
+  document.querySelectorAll('.tab').forEach((el,i) => el.classList.toggle('active', tabs[i]===t));
+  tabs.forEach(tab => {
+    const el = document.getElementById('tab-'+tab);
+    if (el) el.style.display = tab===t ? '' : 'none';
+  });
+  renderAll();
 }
 
-function saveSupport(data) {
-  localStorage.setItem('achadinhos_support', JSON.stringify(data));
+// ── RENDER ALL ──
+function renderAll() {
+  renderTable('hotel');
+  renderTable('mbrf');
+  renderStats();
+  renderReservas();
+  renderRefeicoes();
+  document.getElementById('mbrfBadge').textContent = mbrfs.length;
+  document.getElementById('reservasBadge').textContent = reservas.length;
+  document.getElementById('refeicoesBadge').textContent = mbrfs.length;
 }
 
-function genCode(catKey, i) {
-  const prefix = catKey.substring(0, 3).toUpperCase();
-  return prefix + String(i+1).padStart(3, '0');
-}
+function renderTable(cat, filter='') {
+  const data = cat==='hotel' ? hospedes : mbrfs;
+  const tbody = document.getElementById('table'+cap(cat));
+  const rows = data.filter(h => !filter || h.nome.toLowerCase().includes(filter.toLowerCase()) || h.quarto.includes(filter));
+  const isMbrf = cat === 'mbrf';
 
-function thumb(p) {
-  if (p.img) return `<img src="${p.img}" alt="${p.name}" loading="lazy">`;
-  return `<div class="no-img">${p.emoji||'🛍️'}</div>`;
-}
-
-function loadClicks() {
-  try { return JSON.parse(localStorage.getItem('achadinhos_clicks') || '{}'); }
-  catch(e) { return {}; }
-}
-function saveClicks(c) { localStorage.setItem('achadinhos_clicks', JSON.stringify(c)); }
-
-function loadClicksDetailed() {
-  try { return JSON.parse(localStorage.getItem('achadinhos_clicks_detailed') || '[]'); }
-  catch(e) { return []; }
-}
-function saveClicksDetailed(arr) { localStorage.setItem('achadinhos_clicks_detailed', JSON.stringify(arr)); }
-
-function trackClick(catKey, idx) {
-  const key = catKey + '_' + idx;
-  // Objeto simples (contador)
-  const clicks = loadClicks();
-  clicks[key] = (clicks[key] || 0) + 1;
-  saveClicks(clicks);
-  // Detalhado com timestamp
-  const detailed = loadClicksDetailed();
-  detailed.push({ key, ts: new Date().toISOString() });
-  saveClicksDetailed(detailed);
-  // Navegação feita pelo <a href> nativo — sem window.open
-}
-
-function buildCard(p, code, catKey, idx) {
-  const shopeeLink = p.link && p.link.trim() ? p.link : '#';
-  const isClickable = shopeeLink !== '#';
-  const clicks = loadClicks();
-  const clickCount = clicks[catKey + '_' + idx] || 0;
-  const clickBadge = clickCount > 0 ? `<span style="font-size:10px; color:var(--subtexto); margin-left:6px;">👆 ${clickCount}</span>` : '';
-
-  if (isClickable) {
-    // Wrapper <a> cobre o card inteiro — 1 clique = 1 evento, sem bubbling duplicado
-    return `
-    <div class="product-card" style="cursor:pointer;">
-      <a href="${shopeeLink}" target="_blank" rel="noopener noreferrer"
-         onclick="trackClick('${catKey}',${idx})"
-         style="text-decoration:none;color:inherit;display:contents;">
-        <div class="product-thumb">${thumb(p)}</div>
-        <div class="product-body">
-          <div class="product-name">${p.name}</div>
-          <div class="product-code" onclick="event.stopPropagation();event.preventDefault();copyCode('${code}')">${code} 📋</div>
-        </div>
-        <div class="product-footer">
-          <div class="btn-shopee">🛒 Ver na Shopee${clickBadge}</div>
-        </div>
-      </a>
-    </div>`;
+  if (!rows.length) {
+    tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:48px 20px;color:#8A8F9E;">
+      <div style="font-size:36px;margin-bottom:10px;">🛏️</div>
+      <div style="font-weight:600;color:#1A2340;">Nenhum hóspede encontrado</div>
+      <div style="font-size:12px;margin-top:4px;">Cadastre um novo hóspede para começar</div>
+    </td></tr>`;
+    return;
   }
 
-  return `
-    <div class="product-card">
-      <div class="product-thumb">${thumb(p)}</div>
-      <div class="product-body">
-        <div class="product-name">${p.name}</div>
-        <div class="product-code" onclick="copyCode('${code}')">${code} 📋</div>
-      </div>
-      <div class="product-footer"></div>
-    </div>`;
-}
+  tbody.innerHTML = rows.map(h => {
+    const dias = diasNoHotel(h.checkin);
+    const valorTotal = h.diaria * dias;
+    const valorPago = h.diaria * h.diasPagos;
+    const saldo = valorTotal - valorPago;
+    const status = statusPgto(h);
 
-function renderCategories() {
-  const data = loadProducts();
-  const categories = loadCategories();
-  
-  let navHtml = '<a class="cat-btn active" onclick="filterCat(\'all\',this)">🏠 Todos</a>';
-  const sorted = Object.entries(categories)
-    .sort((a, b) => (a[1].order||0) - (b[1].order||0));
-  
-  sorted.forEach(([key, cat]) => {
-    navHtml += `<a class="cat-btn" onclick="filterCat('${key}',this)">${cat.emoji} ${cat.name}</a>`;
-  });
-  document.getElementById('catsNav').innerHTML = navHtml;
-  
-  let sectionsHtml = '';
-  sorted.forEach(([key, cat]) => {
-    const items = data[key]||[];
-    let gridHtml = '';
-    if (items.length === 0) {
-      gridHtml = `<div class="empty-state"><div class="emo">📦</div><p>Nenhum produto ainda</p></div>`;
+    if (isMbrf) {
+      // ── BRF ROW — sem data saída, dias acumulando ──
+      const saldoBadge = saldo > 0
+        ? `<div style="font-weight:700;color:var(--red);">${fmt(saldo)}</div><div style="font-size:11px;color:#8A8F9E;">${dias - h.diasPagos} dias em aberto</div>`
+        : `<div class="alert-paid"><span class="dot"></span> Quitado</div>`;
+
+      return `<tr>
+        <td>
+          <span class="guest-name" onclick="openInfoModal('mbrf',${h.id})" title="Ver ficha completa">👤 ${h.nome}</span>
+          <div class="guest-room">🚪 Quarto ${h.quarto}</div>
+          ${h.obs ? `<div style="font-size:11px;color:#8A8F9E;margin-top:2px;">📝 ${h.obs}</div>` : ''}
+        </td>
+        <td><span class="badge-status badge-mbrf">${h.matricula||'—'}</span><div style="font-size:11px;color:#8A8F9E;margin-top:2px;">${h.setor||''}</div></td>
+        <td>${fmtDate(h.checkin)}</td>
+        <td>
+          <div style="font-weight:700;font-size:16px;color:var(--mbrf-purple);">${dias}d</div>
+          <div class="open-stay-badge" style="margin-top:4px;">⏱ Em aberto</div>
+        </td>
+        <td>
+          <div style="font-weight:600;">${h.diasPagos} dias</div>
+          <div style="font-size:11px;color:#8A8F9E;">${fmt(valorPago)}</div>
+        </td>
+        <td>
+          <div style="font-weight:600;">${fmt(valorTotal)}</div>
+          <div style="font-size:11px;color:#8A8F9E;">${dias}d × ${fmt(h.diaria)}</div>
+        </td>
+        <td>${saldoBadge}</td>
+        <td>
+          <div class="actions">
+            <button class="btn-sm" onclick="registrarPagamento('mbrf',${h.id})">💰 Pagar</button>
+            <button class="btn-sm checkout-btn" onclick="finalizarEstadia('mbrf',${h.id})" title="Finalizar estadia agora">🚪 Saída</button>
+            <button class="btn-sm" onclick="editHospede('mbrf',${h.id})">✏️</button>
+            <button class="btn-sm danger" onclick="removerHospede('mbrf',${h.id})">🗑️</button>
+          </div>
+        </td>
+      </tr>`;
     } else {
-      gridHtml = items.map((p, i) => buildCard(p, genCode(key, i), key, i)).join('');
+      // ── HOTEL ROW ──
+      const totalDias = h.checkout ? diffDays(h.checkin, h.checkout) : dias;
+      const pct = Math.min(100, totalDias ? Math.round(dias/totalDias*100) : 0);
+      const statusBadge = status==='pago'
+        ? `<span class="badge-status badge-pago"><span class="dot"></span> PAGO ✓</span>`
+        : status==='vencido'
+        ? `<span class="badge-status badge-vencido"><span class="dot"></span> VENCIDO</span>`
+        : `<span class="badge-status badge-pendente"><span class="dot"></span> PENDENTE</span>`;
+      const alertaPago = status==='pago'
+        ? `<div class="alert-paid" style="margin-top:4px;"><span class="dot"></span> Estadia quitada</div>` : '';
+
+      return `<tr>
+        <td>
+          <span class="guest-name" onclick="openInfoModal('hotel',${h.id})" title="Ver ficha completa">👤 ${h.nome}</span>
+          <div class="guest-room">🚪 Quarto ${h.quarto}</div>
+          ${h.obs ? `<div style="font-size:11px;color:#8A8F9E;margin-top:2px;">📝 ${h.obs}</div>` : ''}
+        </td>
+        <td>${fmtDate(h.checkin)}</td>
+        <td>${fmtDate(h.checkout) || '<span style="color:var(--gray);font-size:12px;">Em aberto</span>'}</td>
+        <td>
+          <div class="dias-bar">
+            <div class="bar-bg"><div class="bar-fill ${pct>=100?'over':''}" style="width:${pct}%"></div></div>
+            <span class="bar-text">${dias}d</span>
+          </div>
+          <div style="font-size:11px;color:#8A8F9E;margin-top:2px;">Prev. ${totalDias}d</div>
+        </td>
+        <td>
+          <div style="font-weight:600;">${h.diasPagos} dias</div>
+          <div style="font-size:11px;color:#8A8F9E;">${fmt(valorPago)}</div>
+          ${alertaPago}
+        </td>
+        <td>
+          <div style="font-weight:600;">${fmt(valorTotal)}</div>
+          ${saldo > 0 ? `<div style="font-size:11px;color:#B07D1A;">Saldo: ${fmt(saldo)}</div>` : ''}
+        </td>
+        <td>${statusBadge}</td>
+        <td>
+          <div class="actions">
+            <button class="btn-sm" onclick="registrarPagamento('hotel',${h.id})">💰 Pagar</button>
+            <button class="btn-sm checkout-btn" onclick="finalizarEstadia('hotel',${h.id})" title="Finalizar estadia antecipada">🚪 Saída</button>
+            <button class="btn-sm" onclick="editHospede('hotel',${h.id})">✏️</button>
+            <button class="btn-sm danger" onclick="removerHospede('hotel',${h.id})">🗑️</button>
+          </div>
+        </td>
+      </tr>`;
     }
-    
-    sectionsHtml += `
-      <div class="cat-section visible" id="cat-${key}">
-        <div class="cat-header">
-          <div class="icon">${cat.emoji}</div>
-          <h2>${cat.name}</h2>
-        </div>
-        <div class="products-grid" id="grid-${key}">${gridHtml}</div>
-      </div>`;
-  });
-  
-  document.getElementById('all-categories-sections').innerHTML = sectionsHtml;
+  }).join('');
 }
 
-function filterCat(catKey, el) {
-  document.getElementById('cat-search').classList.remove('visible');
-  document.getElementById('searchInput').value = '';
-  
-  const sections = document.querySelectorAll('.cat-section:not(#cat-search)');
-  if (catKey === 'all') {
-    sections.forEach(s => s.classList.add('visible'));
-  } else {
-    sections.forEach(s => s.classList.remove('visible'));
-    const target = document.getElementById('cat-' + catKey);
-    if (target) target.classList.add('visible');
-  }
+function cap(s) { return s.charAt(0).toUpperCase()+s.slice(1); }
 
-  document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
-  if(el) el.classList.add('active');
+// ── STATS ──
+function renderStats() {
+  const ativos = hospedes.length;
+  const pagos = hospedes.filter(h => statusPgto(h)==='pago').length;
+  const pendente = hospedes.filter(h => statusPgto(h)==='pendente').length;
+  const receita = hospedes.reduce((acc,h) => acc + h.diaria * h.diasPagos, 0);
+  document.getElementById('statsHotel').innerHTML = `
+    <div class="stat"><div class="stat-label">Hóspedes Ativos</div><div class="stat-value">${ativos}</div><div class="stat-sub">no hotel agora</div></div>
+    <div class="stat green"><div class="stat-label">Pagamentos OK</div><div class="stat-value">${pagos}</div><div class="stat-sub">estadias quitadas</div></div>
+    <div class="stat red"><div class="stat-label">Pendentes</div><div class="stat-value">${pendente}</div><div class="stat-sub">aguardando pagamento</div></div>
+    <div class="stat"><div class="stat-label">Receita Recebida</div><div class="stat-value" style="font-size:20px;">${fmt(receita)}</div><div class="stat-sub">total em caixa</div></div>
+  `;
+  const ma = mbrfs.length;
+  const mp = mbrfs.filter(h => statusPgto(h)==='pago').length;
+  const mr = mbrfs.reduce((acc,h) => acc + h.diaria * h.diasPagos, 0);
+  const totalDevido = mbrfs.reduce((acc,h) => acc + Math.max(0, h.diaria * diasNoHotel(h.checkin) - h.diaria * h.diasPagos), 0);
+  document.getElementById('statsMbrf').innerHTML = `
+    <div class="stat purple"><div class="stat-label">Funcionários BRF</div><div class="stat-value">${ma}</div><div class="stat-sub">hospedados agora</div></div>
+    <div class="stat green"><div class="stat-label">Pagamentos OK</div><div class="stat-value">${mp}</div><div class="stat-sub">pela empresa</div></div>
+    <div class="stat red"><div class="stat-label">Saldo Total BRF</div><div class="stat-value" style="font-size:18px;">${fmt(totalDevido)}</div><div class="stat-sub">a receber</div></div>
+    <div class="stat purple"><div class="stat-label">Faturado BRF</div><div class="stat-value" style="font-size:20px;">${fmt(mr)}</div><div class="stat-sub">recebido da empresa</div></div>
+  `;
+  const rc = reservas.filter(r => r.status==='confirmada').length;
+  const rp = reservas.filter(r => r.status==='pendente').length;
+  const rProx = reservas.filter(r => diffDays(today(), r.checkin) <= 7 && diffDays(today(), r.checkin) >= 0).length;
+  document.getElementById('statsReservas').innerHTML = `
+    <div class="stat blue"><div class="stat-label">Total Reservas</div><div class="stat-value">${reservas.length}</div><div class="stat-sub">cadastradas</div></div>
+    <div class="stat green"><div class="stat-label">Confirmadas</div><div class="stat-value">${rc}</div><div class="stat-sub">garantidas</div></div>
+    <div class="stat red"><div class="stat-label">Pendentes</div><div class="stat-value">${rp}</div><div class="stat-sub">aguardando confirmação</div></div>
+    <div class="stat blue"><div class="stat-label">Próx. 7 dias</div><div class="stat-value">${rProx}</div><div class="stat-sub">chegando em breve</div></div>
+  `;
+  const refHoje = refeicoes.filter(r => r.data === today());
+  const almocoHoje = refHoje.filter(r => r.tipo==='almoco').length;
+  const jantarHoje = refHoje.filter(r => r.tipo==='jantar').length;
+  const totalMes = refeicoes.filter(r => r.data.startsWith(today().slice(0,7))).length;
+  document.getElementById('statsRefeicoes').innerHTML = `
+    <div class="stat teal"><div class="stat-label">Funcionários BRF</div><div class="stat-value">${mbrfs.length}</div><div class="stat-sub">hospedados</div></div>
+    <div class="stat"><div class="stat-label">Almoços Hoje</div><div class="stat-value">${almocoHoje}</div><div class="stat-sub">registrados</div></div>
+    <div class="stat"><div class="stat-label">Jantares Hoje</div><div class="stat-value">${jantarHoje}</div><div class="stat-sub">registrados</div></div>
+    <div class="stat teal"><div class="stat-label">Total no Mês</div><div class="stat-value">${totalMes}</div><div class="stat-sub">refeições registradas</div></div>
+  `;
 }
 
-function doSearch() {
-  const q = document.getElementById('searchInput').value.trim().toLowerCase();
-  if (!q) { filterCat('all', document.querySelector('.cat-btn')); return; }
-  
-  const data = loadProducts();
-  let res = [];
+// ── FICHA DO HÓSPEDE (INFO MODAL) ──
+function openInfoModal(cat, id) {
+  const arr = cat==='hotel' ? hospedes : mbrfs;
+  const h = arr.find(x => x.id===id);
+  if (!h) return;
 
-  Object.entries(data).forEach(([catKey, items]) => {
-    (items||[]).forEach((p, i) => {
-      const code = genCode(catKey, i);
-      if (p.name.toLowerCase().includes(q) || code.toLowerCase().includes(q)) {
-        res.push({ p, code, catKey, idx: i });
-      }
-    });
-  });
+  const dias = diasNoHotel(h.checkin);
+  const valorTotal = h.diaria * dias;
+  const valorPago = h.diaria * h.diasPagos;
+  const saldo = Math.max(0, valorTotal - valorPago);
+  const status = statusPgto(h);
 
-  document.querySelectorAll('.cat-section:not(#cat-search)').forEach(s => s.classList.remove('visible'));
-  document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
-  
-  document.getElementById('search-title').textContent = `"${q}" — ${res.length} resultado(s)`;
-  document.getElementById('grid-search').innerHTML = res.length
-    ? res.map(r => buildCard(r.p, r.code, r.catKey, r.idx)).join('')
-    : `<div class="empty-state"><div class="emo">🔎</div><p>Nenhum produto encontrado</p></div>`;
-  document.getElementById('cat-search').classList.add('visible');
-}
+  // Avatar
+  const av = document.getElementById('infoAvatar');
+  av.textContent = initials(h.nome);
+  av.className = 'info-avatar ' + cat;
 
-function copyCode(code) {
-  navigator.clipboard.writeText(code).catch(() => {});
-  const t = document.getElementById('toast');
-  t.textContent = '✅ Código ' + code + ' copiado!';
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2200);
-}
+  document.getElementById('infoName').textContent = h.nome;
+  document.getElementById('infoSub').innerHTML = `🚪 Quarto ${h.quarto}${h.matricula ? ` &nbsp;·&nbsp; <span style="color:var(--mbrf-purple);font-weight:600;">${h.matricula}</span>` : ''}${h.setor ? ` &nbsp;·&nbsp; ${h.setor}` : ''}`;
 
-// SUPORTE
-function openSupportModal() {
-  // Verificar se há suporte pendente (não resolvido)
-  const support = loadSupport();
-  const hasPendingSupport = support.some(s => s.status !== 'respondido');
-  
-  if (hasPendingSupport) {
-    showToast('⚠️ Você já tem um suporte aberto. Aguarde o admin resolver.', true);
-    return;
-  }
-  
-  document.getElementById('supportName').value = '';
-  document.getElementById('supportPhone').value = '';
-  document.getElementById('supportMessage').value = '';
-  document.getElementById('supportImage').value = '';
-  document.getElementById('imagePreview').innerHTML = '';
-  document.getElementById('supportModal').classList.add('active');
-}
+  // Grid cards
+  let totalDias = h.checkout ? diffDays(h.checkin, h.checkout) : dias;
+  const pct = totalDias ? Math.min(100, Math.round(dias/totalDias*100)) : 0;
 
-// Pré-visualizar imagem
-document.addEventListener('DOMContentLoaded', function() {
-  const imageInput = document.getElementById('supportImage');
-  if (imageInput) {
-    imageInput.addEventListener('change', function(e) {
-      const file = e.target.files[0];
-      const preview = document.getElementById('imagePreview');
-      
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = function(event) {
-          preview.innerHTML = `<img src="${event.target.result}" style="max-width: 100%; max-height: 200px; border-radius: 8px; margin-top: 10px;">`;
-          // Armazenar a imagem em base64
-          document.getElementById('supportImage').dataset.base64 = event.target.result;
-        };
-        reader.readAsDataURL(file);
-      } else {
-        preview.innerHTML = '';
-      }
-    });
-  }
-});
+  const statusLabel = status==='pago' ? '✅ Quitado' : status==='vencido' ? '⚠️ Vencido' : '⏳ Pendente';
 
-// Função para atualizar estado do botão de suporte
-function updateSupportButtonStatus() {
-  const support = loadSupport();
-  const hasPendingSupport = support.some(s => s.status !== 'respondido');
-  const btn = document.getElementById('supportBtn');
-  
-  if (hasPendingSupport) {
-    btn.classList.add('disabled');
-    btn.disabled = true;
-    btn.title = '🔒 Você tem um suporte aberto. Aguarde a resolução.';
-  } else {
-    btn.classList.remove('disabled');
-    btn.disabled = false;
-    btn.title = 'Suporte';
-  }
-}
-
-// HISTÓRICO DE SUPORTES
-function viewSupportHistory() {
-  const support = loadSupport();
-  
-  // Filtrar apenas os suportes abertos (não resolvidos)
-  const openSupport = support.filter(s => s.status !== 'respondido');
-  
-  if (openSupport.length === 0) {
-    showToast('✅ Você não tem suportes abertos', false);
-    return;
-  }
-  
-  let html = '';
-  support.forEach((s, i) => {
-    // Pular os resolvidos
-    if (s.status === 'respondido') return;
-    
-    const hasAdminResponse = s.responses && s.responses.some(r => r.admin);
-    
-    let statusBadge = '';
-    if (hasAdminResponse) {
-      statusBadge = '<span style="background: #FF6B35; color: white; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600;">🏢 Admin Respondeu</span>';
-    } else {
-      statusBadge = '<span style="background: #FFA500; color: white; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600;">⏳ Aguardando</span>';
-    }
-    
-    html += `
-      <div style="background: var(--bg3); border: 1px solid var(--borda); border-radius: 12px; padding: 14px; margin-bottom: 12px;">
-        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
-          <div>
-            <div style="font-weight: 700; font-size: 13px;">${s.name}</div>
-            <div style="font-size: 12px; color: var(--subtexto);">📱 ${s.phone}</div>
-          </div>
-          ${statusBadge}
-        </div>
-        
-        <div style="background: var(--bg2); padding: 10px; border-radius: 8px; margin-bottom: 10px; font-size: 12px; line-height: 1.5; border-left: 3px solid var(--laranja);">
-          ${s.message}
-        </div>
-        
-        ${s.responses && s.responses.length > 0 ? `
-          <div style="font-size: 11px; color: var(--subtexto); margin-bottom: 10px;">
-            💬 ${s.responses.length} mensagem(ns)
-          </div>
-        ` : ''}
-        
-        <div style="font-size: 11px; color: var(--subtexto); margin-bottom: 10px;">
-          📅 ${s.date}
-        </div>
-        
-        <button class="btn btn-primary" style="padding: 8px 12px; font-size: 12px; width: 100%;" onclick="openHistorySupportDetail(${i})">
-          💬 Ver Conversa
-        </button>
-      </div>
-    `;
-  });
-  
-  document.getElementById('supportHistoryList').innerHTML = html;
-  document.getElementById('historyModal').classList.add('active');
-}
-
-function closeHistoryModal() {
-  document.getElementById('historyModal').classList.remove('active');
-}
-
-function openHistorySupportDetail(idx) {
-  closeHistoryModal();
-  openReplyModal(idx);
-}
-
-function closeSupportModal() {
-  document.getElementById('supportModal').classList.remove('active');
-}
-
-function sendSupport() {
-  const name = document.getElementById('supportName').value.trim();
-  const phone = document.getElementById('supportPhone').value.trim();
-  const message = document.getElementById('supportMessage').value.trim();
-  const imageInput = document.getElementById('supportImage');
-  const image = imageInput.dataset.base64 || null; // Imagem em base64
-
-  if (!name || !phone || !message) {
-    showToast('⚠️ Preencha todos os campos!', true);
-    return;
-  }
-
-  const support = loadSupport();
-  support.push({
-    id: Date.now(),
-    name,
-    phone,
-    message,
-    image, // Salvar imagem em base64
-    date: new Date().toLocaleString('pt-BR'),
-    status: 'novo',
-    responses: []
-  });
-
-  saveSupport(support);
-  showToast('✅ Mensagem enviada! Abra o chat abaixo.');
-  closeSupportModal();
-  
-  // Limpar campos
-  document.getElementById('supportName').value = '';
-  document.getElementById('supportPhone').value = '';
-  document.getElementById('supportMessage').value = '';
-  document.getElementById('supportImage').value = '';
-  document.getElementById('imagePreview').innerHTML = '';
-  
-  // Atualizar status do botão de suporte
-  updateSupportButtonStatus();
-  
-  // Abrir modal de conversa automaticamente
-  setTimeout(() => {
-    openReplyModal(support.length - 1);
-    updateSupportButtonStatus();
-  }, 300);
-}
-
-// VISUALIZAR SUPORTE PÚBLICO
-function viewPublicSupport() {
-  document.getElementById('publicSupportModal').classList.add('active');
-  renderPublicSupport();
-}
-
-function closePublicSupport() {
-  document.getElementById('publicSupportModal').classList.remove('active');
-}
-
-function renderPublicSupport() {
-  const support = loadSupport();
-  const list = document.getElementById('publicSupportList');
-  
-  if (support.length === 0) {
-    list.innerHTML = '<div style="text-align: center; color: var(--subtexto); padding: 30px 20px;">📭 Nenhuma mensagem ainda</div>';
-    return;
-  }
-  
-  let html = '';
-  support.forEach((s, i) => {
-    const badge = s.status === 'novo' 
-      ? '<span class="support-thread-badge pending">⏳ Aguardando Resposta</span>' 
-      : '<span class="support-thread-badge">✅ Respondido</span>';
-    
-    let responsesHtml = '';
-    if (s.responses && s.responses.length > 0) {
-      responsesHtml = '<div class="support-responses"><strong>Respostas:</strong>' +
-        s.responses.map(r => `
-          <div class="response-item">
-            <div class="response-from ${r.admin ? 'admin' : ''}">
-              ${r.admin ? '🏢 Administrador' : '👤 Você'}
-            </div>
-            <div>${r.text}</div>
-            <div style="font-size: 10px; margin-top: 4px; color: var(--subtexto);">${r.date}</div>
-          </div>
-        `).join('') + '</div>';
-    }
-    
-    html += `
-      <div class="support-thread">
-        <div class="support-thread-header">
-          <div>
-            <div class="support-thread-name">${s.name}</div>
-            <div class="support-thread-phone">📱 ${s.phone}</div>
-          </div>
-          ${badge}
-        </div>
-        <div class="support-thread-message">"${s.message}"</div>
-        <div class="support-thread-date">${s.date}</div>
-        ${responsesHtml}
-        <div style="margin-top: 12px;">
-          <button class="btn btn-primary" style="padding: 8px 12px; font-size: 12px;" onclick="openReplyModal(${i})">💬 Responder/Perguntar</button>
-        </div>
-      </div>
-    `;
-  });
-  
-  list.innerHTML = html;
-}
-
-function openReplyModal(idx) {
-  currentReplyIndex = idx;
-  const support = loadSupport();
-  const s = support[idx];
-  
-  // Mostrar mensagem inicial
-  let displayHtml = `
-    <div style="margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--borda);">
-      <div style="font-weight: 700; font-size: 13px; margin-bottom: 4px;">👤 ${s.name}</div>
-      <div style="font-size: 12px; color: var(--subtexto); margin-bottom: 8px;">${s.date}</div>
-      <div style="line-height: 1.5;">${s.message}</div>
-      ${s.image ? `<img src="${s.image}" style="max-width: 100%; max-height: 200px; border-radius: 8px; margin-top: 10px;">` : ''}
+  document.getElementById('infoGrid').innerHTML = `
+    <div class="info-card">
+      <div class="info-card-label">Check-in</div>
+      <div class="info-card-value">${fmtDate(h.checkin)}</div>
+      <div class="info-card-sub">${dias} dias atrás</div>
+    </div>
+    <div class="info-card">
+      <div class="info-card-label">${cat==='mbrf' ? 'Estadia' : 'Previsão Saída'}</div>
+      <div class="info-card-value">${cat==='mbrf' ? '<span style="color:var(--mbrf-purple)">Em aberto ⏱</span>' : fmtDate(h.checkout)}</div>
+      <div class="info-card-sub">${cat==='mbrf' ? 'Dias acumulando' : (h.checkout ? diffDays(today(), h.checkout) + ' dias restantes' : '—')}</div>
+    </div>
+    <div class="info-card highlight">
+      <div class="info-card-label">Dias Hospedado</div>
+      <div class="info-card-value">${dias} dias</div>
+      <div class="info-card-sub">desde o check-in</div>
+    </div>
+    <div class="info-card">
+      <div class="info-card-label">Diária</div>
+      <div class="info-card-value">${fmt(h.diaria)}</div>
+      <div class="info-card-sub">por noite</div>
+    </div>
+    <div class="info-card ${saldo > 0 ? 'red-card' : 'green-card'}">
+      <div class="info-card-label">Saldo Devedor</div>
+      <div class="info-card-value">${saldo > 0 ? fmt(saldo) : 'R$ 0,00'}</div>
+      <div class="info-card-sub">${statusLabel}</div>
+    </div>
+    <div class="info-card">
+      <div class="info-card-label">Total Acumulado</div>
+      <div class="info-card-value">${fmt(valorTotal)}</div>
+      <div class="info-card-sub">${fmt(valorPago)} pago</div>
     </div>
   `;
-  
-  // Mostrar TODO o histórico de respostas
-  if (s.responses && s.responses.length > 0) {
-    s.responses.forEach(r => {
-      displayHtml += `
-        <div style="margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid var(--borda);">
-          <div style="font-weight: 700; font-size: 12px; margin-bottom: 4px; color: ${r.admin ? '#FF6B35' : '#10B981'};">
-            ${r.admin ? '🏢 Administrador' : '👤 Você'}
-          </div>
-          <div style="font-size: 13px; line-height: 1.5;">${r.text}</div>
-          ${r.image ? `<img src="${r.image}" style="max-width: 100%; max-height: 200px; border-radius: 8px; margin-top: 8px;">` : ''}
-          <div style="font-size: 11px; color: var(--subtexto); margin-top: 4px;">${r.date}</div>
-        </div>
-      `;
-    });
-  }
-  
-  document.getElementById('replyThreadDisplay').innerHTML = displayHtml;
-  document.getElementById('replyText').value = '';
-  
-  // Verificar se o admin já respondeu
-  const adminResponded = s.responses && s.responses.some(r => r.admin);
-  const sendButton = document.getElementById('sendReplyButton');
-  const replyTextarea = document.getElementById('replyText');
-  
-  if (adminResponded) {
-    // Bloquear respostas do usuário
-    replyTextarea.disabled = true;
-    replyTextarea.placeholder = 'Admin já respondeu. Aguarde uma nova mensagem.';
-    sendButton.disabled = true;
-    sendButton.textContent = '✅ Suporte em Atendimento';
-    sendButton.style.opacity = '0.5';
-    sendButton.style.cursor = 'not-allowed';
+
+  // Progress bar (apenas hotel)
+  const progressWrap = document.getElementById('infoProgressWrap');
+  if (cat === 'hotel' && h.checkout) {
+    const pctPago = Math.min(100, valorTotal > 0 ? Math.round(valorPago/valorTotal*100) : 0);
+    progressWrap.innerHTML = `
+      <div class="info-progress-label">
+        <span>Progresso da estadia</span>
+        <span>${dias}d de ${totalDias}d (${pct}%)</span>
+      </div>
+      <div class="info-progress-bar">
+        <div class="info-progress-fill ${pct>=100?'over':''}" style="width:${pct}%"></div>
+      </div>
+      <div class="info-progress-label" style="margin-top:10px;">
+        <span>Pagamento</span>
+        <span>${h.diasPagos} dias pagos (${pctPago}%)</span>
+      </div>
+      <div class="info-progress-bar">
+        <div class="info-progress-fill paid" style="width:${pctPago}%"></div>
+      </div>
+    `;
+    progressWrap.style.display = '';
+  } else if (cat === 'mbrf') {
+    const pctPago = Math.min(100, valorTotal > 0 ? Math.round(valorPago/valorTotal*100) : 0);
+    progressWrap.innerHTML = `
+      <div class="info-progress-label">
+        <span>Pagamento BRF</span>
+        <span>${h.diasPagos} de ${dias} dias pagos (${pctPago}%)</span>
+      </div>
+      <div class="info-progress-bar">
+        <div class="info-progress-fill paid" style="width:${pctPago}%"></div>
+      </div>
+    `;
+    progressWrap.style.display = '';
   } else {
-    // Permitir respostas
-    replyTextarea.disabled = false;
-    replyTextarea.placeholder = 'Digite sua resposta ou pergunta...';
-    sendButton.disabled = false;
-    sendButton.textContent = '📤 Enviar Mensagem';
-    sendButton.style.opacity = '1';
-    sendButton.style.cursor = 'pointer';
+    progressWrap.style.display = 'none';
   }
-  
-  document.getElementById('replyModal').classList.add('active');
+
+  // Obs
+  const obsWrap = document.getElementById('infoObsWrap');
+  obsWrap.innerHTML = h.obs ? `<div class="info-obs">📝 <span>${h.obs}</span></div>` : '';
+
+  // Footer buttons
+  document.getElementById('infoFooter').innerHTML = `
+    <button class="btn btn-outline" onclick="closeInfoModal()">Fechar</button>
+    <button class="btn btn-outline" onclick="closeInfoModal();editHospede('${cat}',${h.id})">✏️ Editar</button>
+    <button class="btn btn-primary" onclick="closeInfoModal();registrarPagamento('${cat}',${h.id})">💰 Registrar Pagamento</button>
+    <button class="btn" style="background:var(--red-light);color:var(--red);border:1px solid #E8B0B0;" onclick="closeInfoModal();finalizarEstadia('${cat}',${h.id})">🚪 Dar Saída</button>
+  `;
+
+  document.getElementById('infoModalOverlay').classList.add('open');
+}
+function closeInfoModal() { document.getElementById('infoModalOverlay').classList.remove('open'); }
+
+// ── FINALIZAR ESTADIA (CHECKOUT ANTECIPADO ou BRF) ──
+function finalizarEstadia(cat, id) {
+  const arr = cat==='hotel' ? hospedes : mbrfs;
+  const h = arr.find(x => x.id===id);
+  if (!h) return;
+
+  const dias = diasNoHotel(h.checkin);
+  const saldo = Math.max(0, h.diaria * dias - h.diaria * h.diasPagos);
+  const msg = cat==='mbrf'
+    ? `Finalizar estadia de ${h.nome}?\n\nDias hospedado: ${dias}\nSaldo em aberto: ${saldo > 0 ? 'R$ ' + saldo.toLocaleString('pt-BR',{minimumFractionDigits:2}) : 'QUITADO'}\n\nAo confirmar, o hóspede será removido do sistema.`
+    : `Dar saída a ${h.nome} HOJE?\n\nCheck-in: ${fmtDate(h.checkin)}\nDias hospedado: ${dias}${h.checkout ? '\nSaída prevista: '+fmtDate(h.checkout) : ''}\nSaldo: ${saldo > 0 ? 'R$ ' + saldo.toLocaleString('pt-BR',{minimumFractionDigits:2}) + ' a receber' : 'QUITADO'}\n\nO hóspede será removido do sistema.`;
+
+  if (!confirm(msg)) return;
+
+  if (cat==='hotel') {
+    hospedes = hospedes.filter(x => x.id!==id);
+    saveHotel();
+  } else {
+    mbrfs = mbrfs.filter(x => x.id!==id);
+    // Limpar refeições
+    refeicoes = refeicoes.filter(r => r.mbrfId !== id);
+    saveMbrf();
+    saveRefeicoes();
+  }
+  renderAll();
+  showNotif(`✅ Saída de ${h.nome} registrada — ${dias} dias hospedado${saldo>0?' · Saldo pendente: R$'+saldo.toLocaleString('pt-BR',{minimumFractionDigits:2}):''}`, saldo>0?'warn':'ok');
 }
 
-function closeReplyModal() {
-  document.getElementById('replyModal').classList.remove('active');
-  currentReplyIndex = null;
-  updateSupportButtonStatus();
-}
+// ── RESERVAS ──
+function renderReservas(filter='') {
+  const list = document.getElementById('reservasList');
+  const sorted = [...reservas]
+    .filter(r => !filter || r.nome.toLowerCase().includes(filter.toLowerCase()) || r.quarto.includes(filter))
+    .sort((a,b) => a.checkin.localeCompare(b.checkin));
 
-function sendReply() {
-  const text = document.getElementById('replyText').value.trim();
-  if (!text) {
-    showToast('⚠️ Digite sua mensagem!', true);
+  if (!sorted.length) {
+    list.innerHTML = `<div class="empty-state"><div class="empty-icon">📋</div><h3>Nenhuma reserva encontrada</h3><p>Adicione novas reservas para controlar check-ins futuros</p></div>`;
     return;
   }
-  
-  const support = loadSupport();
-  const s = support[currentReplyIndex];
-  if (!s.responses) s.responses = [];
-  
-  s.responses.push({
-    text,
-    admin: false,
-    date: new Date().toLocaleString('pt-BR')
+
+  list.innerHTML = sorted.map(r => {
+    const dt = new Date(r.checkin + 'T12:00:00');
+    const day = String(dt.getDate()).padStart(2,'0');
+    const mon = dt.toLocaleDateString('pt-BR', {month:'short'}).replace('.','');
+    const nights = r.checkout ? diffDays(r.checkin, r.checkout) : 0;
+    const total = nights > 0 ? fmt(r.diaria * nights) : '—';
+    const daysUntil = diffDays(today(), r.checkin);
+    const urgency = daysUntil <= 2 ? `<span style="color:#B23B3B;font-weight:600;">⚡ ${daysUntil===0?'Hoje!':daysUntil===1?'Amanhã':'Em '+daysUntil+' dias'}</span>` : `<span>Em ${daysUntil} dias</span>`;
+    const badge = r.status==='confirmada'
+      ? `<span class="badge-status badge-confirmada">✓ Confirmada</span>`
+      : `<span class="badge-status badge-pendente">⏳ Pendente</span>`;
+
+    return `<div class="reserva-card">
+      <div class="reserva-date-badge">
+        <div class="reserva-date-day">${day}</div>
+        <div class="reserva-date-mon">${mon}</div>
+      </div>
+      <div class="reserva-info">
+        <div class="reserva-name">${r.nome}</div>
+        <div class="reserva-details">
+          <span>🚪 Quarto ${r.quarto}</span>
+          ${nights > 0 ? `<span>🌙 ${nights} noite${nights!==1?'s':''} · ${total}</span>` : ''}
+          <span>📱 ${r.telefone||'—'}</span>
+          <span>🔗 ${r.origem||'Direto'}</span>
+          ${urgency}
+        </div>
+        ${r.obs ? `<div style="font-size:11px;color:#8A8F9E;margin-top:4px;">📝 ${r.obs}</div>` : ''}
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;">
+        ${badge}
+        <div class="reserva-actions">
+          <button class="btn-sm success" onclick="confirmarReserva(${r.id})" ${r.status==='confirmada'?'disabled style="opacity:0.4"':''}>✓</button>
+          <button class="btn-sm" onclick="editReserva(${r.id})">✏️</button>
+          <button class="btn-sm" onclick="converterReserva(${r.id})" title="Converter para hóspede ativo">🏨</button>
+          <button class="btn-sm danger" onclick="removerReserva(${r.id})">🗑️</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function filterReservas(val) { renderReservas(val); }
+
+function openReservaModal(id=null) {
+  editingReservaId = id;
+  document.getElementById('reservaModalOverlay').classList.add('open');
+  document.getElementById('reservaModalTitle').textContent = id ? 'Editar Reserva' : 'Nova Reserva';
+  document.getElementById('btnSalvarReserva').textContent = id ? 'Salvar Alterações' : 'Salvar Reserva';
+  if (id) {
+    const r = reservas.find(x => x.id===id);
+    if (r) {
+      document.getElementById('r_nome').value = r.nome;
+      document.getElementById('r_quarto').value = r.quarto;
+      document.getElementById('r_telefone').value = r.telefone||'';
+      document.getElementById('r_origem').value = r.origem||'Direto';
+      document.getElementById('r_checkin').value = r.checkin;
+      document.getElementById('r_checkout').value = r.checkout||'';
+      document.getElementById('r_diaria').value = r.diaria||'';
+      document.getElementById('r_status').value = r.status||'confirmada';
+      document.getElementById('r_obs').value = r.obs||'';
+    }
+  } else {
+    ['r_nome','r_quarto','r_telefone','r_checkin','r_checkout','r_diaria','r_obs'].forEach(fid => {
+      const el = document.getElementById(fid); if (el) el.value='';
+    });
+    document.getElementById('r_origem').value = 'Direto';
+    document.getElementById('r_status').value = 'confirmada';
+  }
+}
+function closeReservaModal() { document.getElementById('reservaModalOverlay').classList.remove('open'); editingReservaId=null; }
+
+function salvarReserva() {
+  const nome = document.getElementById('r_nome').value.trim();
+  const quarto = document.getElementById('r_quarto').value.trim();
+  const checkin = document.getElementById('r_checkin').value;
+  if (!nome || !quarto || !checkin) { showNotif('Preencha nome, quarto e data de entrada!','warn'); return; }
+  const obj = {
+    nome, quarto,
+    telefone: document.getElementById('r_telefone').value.trim(),
+    origem: document.getElementById('r_origem').value,
+    checkin,
+    checkout: document.getElementById('r_checkout').value,
+    diaria: parseFloat(document.getElementById('r_diaria').value)||0,
+    status: document.getElementById('r_status').value,
+    obs: document.getElementById('r_obs').value.trim()
+  };
+  if (editingReservaId) {
+    const r = reservas.find(x => x.id===editingReservaId);
+    if (r) Object.assign(r, obj);
+    showNotif('Reserva atualizada!');
+  } else {
+    const newId = (reservas.length ? Math.max(...reservas.map(x=>x.id)) : 0)+1;
+    reservas.push({id:newId, ...obj});
+    showNotif('Reserva cadastrada!');
+  }
+  saveReservas(); closeReservaModal(); renderAll();
+}
+
+function confirmarReserva(id) {
+  const r = reservas.find(x => x.id===id);
+  if (r) { r.status='confirmada'; saveReservas(); renderAll(); showNotif('Reserva confirmada!'); }
+}
+
+function converterReserva(id) {
+  const r = reservas.find(x => x.id===id);
+  if (!r) return;
+  if (!confirm(`Converter reserva de ${r.nome} para hóspede ativo?`)) return;
+  const newId = (hospedes.length ? Math.max(...hospedes.map(x=>x.id)) : 0)+1;
+  hospedes.push({ id: newId, nome: r.nome, quarto: r.quarto, checkin: r.checkin, checkout: r.checkout||'', diaria: r.diaria||0, diasPagos: 0, obs: r.obs||'', categoria: 'hotel' });
+  reservas = reservas.filter(x => x.id!==id);
+  saveHotel(); saveReservas();
+  renderAll();
+  showNotif(`${r.nome} movido para hóspedes ativos!`);
+}
+
+function editReserva(id) { openReservaModal(id); }
+function removerReserva(id) {
+  if (!confirm('Remover esta reserva?')) return;
+  reservas = reservas.filter(r => r.id!==id);
+  saveReservas(); renderAll(); showNotif('Reserva removida.','warn');
+}
+
+// ── REFEIÇÕES ──
+function navDay(dir) {
+  const d = new Date(foodDate + 'T12:00:00');
+  d.setDate(d.getDate()+dir);
+  foodDate = d.toISOString().split('T')[0];
+  renderRefeicoes();
+}
+
+function renderRefeicoes() {
+  const display = document.getElementById('foodDateDisplay');
+  if (display) display.textContent = fmtDateFull(foodDate);
+  const list = document.getElementById('refeicoesList');
+  if (!list) return;
+
+  if (!mbrfs.length) {
+    list.innerHTML = `<div class="empty-state"><div class="empty-icon">👥</div><h3>Nenhum funcionário BRF cadastrado</h3><p>Cadastre funcionários na aba MBRF primeiro</p></div>`;
+    return;
+  }
+
+  const refDia = refeicoes.filter(r => r.data === foodDate);
+  const almocos = refDia.filter(r => r.tipo==='almoco');
+  const jantares = refDia.filter(r => r.tipo==='jantar');
+
+  const makeList = (tipo, lista) => mbrfs.map(f => {
+    const marcado = lista.find(r => r.mbrfId===f.id);
+    return `<div class="meal-person">
+      <div>
+        <div class="meal-person-name">${f.nome}</div>
+        <div class="meal-person-room">Quarto ${f.quarto} · ${f.setor||''}</div>
+      </div>
+      <div class="meal-check ${marcado?'checked':''}" onclick="toggleRefeicao(${f.id},'${tipo}','${foodDate}')">${marcado?'✓':''}</div>
+    </div>`;
+  }).join('');
+
+  list.innerHTML = `
+    <div class="meal-grid">
+      <div class="meal-card">
+        <div class="meal-card-header almoco">
+          <span>🌞 Almoço</span>
+          <span style="font-size:11px;">${almocos.length}/${mbrfs.length} confirmados</span>
+        </div>
+        <div class="meal-card-body">${makeList('almoco',almocos)}</div>
+      </div>
+      <div class="meal-card">
+        <div class="meal-card-header jantar">
+          <span>🌙 Jantar</span>
+          <span style="font-size:11px;">${jantares.length}/${mbrfs.length} confirmados</span>
+        </div>
+        <div class="meal-card-body">${makeList('jantar',jantares)}</div>
+      </div>
+    </div>
+  `;
+}
+
+function toggleRefeicao(mbrfId, tipo, data) {
+  const idx = refeicoes.findIndex(r => r.mbrfId===mbrfId && r.tipo===tipo && r.data===data);
+  if (idx>=0) refeicoes.splice(idx,1);
+  else {
+    const f = mbrfs.find(x=>x.id===mbrfId);
+    refeicoes.push({ id: Date.now(), mbrfId, nome: f?f.nome:'', tipo, data, obs:'' });
+  }
+  saveRefeicoes(); renderRefeicoes(); renderStats();
+}
+
+function openRefeicaoModal() {
+  const sel = document.getElementById('ref_funcionario');
+  sel.innerHTML = '<option value="">Selecione...</option>' + mbrfs.map(f => `<option value="${f.id}">${f.nome} (Q.${f.quarto})</option>`).join('');
+  document.getElementById('ref_data').value = foodDate;
+  document.getElementById('ref_obs').value = '';
+  document.getElementById('refeicaoModalOverlay').classList.add('open');
+}
+function closeRefeicaoModal() { document.getElementById('refeicaoModalOverlay').classList.remove('open'); }
+function salvarRefeicao() {
+  const mbrfId = parseInt(document.getElementById('ref_funcionario').value);
+  const data = document.getElementById('ref_data').value;
+  const tipo = document.getElementById('ref_tipo').value;
+  const obs = document.getElementById('ref_obs').value.trim();
+  if (!mbrfId || !data) { showNotif('Selecione um funcionário e a data!','warn'); return; }
+  const existe = refeicoes.find(r => r.mbrfId===mbrfId && r.tipo===tipo && r.data===data);
+  if (existe) { showNotif('Já registrado!','warn'); return; }
+  const f = mbrfs.find(x=>x.id===mbrfId);
+  refeicoes.push({ id: Date.now(), mbrfId, nome: f?f.nome:'', tipo, data, obs });
+  saveRefeicoes();
+  foodDate = data;
+  closeRefeicaoModal();
+  renderAll();
+  showNotif(`Refeição registrada para ${f?f.nome:''}!`);
+}
+
+// ── MODAL HÓSPEDE / MBRF ──
+let modalCat = 'hotel';
+function openModal(cat, id=null) {
+  modalCat = cat;
+  editingId = id;
+  document.getElementById('modalOverlay').classList.add('open');
+  const isMbrf = cat==='mbrf';
+  document.getElementById('f_matricula_row').style.display = isMbrf ? 'grid' : 'none';
+  // Para BRF, ocultar campo checkout (opcional)
+  const checkoutGroup = document.getElementById('f_checkout_group');
+  checkoutGroup.style.opacity = isMbrf ? '0.5' : '1';
+  const checkoutInput = document.getElementById('f_checkout');
+  checkoutInput.placeholder = isMbrf ? 'Deixe em branco (estadia aberta)' : '';
+
+  document.getElementById('modalTitle').textContent = isMbrf ? (id ? 'Editar Funcionário BRF' : 'Novo Funcionário BRF') : (id ? 'Editar Hóspede' : 'Novo Hóspede');
+  document.getElementById('btnSalvar').textContent = id ? 'Salvar Alterações' : (isMbrf ? 'Cadastrar Funcionário' : 'Cadastrar Hóspede');
+
+  if (id) {
+    const arr = isMbrf ? mbrfs : hospedes;
+    const h = arr.find(x => x.id===id);
+    if (h) {
+      document.getElementById('f_nome').value = h.nome;
+      document.getElementById('f_quarto').value = h.quarto;
+      document.getElementById('f_checkin').value = h.checkin;
+      document.getElementById('f_checkout').value = h.checkout||'';
+      document.getElementById('f_diaria').value = h.diaria;
+      document.getElementById('f_diasPagos').value = h.diasPagos;
+      document.getElementById('f_obs').value = h.obs||'';
+      document.getElementById('f_matricula').value = h.matricula||'';
+      document.getElementById('f_setor').value = h.setor||'';
+    }
+  } else {
+    ['f_nome','f_quarto','f_checkout','f_diaria','f_obs','f_matricula','f_setor'].forEach(fid => {
+      const el = document.getElementById(fid); if (el) el.value='';
+    });
+    document.getElementById('f_checkin').value = today();
+    document.getElementById('f_diasPagos').value = '0';
+  }
+}
+function closeModal() { document.getElementById('modalOverlay').classList.remove('open'); editingId=null; }
+
+function salvarHospede() {
+  const nome = document.getElementById('f_nome').value.trim();
+  const quarto = document.getElementById('f_quarto').value.trim();
+  const checkin = document.getElementById('f_checkin').value;
+  const diaria = parseFloat(document.getElementById('f_diaria').value);
+  if (!nome || !quarto || !checkin || !diaria) { showNotif('Preencha os campos obrigatórios!','warn'); return; }
+  const obj = {
+    nome, quarto, checkin,
+    checkout: document.getElementById('f_checkout').value,
+    diaria,
+    diasPagos: parseInt(document.getElementById('f_diasPagos').value)||0,
+    obs: document.getElementById('f_obs').value.trim(),
+    matricula: document.getElementById('f_matricula').value.trim(),
+    setor: document.getElementById('f_setor').value.trim(),
+    categoria: modalCat
+  };
+  const arr = modalCat==='hotel' ? hospedes : mbrfs;
+  if (editingId) {
+    const h = arr.find(x => x.id===editingId);
+    if (h) Object.assign(h, obj);
+  } else {
+    const newId = (arr.length ? Math.max(...arr.map(x=>x.id)) : 0)+1;
+    arr.push({id:newId, ...obj});
+  }
+  if (modalCat==='hotel') saveHotel(); else saveMbrf();
+  closeModal(); renderAll();
+  showNotif(editingId ? 'Hóspede atualizado!' : 'Hóspede cadastrado!');
+}
+
+function removerHospede(cat, id) {
+  if (!confirm('Remover este hóspede?')) return;
+  if (cat==='hotel') { hospedes = hospedes.filter(h => h.id!==id); saveHotel(); }
+  else { mbrfs = mbrfs.filter(h => h.id!==id); saveMbrf(); }
+  renderAll(); showNotif('Hóspede removido.','warn');
+}
+function editHospede(cat, id) { openModal(cat, id); }
+
+function registrarPagamento(cat, id) {
+  const arr = cat==='hotel' ? hospedes : mbrfs;
+  const h = arr.find(x => x.id===id);
+  if (!h) return;
+  const dias = diasNoHotel(h.checkin);
+  const extra = prompt(`Quantos dias adicionar ao pagamento de ${h.nome}?\nAtual: ${h.diasPagos} dias | Total hospedado: ${dias} dias`, dias - h.diasPagos);
+  if (extra===null) return;
+  const add = parseInt(extra)||0;
+  h.diasPagos += add;
+  if (cat==='hotel') saveHotel(); else saveMbrf();
+  renderAll();
+  if (statusPgto(h)==='pago') showNotif(`✅ ${h.nome} — Estadia totalmente quitada!`);
+  else showNotif(`💰 ${add} dias registrados para ${h.nome}`);
+}
+
+function filterTable(val, cat) { renderTable(cat, val); }
+
+// ── NOTIFICATION ──
+let notifTimer;
+function showNotif(msg, type='ok') {
+  const el = document.getElementById('notif');
+  document.getElementById('notifMsg').textContent = msg;
+  document.getElementById('notifIcon').textContent = type==='warn' ? '⚠️' : '✅';
+  el.className = 'notif show' + (type==='warn' ? ' warn' : '') + (type==='danger' ? ' danger' : '');
+  clearTimeout(notifTimer);
+  notifTimer = setTimeout(() => el.className='notif', 3800);
+}
+
+// ── CLOSE ON OVERLAY ──
+['modalOverlay','reservaModalOverlay','refeicaoModalOverlay','infoModalOverlay'].forEach(id => {
+  document.getElementById(id).addEventListener('click', function(e) {
+    if (e.target===this) {
+      if (id==='modalOverlay') closeModal();
+      else if (id==='reservaModalOverlay') closeReservaModal();
+      else if (id==='refeicaoModalOverlay') closeRefeicaoModal();
+      else closeInfoModal();
+    }
   });
-  
-  saveSupport(support);
-  showToast('✅ Mensagem enviada!');
-  // Reabrir o modal com o novo histórico
-  openReplyModal(currentReplyIndex);
-}
+});
 
-function showToast(msg, isError = false) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  if(isError) t.style.borderLeftColor = '#DC2626';
-  else t.style.borderLeftColor = '#10B981';
-  setTimeout(() => t.classList.remove('show'), 2300);
-}
-
-document.getElementById('searchInput').addEventListener('keydown', e => { if(e.key==='Enter') doSearch(); });
-window.addEventListener('storage', e => { if(e.key==='achadinhos_products' || e.key==='achadinhos_categories') renderCategories(); });
-
-renderCategories();
-updateSupportButtonStatus();
+// ── INIT ──
+renderAll();
 </script>
 </body>
 </html>
