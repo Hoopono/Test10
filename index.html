@@ -4747,13 +4747,13 @@ const lixoState = {
   mbrf:      false,   // 🗑️ botão deletar funcionários BRF
   estoque:   false,   // 🗑️ botão deletar produtos do Estoque
   quartos:   true,   // 🗑️ botão deletar Quartos
-  historico: true,   // 🗑️ botão Limpar Histórico
+  historico: false,   // 🗑️ botão Limpar Histórico
 };
 
 // ── CONFIGURAÇÃO BOTÃO REINICIAR SISTEMA ──
 // true  = mostra o botão "Reiniciar Sistema" na aba Relatórios (uso em testes)
 // false = oculta o botão completamente (produção)
-const resetSistemaHabilitado = true;
+const resetSistemaHabilitado = false;
 
 function renderZonaReset(){
   const wrap = document.getElementById('zonaResetWrap');
