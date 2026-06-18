@@ -156,6 +156,24 @@
   .mov-resumo-row.total .rv { font-size: 15px; color: var(--estoque-green); }
   .mov-resumo-row.total.saida-total .rv { color: var(--red); }
 
+  /* RESERVA — SELEÇÃO MÚLTIPLA DE QUARTOS */
+  .reserva-quartos-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(108px, 1fr)); gap: 8px;
+    max-height: 190px; overflow-y: auto; padding: 8px;
+    border: 1.5px solid var(--border); border-radius: 11px; background: var(--cream);
+  }
+  .reserva-quarto-chip {
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+    padding: 9px 6px; border-radius: 9px; border: 1.5px solid var(--border); background: white;
+    cursor: pointer; font-family: 'Inter', sans-serif; font-size: 11.5px; font-weight: 600;
+    color: var(--navy); transition: all 0.15s; text-align: center;
+  }
+  .reserva-quarto-chip:hover { border-color: var(--reserva-blue); }
+  .reserva-quarto-chip.selected { border-color: var(--reserva-blue); background: var(--reserva-light); color: var(--reserva-blue); box-shadow: 0 0 0 2px rgba(26,74,122,0.12); }
+  .reserva-quarto-chip .chip-sub { font-size: 9.5px; font-weight: 400; opacity: 0.7; }
+  .reserva-quartos-count { font-size: 11px; color: var(--reserva-blue); font-weight: 700; margin-top: 6px; }
+  .reserva-quartos-empty { font-size: 12px; color: var(--gray); padding: 6px 2px; }
+
   /* HISTÓRICO DE MOVIMENTAÇÕES */
   .mov-hist-list { margin-top: 12px; }
   .mov-hist-item { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid #F3F0EA; font-size: 12px; }
@@ -926,7 +944,39 @@
         <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:6px;" onclick="imprimirCaixaComPeriodo()">🖨️ Gerar e Imprimir</button>
       </div>
 
+      <!-- Relatório de Pessoas BRF -->
+      <div class="rel-card">
+        <div class="rel-icon">🏢</div>
+        <div class="rel-title">Relatório de Pessoas BRF</div>
+        <div class="rel-desc">Lista de todos os funcionários BRF ativos: quantas pessoas, matrícula/código, quarto, setor e tempo de estadia.</div>
+
+        <div class="rel-info">
+          <div class="rel-info-item">Quantidade total de pessoas</div>
+          <div class="rel-info-item">Matrícula e código de cada um</div>
+          <div class="rel-info-item">Tempo de estadia (dias)</div>
+          <div class="rel-info-item">Valor total e saldo pendente</div>
+        </div>
+        <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:6px;" onclick="imprimirRelatorioBRF()">🖨️ Gerar e Imprimir</button>
+      </div>
+
+      <!-- Relatório de Estoque -->
+      <div class="rel-card">
+        <div class="rel-icon">📦</div>
+        <div class="rel-title">Relatório de Estoque</div>
+        <div class="rel-desc">Lista completa de produtos com quantidade atual, preço, valor total em estoque e status (ok, baixo ou zerado).</div>
+
+        <div class="rel-info">
+          <div class="rel-info-item">Quantidade atual por produto</div>
+          <div class="rel-info-item">Valor total em estoque</div>
+          <div class="rel-info-item">Produtos com estoque baixo</div>
+          <div class="rel-info-item">Produtos zerados</div>
+        </div>
+        <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:6px;" onclick="imprimirRelatorioEstoque()">🖨️ Gerar e Imprimir</button>
+      </div>
+
     </div>
+
+    <div id="zonaResetWrap" style="margin-top:28px;"></div>
   </div>
 
 </main>
@@ -1032,6 +1082,40 @@
     </div>
     <div class="form-row">
       <div class="form-group">
+        <label class="form-label">CPF / CNPJ <span style="color:var(--gray);font-weight:400;font-size:9px;">(opcional)</span></label>
+        <input class="form-input" id="f_documento" placeholder="000.000.000-00" maxlength="18" inputmode="numeric" oninput="maskDocumento(this)">
+      </div>
+      <div class="form-group">
+        <label class="form-label">CEP <span style="color:var(--gray);font-weight:400;font-size:9px;">(opcional)</span></label>
+        <input class="form-input" id="f_cep" placeholder="00000-000" maxlength="9" inputmode="numeric" oninput="maskCep(this)" onblur="buscarEnderecoPorCep('f')">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Endereço <span style="color:var(--gray);font-weight:400;font-size:9px;">(opcional)</span></label>
+        <input class="form-input" id="f_endereco" placeholder="Rua / Avenida">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Número <span style="color:var(--gray);font-weight:400;font-size:9px;">(opcional)</span></label>
+        <input class="form-input" id="f_numero" placeholder="123">
+      </div>
+    </div>
+    <div class="form-row three">
+      <div class="form-group">
+        <label class="form-label">Bairro <span style="color:var(--gray);font-weight:400;font-size:9px;">(opcional)</span></label>
+        <input class="form-input" id="f_bairro" placeholder="Centro">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Cidade <span style="color:var(--gray);font-weight:400;font-size:9px;">(opcional)</span></label>
+        <input class="form-input" id="f_cidade" placeholder="Cidade">
+      </div>
+      <div class="form-group">
+        <label class="form-label">UF <span style="color:var(--gray);font-weight:400;font-size:9px;">(opcional)</span></label>
+        <input class="form-input" id="f_estado" placeholder="UF" maxlength="2" style="text-transform:uppercase;">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
         <label class="form-label">Código da Ficha <span style="color:var(--gray);font-weight:400;font-size:9px;">(opcional — preencha ou gere)</span></label>
         <div style="display:flex;gap:6px;align-items:center;">
           <input class="form-input" id="f_codigoFicha" placeholder="Ex: F-2024-001" style="flex:1;">
@@ -1096,16 +1180,19 @@
       </div>
     </div>
 
-    <div class="form-row">
+    <div class="form-row full">
       <div class="form-group">
         <label class="form-label" id="r_nome_label">Nome do Hóspede *</label>
         <input class="form-input" id="r_nome" placeholder="João da Silva">
       </div>
-      <div class="form-group">
-        <label class="form-label">Quarto <span style="color:var(--gray);font-weight:400;font-size:9px;">(disponíveis)</span></label>
-        <select class="form-select" id="r_quarto"></select>
-      </div>
     </div>
+
+    <div style="margin-bottom:14px;">
+      <label class="form-label" style="margin-bottom:8px;display:block;">Quarto(s) <span style="color:var(--gray);font-weight:400;font-size:9px;">(toque para selecionar — pode escolher 2 ou mais)</span></label>
+      <div class="reserva-quartos-grid" id="r_quartos_grid"></div>
+      <div class="reserva-quartos-count" id="r_quartos_count"></div>
+    </div>
+
     <div class="form-row">
       <div class="form-group">
         <label class="form-label">Telefone / Contato</label>
@@ -1134,7 +1221,7 @@
     </div>
     <div class="form-row">
       <div class="form-group">
-        <label class="form-label">Valor por Diária (R$)</label>
+        <label class="form-label">Valor por Diária (R$) <span style="color:var(--gray);font-weight:400;font-size:9px;">(por quarto)</span></label>
         <input class="form-input" type="number" id="r_diaria" placeholder="150.00">
       </div>
       <div class="form-group">
@@ -1145,6 +1232,42 @@
         </select>
       </div>
     </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">CPF / CNPJ <span style="color:var(--gray);font-weight:400;font-size:9px;">(opcional)</span></label>
+        <input class="form-input" id="r_documento" placeholder="000.000.000-00" maxlength="18" inputmode="numeric" oninput="maskDocumento(this)">
+      </div>
+      <div class="form-group">
+        <label class="form-label">CEP <span style="color:var(--gray);font-weight:400;font-size:9px;">(opcional)</span></label>
+        <input class="form-input" id="r_cep" placeholder="00000-000" maxlength="9" inputmode="numeric" oninput="maskCep(this)" onblur="buscarEnderecoPorCep()">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Endereço <span style="color:var(--gray);font-weight:400;font-size:9px;">(opcional)</span></label>
+        <input class="form-input" id="r_endereco" placeholder="Rua / Avenida">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Número <span style="color:var(--gray);font-weight:400;font-size:9px;">(opcional)</span></label>
+        <input class="form-input" id="r_numero" placeholder="123">
+      </div>
+    </div>
+    <div class="form-row three">
+      <div class="form-group">
+        <label class="form-label">Bairro <span style="color:var(--gray);font-weight:400;font-size:9px;">(opcional)</span></label>
+        <input class="form-input" id="r_bairro" placeholder="Centro">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Cidade <span style="color:var(--gray);font-weight:400;font-size:9px;">(opcional)</span></label>
+        <input class="form-input" id="r_cidade" placeholder="Cidade">
+      </div>
+      <div class="form-group">
+        <label class="form-label">UF <span style="color:var(--gray);font-weight:400;font-size:9px;">(opcional)</span></label>
+        <input class="form-input" id="r_estado" placeholder="UF" maxlength="2" style="text-transform:uppercase;">
+      </div>
+    </div>
+
     <div class="form-row full">
       <div class="form-group">
         <label class="form-label">Observações</label>
@@ -1378,6 +1501,64 @@
     <button class="modal-close" onclick="document.getElementById('produtoHistOverlay').classList.remove('open')">✕</button>
     <div class="modal-title" id="produtoHistTitle">📋 Histórico do Produto</div>
     <div id="produtoHistBody"></div>
+  </div>
+</div>
+
+<!-- MODAL EDITAR REGISTRO DO HISTÓRICO -->
+<div class="modal-overlay" id="histEditOverlay">
+  <div class="modal" style="width:520px;">
+    <button class="modal-close" onclick="closeHistEditModal()">✕</button>
+    <div class="modal-title">📁 Editar Registro do Histórico</div>
+    <div class="form-row">
+      <div class="form-group" style="flex:2;">
+        <label class="form-label">Nome</label>
+        <input class="form-input" id="he_nome">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Quarto</label>
+        <input class="form-input" id="he_quarto">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Check-in</label>
+        <input class="form-input" type="date" id="he_checkin">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Dias Hospedado</label>
+        <input class="form-input" type="number" min="0" id="he_dias">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Valor Pago</label>
+        <input class="form-input" type="number" min="0" step="0.01" id="he_pago">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Saldo Devedor</label>
+        <input class="form-input" type="number" min="0" step="0.01" id="he_saldo">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Forma de Pagamento</label>
+        <input class="form-input" id="he_forma" placeholder="Dinheiro, Pix, Débito...">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Matrícula (BRF, opcional)</label>
+        <input class="form-input" id="he_matricula">
+      </div>
+    </div>
+    <div class="form-row full">
+      <div class="form-group">
+        <label class="form-label">Observação</label>
+        <input class="form-input" id="he_obs">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeHistEditModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarHistEdit()">✅ Salvar Alterações</button>
+    </div>
   </div>
 </div>
 
@@ -1758,6 +1939,7 @@ function renderAll(){
   renderQuartos();
   renderHistorico();
   renderEstoque();
+  renderZonaReset();
   document.getElementById('hotelBadge').textContent=hospedes.length;
   document.getElementById('mbrfBadge').textContent=mbrfs.length;
   document.getElementById('reservasBadge').textContent=reservas.length;
@@ -2193,7 +2375,8 @@ function executarSaida(){
     checkin: h.checkin, checkout: today(), saidaISO,
     diasHospedado: dias, diaria: h.diaria, diasPagos: h.diasPagos,
     valorPago, saldoDevedor: saldo,
-    ultimaForma: h.ultimaPgtoForma||'', obs: h.obs||''
+    ultimaForma: h.ultimaPgtoForma||'', obs: h.obs||'',
+    documento: h.documento||'', cep: h.cep||'', endereco: h.endereco||'', numero: h.numero||'', bairro: h.bairro||'', cidade: h.cidade||'', estado: h.estado||''
   });
   saveHistorico();
 
@@ -2217,19 +2400,8 @@ function gerarReciboBRF(h, dias, valorTotal, valorPago, saldo, saidaISO){
   const emissao   = new Date().toLocaleDateString('pt-BR',{timeZone:TZ,day:'2-digit',month:'2-digit',year:'numeric'})
                   + ' às ' + new Date().toLocaleTimeString('pt-BR',{timeZone:TZ,hour:'2-digit',minute:'2-digit'});
 
-  // Consumo de produtos do hóspede
-  const consumo = [];
-  estoque.forEach(p => {
-    (p.movimentacoes||[]).forEach(m => {
-      if(m.tipo==='saida' && !m.venda) {
-        const ref = m.obs||'';
-        // Verifica se o obs tem o nome do funcionário ou referência
-        if(ref.toLowerCase().includes(h.nome.toLowerCase().split(' ')[0].toLowerCase())) {
-          consumo.push({ nome: p.nome, qtd: m.qtd, preco: p.preco, total: p.preco*m.qtd, unidade: p.unidade||'un' });
-        }
-      }
-    });
-  });
+  // Consumo de produtos do hóspede (vinculado pelo ID, com fallback por nome)
+  const consumo = getConsumoHospede('mbrf', h.id);
   const totalConsumo = consumo.reduce((a,c)=>a+c.total, 0);
   const totalGeral = valorTotal + totalConsumo;
   const totalFinal = Math.max(0, totalGeral - valorPago);
@@ -2615,16 +2787,17 @@ function gerarReciboPagamento(cat, h, diasPagos, forma){
 
 // ── FICHA INFO ──
 function getConsumoHospede(cat, id){
-  // Busca todas as movimentações de saída vinculadas a este hóspede
-  const chave = `${cat}:${id}`;
+  // Busca todas as movimentações de saída vinculadas a este hóspede (por ID, com fallback por nome para dados antigos)
+  const arr = cat==='hotel' ? hospedes : mbrfs;
+  const h   = arr.find(x=>x.id===id);
   const itens = [];
   estoque.forEach(p => {
-    const movs = (p.movimentacoes||[]).filter(m => m.tipo==='saida' && m.cliente && (() => {
-      // Tenta casar pelo nome — a movimentação guarda o nome do cliente
-      const arr = cat==='hotel' ? hospedes : mbrfs;
-      const h   = arr.find(x=>x.id===id);
-      return h && m.cliente === h.nome;
-    })());
+    const movs = (p.movimentacoes||[]).filter(m => {
+      if(m.tipo!=='saida') return false;
+      if(m.clienteId!=null) return m.clienteCat===cat && m.clienteId===id;
+      // fallback para movimentações antigas, sem clienteId, vinculadas só pelo nome
+      return h && m.cliente && m.cliente===h.nome;
+    });
     if(movs.length){
       const qtdTotal = movs.reduce((a,m)=>a+m.qtd,0);
       itens.push({ nome: p.nome, codigo: p.codigo||'', qtd: qtdTotal, preco: p.preco, unidade: p.unidade||'un', total: qtdTotal*p.preco });
@@ -2652,7 +2825,7 @@ function openInfoModal(cat, id){
   const av=document.getElementById('infoAvatar');
   av.textContent=initials(h.nome); av.className='info-avatar '+cat;
   document.getElementById('infoName').textContent=h.nome;
-  document.getElementById('infoSub').innerHTML=`🚪 Quarto ${h.quarto||'—'}${h.codigoFicha?` · <span style="background:var(--amber-light);color:var(--amber);font-weight:700;font-size:11px;padding:2px 8px;border-radius:6px;letter-spacing:0.5px;">📋 ${h.codigoFicha}</span>`:''}${h.matricula?` · <span style="color:var(--mbrf-purple);font-weight:600;">${h.matricula}</span>`:''}${h.setor?` · ${h.setor}`:''}`;
+  document.getElementById('infoSub').innerHTML=`🚪 Quarto ${h.quarto||'—'}${h.codigoFicha?` · <span style="background:var(--amber-light);color:var(--amber);font-weight:700;font-size:11px;padding:2px 8px;border-radius:6px;letter-spacing:0.5px;">📋 ${h.codigoFicha}</span>`:''}${h.matricula?` · <span style="color:var(--mbrf-purple);font-weight:600;">${h.matricula}</span>`:''}${h.setor?` · ${h.setor}`:''}${h.documento?`<br>🪪 ${h.documento}`:''}${(h.endereco||h.cidade)?`${h.documento?' &nbsp;·&nbsp; ':'<br>'}📍 ${h.endereco||''}${h.numero?', '+h.numero:''}${h.bairro?' - '+h.bairro:''}${h.cidade?' - '+h.cidade:''}${h.estado?'/'+h.estado:''}${h.cep?' · CEP '+h.cep:''}`:''}`;
 
   let totalDias=h.checkout?diffDays(h.checkin,h.checkout):dias;
   const pct=totalDias?Math.min(100,Math.round(dias/totalDias*100)):0;
@@ -2971,11 +3144,53 @@ function renderHistorico(filter=''){
         <div class="hist-saida-date">${fmtDateTimeShort(x.saidaISO)}</div>
         <div class="hist-saida-time">às ${fmtTime(x.saidaISO)}</div>
         <div class="${x.saldoDevedor>0?'hist-pgto-badge pendente':'hist-pgto-badge quitado'}">${x.saldoDevedor>0?'⚠️ '+fmt(x.saldoDevedor)+' pendente':'✅ Quitado'}</div>
+        <button class="btn-sm" style="margin-top:6px;" onclick="openHistEditModal(${x.id})">✏️ Editar</button>
       </div>
     </div>`;
   }).join('');
 }
 function filterHistorico(val){ renderHistorico(val); }
+
+// ── EDIÇÃO DE REGISTRO DO HISTÓRICO ──
+let histEditId = null;
+function openHistEditModal(id){
+  const x = historico.find(h=>h.id===id);
+  if(!x) return;
+  histEditId = id;
+  document.getElementById('he_nome').value      = x.nome||'';
+  document.getElementById('he_quarto').value     = x.quarto||'';
+  document.getElementById('he_checkin').value    = x.checkin||'';
+  document.getElementById('he_dias').value       = x.diasHospedado||0;
+  document.getElementById('he_pago').value       = x.valorPago||0;
+  document.getElementById('he_saldo').value      = x.saldoDevedor||0;
+  document.getElementById('he_forma').value      = x.ultimaForma||'';
+  document.getElementById('he_matricula').value  = x.matricula||'';
+  document.getElementById('he_obs').value        = x.obs||'';
+  document.getElementById('histEditOverlay').classList.add('open');
+}
+function closeHistEditModal(){
+  document.getElementById('histEditOverlay').classList.remove('open');
+  histEditId = null;
+}
+function salvarHistEdit(){
+  const x = historico.find(h=>h.id===histEditId);
+  if(!x){ closeHistEditModal(); return; }
+  const nome = document.getElementById('he_nome').value.trim();
+  if(!nome){ showNotif('Digite o nome!','warn'); return; }
+  x.nome          = nome;
+  x.quarto        = document.getElementById('he_quarto').value.trim();
+  x.checkin       = document.getElementById('he_checkin').value || x.checkin;
+  x.diasHospedado = Number(document.getElementById('he_dias').value || 0);
+  x.valorPago     = Number(document.getElementById('he_pago').value || 0);
+  x.saldoDevedor  = Number(document.getElementById('he_saldo').value || 0);
+  x.ultimaForma   = document.getElementById('he_forma').value.trim();
+  x.matricula     = document.getElementById('he_matricula').value.trim();
+  x.obs           = document.getElementById('he_obs').value.trim();
+  saveHistorico();
+  closeHistEditModal();
+  renderAll();
+  showNotif(`📁 Registro de ${nome} atualizado!`);
+}
 
 // ── RESERVAS ──
 function renderReservas(filter=''){
@@ -2987,23 +3202,27 @@ function renderReservas(filter=''){
     const day=String(dt.getDate()).padStart(2,'0');
     const mon=dt.toLocaleDateString('pt-BR',{month:'short'}).replace('.','');
     const nights=r.checkout?diffDays(r.checkin,r.checkout):0;
-    const total=nights>0?fmt(r.diaria*nights):'—';
+    const qtdQuartos=(r.quartos&&r.quartos.length)?r.quartos.length:(r.quarto?1:0);
+    const total=nights>0?fmt(r.diaria*nights*(qtdQuartos||1)):'—';
     const daysUntil=diffDays(today(),r.checkin);
     const urgency=daysUntil<=2
       ?`<span style="color:#B23B3B;font-weight:600;">⚡ ${daysUntil===0?'Hoje!':daysUntil===1?'Amanhã':'Em '+daysUntil+'d'}</span>`
       :`<span>Em ${daysUntil}d</span>`;
     const badge=r.status==='confirmada'?`<span class="badge-status badge-confirmada">✓ Confirmada</span>`:`<span class="badge-status badge-pendente">⏳ Pendente</span>`;
+    const quartoLabel=qtdQuartos>1?`🚪 ${qtdQuartos} Quartos: ${r.quartos.join(', ')}`:`🚪 Quarto ${r.quarto||'—'}`;
+    const docCidade=[r.documento?`🪪 ${r.documento}`:'',(r.cidade||r.estado)?`📍 ${r.cidade||''}${r.cidade&&r.estado?'/':''}${r.estado||''}`:''].filter(Boolean).join(' &nbsp; ');
     return `<div class="reserva-card">
       <div class="reserva-date-badge"><div class="reserva-date-day">${day}</div><div class="reserva-date-mon">${mon}</div></div>
       <div class="reserva-info">
         <div class="reserva-name">${r.nome} ${r.tipo==='brf'?'<span style="font-size:10px;background:var(--mbrf-light);color:var(--mbrf-purple);padding:2px 8px;border-radius:10px;font-weight:700;vertical-align:middle;">🏢 BRF</span>':'<span style="font-size:10px;background:var(--reserva-light);color:var(--reserva-blue);padding:2px 8px;border-radius:10px;font-weight:700;vertical-align:middle;">🏨 Hotel</span>'}</div>
         <div class="reserva-details">
-          <span>🚪 Quarto ${r.quarto||'—'}</span>
+          <span>${quartoLabel}</span>
           ${nights>0?`<span>🌙 ${nights} noite${nights!==1?'s':''} · ${total}</span>`:''}
           <span>📱 ${r.telefone||'—'}</span>
           <span>🔗 ${r.origem||'Direto'}</span>
           ${urgency}
         </div>
+        ${docCidade?`<div style="font-size:11px;color:#8A8F9E;margin-top:4px;">${docCidade}</div>`:''}
         ${r.obs?`<div style="font-size:11px;color:#8A8F9E;margin-top:4px;">📝 ${r.obs}</div>`:''}
       </div>
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;">
@@ -3057,20 +3276,87 @@ function selectReservaTipo(tipo){
   }
 }
 
-function populateReservaQuartosSelect(currentQuarto=''){
-  const sel = document.getElementById('r_quarto');
-  if(!sel) return;
+// Seleção múltipla de quartos na Reserva (1 ou mais quartos por reserva)
+let reservaQuartosSelecionados = [];
+
+function renderReservaQuartosGrid(selecionados=[]){
+  reservaQuartosSelecionados = [...selecionados].map(String);
+  const wrap = document.getElementById('r_quartos_grid');
+  if(!wrap) return;
   // Para reservas, mostra todos os quartos (inclusive ocupados) pois a reserva é futura
   const lista = [...quartos]
     .filter(q => q.statusManual !== 'manutencao')
     .sort((a,b) => String(a.numero).localeCompare(String(b.numero), undefined, {numeric:true}));
-  sel.innerHTML = '<option value="">— Selecione um quarto —</option>'
-    + lista.map(q => {
-        const st = getQuartoStatus(q);
-        const stLabel = st === 'livre' ? '✅ Livre' : st === 'ocupado' ? '🛏 Ocupado' : st === 'mbrf' ? '🏢 BRF' : '';
-        const label = `Quarto ${q.numero}${q.andar?' · '+q.andar:''} — ${q.tipo||'Standard'} ${stLabel}`;
-        return `<option value="${q.numero}"${q.numero===currentQuarto?' selected':''}>${label}</option>`;
-      }).join('');
+  if(!lista.length){
+    wrap.innerHTML = '<div class="reserva-quartos-empty">Nenhum quarto cadastrado. Cadastre quartos na aba Quartos.</div>';
+    atualizaContadorReservaQuartos();
+    return;
+  }
+  wrap.innerHTML = lista.map(q => {
+    const st = getQuartoStatus(q);
+    const stLabel = st === 'livre' ? '✅' : st === 'ocupado' ? '🛏' : st === 'mbrf' ? '🏢' : '';
+    const numero = String(q.numero);
+    const sel = reservaQuartosSelecionados.includes(numero);
+    return `<button type="button" class="reserva-quarto-chip${sel?' selected':''}" data-quarto="${numero}" onclick="toggleReservaQuarto('${numero}')">
+      <span>${stLabel} Quarto ${q.numero}</span>
+      <span class="chip-sub">${q.tipo||'Standard'}</span>
+    </button>`;
+  }).join('');
+  atualizaContadorReservaQuartos();
+}
+
+function toggleReservaQuarto(numero){
+  numero = String(numero);
+  const idx = reservaQuartosSelecionados.indexOf(numero);
+  if(idx>=0) reservaQuartosSelecionados.splice(idx,1);
+  else reservaQuartosSelecionados.push(numero);
+  const btn = document.querySelector(`.reserva-quarto-chip[data-quarto="${numero}"]`);
+  if(btn) btn.classList.toggle('selected', reservaQuartosSelecionados.includes(numero));
+  atualizaContadorReservaQuartos();
+}
+
+function atualizaContadorReservaQuartos(){
+  const el = document.getElementById('r_quartos_count');
+  if(!el) return;
+  const n = reservaQuartosSelecionados.length;
+  el.textContent = n===0 ? '' : n===1 ? `1 quarto selecionado: ${reservaQuartosSelecionados[0]}` : `${n} quartos selecionados: ${reservaQuartosSelecionados.join(', ')}`;
+}
+
+// ── MÁSCARAS: CPF/CNPJ, CEP e busca de endereço ──
+function maskDocumento(input){
+  let v = input.value.replace(/\D/g,'').slice(0,14);
+  if(v.length <= 11){
+    v = v.replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d{1,2})$/,'$1-$2');
+  } else {
+    v = v.replace(/(\d{2})(\d)/,'$1.$2').replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d)/,'$1/$2').replace(/(\d{4})(\d{1,2})$/,'$1-$2');
+  }
+  input.value = v;
+}
+function maskCep(input){
+  let v = input.value.replace(/\D/g,'').slice(0,8);
+  if(v.length > 5) v = v.replace(/(\d{5})(\d{1,3})/,'$1-$2');
+  input.value = v;
+}
+function buscarEnderecoPorCep(prefix='r'){
+  const cepInput = document.getElementById(prefix+'_cep');
+  if(!cepInput) return;
+  const cep = cepInput.value.replace(/\D/g,'');
+  if(cep.length !== 8) return;
+  fetch(`https://viacep.com.br/ws/${cep}/json/`)
+    .then(r => r.json())
+    .then(data => {
+      if(data.erro){ showNotif('CEP não encontrado.','warn'); return; }
+      const end = document.getElementById(prefix+'_endereco');
+      const bai = document.getElementById(prefix+'_bairro');
+      const cid = document.getElementById(prefix+'_cidade');
+      const est = document.getElementById(prefix+'_estado');
+      if(end && !end.value) end.value = data.logradouro || '';
+      if(bai) bai.value = data.bairro || '';
+      if(cid) cid.value = data.localidade || '';
+      if(est) est.value = data.uf || '';
+      showNotif('Endereço preenchido pelo CEP!');
+    })
+    .catch(() => showNotif('Não foi possível buscar o CEP (verifique a conexão).','warn'));
 }
 
 function openReservaModal(id=null){
@@ -3082,19 +3368,27 @@ function openReservaModal(id=null){
     const r=reservas.find(x=>x.id===id);
     if(r){
       document.getElementById('r_nome').value=r.nome;
-      populateReservaQuartosSelect(r.quarto||'');
+      const quartosAtuais = (r.quartos && r.quartos.length) ? r.quartos : (r.quarto ? String(r.quarto).split(',').map(s=>s.trim()).filter(Boolean) : []);
+      renderReservaQuartosGrid(quartosAtuais);
       document.getElementById('r_telefone').value=r.telefone||'';
       document.getElementById('r_origem').value=r.origem||'Direto';
       document.getElementById('r_checkin').value=r.checkin;
       document.getElementById('r_checkout').value=r.checkout||'';
       document.getElementById('r_diaria').value=r.diaria||'';
       document.getElementById('r_status').value=r.status||'confirmada';
+      document.getElementById('r_documento').value=r.documento||'';
+      document.getElementById('r_cep').value=r.cep||'';
+      document.getElementById('r_endereco').value=r.endereco||'';
+      document.getElementById('r_numero').value=r.numero||'';
+      document.getElementById('r_bairro').value=r.bairro||'';
+      document.getElementById('r_cidade').value=r.cidade||'';
+      document.getElementById('r_estado').value=r.estado||'';
       document.getElementById('r_obs').value=r.obs||'';
       reservaTipoSel=r.tipo||'hotel'; selectReservaTipo(reservaTipoSel);
     }
   } else {
-    ['r_nome','r_telefone','r_checkin','r_checkout','r_diaria','r_obs'].forEach(fid=>{const el=document.getElementById(fid);if(el)el.value='';});;
-    populateReservaQuartosSelect('');
+    ['r_nome','r_telefone','r_checkin','r_checkout','r_diaria','r_obs','r_documento','r_cep','r_endereco','r_numero','r_bairro','r_cidade','r_estado'].forEach(fid=>{const el=document.getElementById(fid);if(el)el.value='';});;
+    renderReservaQuartosGrid([]);
     document.getElementById('r_origem').value='Direto';
     document.getElementById('r_status').value='confirmada';
     reservaTipoSel='hotel'; selectReservaTipo('hotel');
@@ -3106,9 +3400,29 @@ function salvarReserva(){
   if(reservaTipoSel==='brf' && nome && !nome.startsWith('BRF-')) nome='BRF-'+nome;
   const checkin=document.getElementById('r_checkin').value;
   if(!nome || nome==='BRF-'){ showNotif('Preencha o nome!','warn'); return; }
-  const obj={ nome, quarto:document.getElementById('r_quarto').value, telefone:document.getElementById('r_telefone').value.trim(), origem:document.getElementById('r_origem').value, checkin, checkout:document.getElementById('r_checkout').value, diaria:parseFloat(document.getElementById('r_diaria').value)||0, status:document.getElementById('r_status').value, obs:document.getElementById('r_obs').value.trim(), tipo:reservaTipoSel };
+  const quartosSel=[...reservaQuartosSelecionados];
+  const obj={
+    nome,
+    quartos: quartosSel,
+    quarto: quartosSel.join(', '),
+    telefone:document.getElementById('r_telefone').value.trim(),
+    origem:document.getElementById('r_origem').value,
+    checkin,
+    checkout:document.getElementById('r_checkout').value,
+    diaria:parseFloat(document.getElementById('r_diaria').value)||0,
+    status:document.getElementById('r_status').value,
+    documento:document.getElementById('r_documento').value.trim(),
+    cep:document.getElementById('r_cep').value.trim(),
+    endereco:document.getElementById('r_endereco').value.trim(),
+    numero:document.getElementById('r_numero').value.trim(),
+    bairro:document.getElementById('r_bairro').value.trim(),
+    cidade:document.getElementById('r_cidade').value.trim(),
+    estado:document.getElementById('r_estado').value.trim().toUpperCase(),
+    obs:document.getElementById('r_obs').value.trim(),
+    tipo:reservaTipoSel
+  };
   if(editingReservaId){ const r=reservas.find(x=>x.id===editingReservaId); if(r) Object.assign(r,obj); showNotif('Reserva atualizada!'); }
-  else { reservas.push({id:(reservas.length?Math.max(...reservas.map(x=>x.id)):0)+1,...obj}); showNotif('Reserva cadastrada!'); }
+  else { reservas.push({id:(reservas.length?Math.max(...reservas.map(x=>x.id)):0)+1,...obj}); showNotif(quartosSel.length>1?`Reserva cadastrada com ${quartosSel.length} quartos!`:'Reserva cadastrada!'); }
   saveReservas(); closeReservaModal(); renderAll();
 }
 function confirmarReserva(id){ const r=reservas.find(x=>x.id===id); if(r){r.status='confirmada';saveReservas();renderAll();showNotif('Reserva confirmada!');} }
@@ -3136,23 +3450,42 @@ function executarConversaoReserva(cat){
   const r  = reservas.find(x=>x.id===id);
   if(!r){ closeConvertReservaModal(); return; }
 
-  // Gera código de ficha
-  const emUso=new Set(); [...hospedes,...mbrfs].forEach(h=>{if(h.codigoFicha)emUso.add(h.codigoFicha);});
-  let cod=null; for(let n=10000;n<=99999;n++){if(!emUso.has(String(n))){cod=String(n);break;}} if(!cod) cod=String(Math.floor(Math.random()*90000)+10000);
+  const quartosReserva = (r.quartos && r.quartos.length) ? r.quartos : (r.quarto ? [r.quarto] : ['']);
+  const grupoReserva = quartosReserva.length>1 ? 'RES-'+Date.now() : null;
 
-  if(cat === 'hotel'){
-    hospedes.push({id:(hospedes.length?Math.max(...hospedes.map(x=>x.id)):0)+1,nome:r.nome,quarto:r.quarto||'',checkin:r.checkin||today(),checkout:r.checkout||'',diaria:r.diaria||0,diasPagos:0,obs:r.obs||'',categoria:'hotel',codigoFicha:cod,telefone:r.telefone||''});
-    saveHotel();
-  } else {
-    // BRF — adiciona ao array de mbrfs sem forçar prefixo no nome
-    const matBrf = r.matricula && !r.matricula.startsWith('BRF-') ? 'BRF-'+r.matricula : (r.matricula||'BRF-');
-    mbrfs.push({id:(mbrfs.length?Math.max(...mbrfs.map(x=>x.id)):0)+1,nome:r.nome,quarto:r.quarto||'',checkin:r.checkin||today(),checkout:'',diaria:r.diaria||0,diasPagos:0,obs:r.obs||'',categoria:'mbrf',codigoFicha:cod,matricula:matBrf,setor:r.setor||'',telefone:r.telefone||''});
-    saveMbrf();
+  // Monta observação extra com documento/endereço, se preenchidos
+  const dadosExtra=[];
+  if(r.documento) dadosExtra.push('Doc: '+r.documento);
+  if(r.cep) dadosExtra.push('CEP: '+r.cep);
+  if(r.endereco) dadosExtra.push('End: '+r.endereco+(r.numero?', '+r.numero:''));
+  if(r.bairro) dadosExtra.push(r.bairro);
+  if(r.cidade || r.estado) dadosExtra.push(`${r.cidade||''}${r.cidade&&r.estado?'/':''}${r.estado||''}`);
+  const obsExtra = dadosExtra.length ? (r.obs?r.obs+' · ':'')+dadosExtra.join(' · ') : (r.obs||'');
+
+  const emUso=new Set(); [...hospedes,...mbrfs].forEach(h=>{if(h.codigoFicha)emUso.add(h.codigoFicha);});
+  function proximoCodigo(){
+    let c=null; for(let n=10000;n<=99999;n++){ if(!emUso.has(String(n))){ c=String(n); break; } }
+    if(!c) c=String(Math.floor(Math.random()*90000)+10000);
+    emUso.add(c); return c;
   }
+
+  quartosReserva.forEach(q=>{
+    const cod=proximoCodigo();
+    if(cat === 'hotel'){
+      hospedes.push({id:(hospedes.length?Math.max(...hospedes.map(x=>x.id)):0)+1,nome:r.nome,quarto:q||'',checkin:r.checkin||today(),checkout:r.checkout||'',diaria:r.diaria||0,diasPagos:0,obs:obsExtra,categoria:'hotel',codigoFicha:cod,telefone:r.telefone||'',grupoReserva});
+    } else {
+      // BRF — aplica prefixo BRF- no nome e na matrícula
+      const nomeBrf = r.nome && !r.nome.toUpperCase().startsWith('BRF-') ? 'BRF-'+r.nome : r.nome;
+      const matBrf = r.matricula && !r.matricula.startsWith('BRF-') ? 'BRF-'+r.matricula : (r.matricula||'BRF-');
+      mbrfs.push({id:(mbrfs.length?Math.max(...mbrfs.map(x=>x.id)):0)+1,nome:nomeBrf,quarto:q||'',checkin:r.checkin||today(),checkout:'',diaria:r.diaria||0,diasPagos:0,obs:obsExtra,categoria:'mbrf',codigoFicha:cod,matricula:matBrf,setor:r.setor||'',telefone:r.telefone||'',grupoReserva});
+    }
+  });
+  if(cat === 'hotel') saveHotel(); else saveMbrf();
 
   reservas=reservas.filter(x=>x.id!==id);
   saveReservas(); closeConvertReservaModal(); renderAll();
-  showNotif(`${r.nome} convertido para ${cat==='hotel'?'Hóspede Hotel':'Funcionário BRF'}! Ficha: ${cod}`);
+  const msgQuartos = quartosReserva.length>1 ? ` (${quartosReserva.length} quartos: ${quartosReserva.join(', ')})` : '';
+  showNotif(`${r.nome} convertido para ${cat==='hotel'?'Hóspede Hotel':'Funcionário BRF'}${msgQuartos}!`);
 }
 function editReserva(id){ openReservaModal(id); }
 function removerReserva(id){ reservas=reservas.filter(r=>r.id!==id); saveReservas(); renderAll(); showNotif('Reserva removida.','warn'); }
@@ -3270,6 +3603,13 @@ function preencherDoHistorico(histId){
   if(h.matricula) document.getElementById('f_matricula').value = h.matricula||'';
   if(h.setor) document.getElementById('f_setor').value = h.setor||'';
   if(h.obs) document.getElementById('f_obs').value = h.obs||'';
+  if(h.documento) document.getElementById('f_documento').value = h.documento||'';
+  if(h.cep) document.getElementById('f_cep').value = h.cep||'';
+  if(h.endereco) document.getElementById('f_endereco').value = h.endereco||'';
+  if(h.numero) document.getElementById('f_numero').value = h.numero||'';
+  if(h.bairro) document.getElementById('f_bairro').value = h.bairro||'';
+  if(h.cidade) document.getElementById('f_cidade').value = h.cidade||'';
+  if(h.estado) document.getElementById('f_estado').value = h.estado||'';
   showNotif(`📋 Dados de ${h.nome} carregados do histórico!`);
 }
 
@@ -3283,7 +3623,7 @@ function openModal(cat,id=null){
   const icon=isMbrf?'🏢':'🏨';
   document.getElementById('modalTitle').textContent=isMbrf?(id?`${icon} Editar Funcionário BRF`:`${icon} Novo Funcionário BRF`):(id?`${icon} Editar Hóspede`:`${icon} Novo Hóspede`);
   document.getElementById('btnSalvar').textContent=id?'Salvar Alterações':(isMbrf?'Cadastrar Funcionário':'Cadastrar Hóspede');
-  document.getElementById('f_nome').placeholder = isMbrf ? 'Nome do funcionário' : 'João da Silva';
+  document.getElementById('f_nome').placeholder = isMbrf ? 'BRF-Nome do funcionário' : 'João da Silva';
   const sugestoes=document.getElementById('historico_sugestoes'); if(sugestoes) sugestoes.style.display='none';
   if(id){
     const arr=isMbrf?mbrfs:hospedes;
@@ -3300,10 +3640,17 @@ function openModal(cat,id=null){
       document.getElementById('f_matricula').value=h.matricula||'';
       document.getElementById('f_setor').value=h.setor||'';
       document.getElementById('f_codigoFicha').value=h.codigoFicha||'';
+      document.getElementById('f_documento').value=h.documento||'';
+      document.getElementById('f_cep').value=h.cep||'';
+      document.getElementById('f_endereco').value=h.endereco||'';
+      document.getElementById('f_numero').value=h.numero||'';
+      document.getElementById('f_bairro').value=h.bairro||'';
+      document.getElementById('f_cidade').value=h.cidade||'';
+      document.getElementById('f_estado').value=h.estado||'';
       populateQuartosSelect(cat, h.quarto||'');
     }
   } else {
-    ['f_telefone','f_checkout','f_diaria','f_obs','f_setor','f_codigoFicha'].forEach(fid=>{const el=document.getElementById(fid);if(el)el.value='';});
+    ['f_telefone','f_checkout','f_diaria','f_obs','f_setor','f_codigoFicha','f_documento','f_cep','f_endereco','f_numero','f_bairro','f_cidade','f_estado'].forEach(fid=>{const el=document.getElementById(fid);if(el)el.value='';});
     document.getElementById('f_nome').value = '';
     document.getElementById('f_matricula').value = isMbrf ? 'BRF-' : '';
     document.getElementById('f_checkin').value=today();
@@ -3348,8 +3695,8 @@ async function salvarHospede() {
   const isMbrf  = modalCat === 'mbrf';
 
   if (!nome) { showNotif('Digite o nome!', 'warn'); return; }
-  // Garante prefixo BRF- APENAS na matrícula
-  const nomeFormatado = nome;
+  // Garante prefixo BRF- no nome para funcionários BRF, e na matrícula
+  const nomeFormatado = isMbrf && nome && !nome.toUpperCase().startsWith('BRF-') ? 'BRF-' + nome : nome;
   const matriculaRaw = isMbrf ? (document.getElementById('f_matricula').value.trim()) : '';
   const matriculaFormatada = isMbrf && matriculaRaw && !matriculaRaw.startsWith('BRF-') ? 'BRF-' + matriculaRaw : matriculaRaw;
 
@@ -3364,6 +3711,13 @@ async function salvarHospede() {
     matricula:  matriculaFormatada,
     setor:      isMbrf ? document.getElementById('f_setor').value.trim() : '',
     codigoFicha: document.getElementById('f_codigoFicha').value.trim(),
+    documento:  document.getElementById('f_documento').value.trim(),
+    cep:        document.getElementById('f_cep').value.trim(),
+    endereco:   document.getElementById('f_endereco').value.trim(),
+    numero:     document.getElementById('f_numero').value.trim(),
+    bairro:     document.getElementById('f_bairro').value.trim(),
+    cidade:     document.getElementById('f_cidade').value.trim(),
+    estado:     document.getElementById('f_estado').value.trim().toUpperCase(),
     categoria:  modalCat,
   };
 
@@ -3424,6 +3778,7 @@ const overlayMap = {
   'movModalOverlay':       ()=>closeMovModal(),
   'vendaModalOverlay':     ()=>closeVendaModal(),
   'produtoHistOverlay':    ()=>document.getElementById('produtoHistOverlay').classList.remove('open'),
+  'histEditOverlay':       ()=>closeHistEditModal(),
 };
 Object.entries(overlayMap).forEach(([oid, fn])=>{
   const el=document.getElementById(oid);
@@ -3643,12 +3998,12 @@ function confirmarMovimentacao(){
   if(movTipoSel==='saida' && qtd > atual){ showNotif(`Estoque insuficiente! Disponível: ${atual} ${p.unidade||'un'}.`,'warn'); return; }
 
   const clienteVal = document.getElementById('mov_cliente').value;
-  let clienteNome = '';
+  let clienteNome = '', clienteCat = '', clienteId = null;
   if(clienteVal){
     const [cat,cid] = clienteVal.split(':');
     const arr = cat==='hotel' ? hospedes : mbrfs;
     const h   = arr.find(x=>x.id===parseInt(cid));
-    if(h) clienteNome = h.nome;
+    if(h){ clienteNome = h.nome; clienteCat = cat; clienteId = h.id; }
   }
 
   if(!p.movimentacoes) p.movimentacoes=[];
@@ -3657,6 +4012,8 @@ function confirmarMovimentacao(){
     tipo:   movTipoSel,
     qtd,
     cliente: clienteNome,
+    clienteCat,
+    clienteId,
     obs:    document.getElementById('mov_obs').value.trim(),
     data:   new Date().toISOString(),
   });
@@ -3777,6 +4134,211 @@ function selectRelPeriodo(tipo, val, btn){
 function imprimirHospedesComPeriodo(){ imprimirHospedes(relPeriodo.hospedes); }
 function imprimirCaixaComPeriodo()   { imprimirCaixa(relPeriodo.caixa); }
 
+// ── RELATÓRIO DE PESSOAS BRF ──
+function imprimirRelatorioBRF(){
+  const n = nowBR();
+  const dataHoje = n.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'});
+  const horaHoje = n.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+
+  const lista = [...mbrfs].sort((a,b)=>String(a.quarto||'').localeCompare(String(b.quarto||''),undefined,{numeric:true}));
+
+  const linhas = lista.map(h=>{
+    const dias = diasNoHotel(h.checkin, h.checkinHora);
+    const consumo = getConsumoHospede('mbrf', h.id).reduce((a,c)=>a+c.total,0);
+    const totalQuarto = h.diaria*dias;
+    const totalGeral = totalQuarto + consumo;
+    const pago = h.diaria*h.diasPagos;
+    const saldo = Math.max(0, totalGeral-pago);
+    return `<tr>
+      <td><strong>${h.nome}</strong></td>
+      <td style="text-align:center;">${h.matricula||'—'}</td>
+      <td style="text-align:center;">${h.quarto||'—'}</td>
+      <td>${h.setor||'—'}</td>
+      <td>${fmtDate(h.checkin)}${h.checkinHora?' às '+h.checkinHora:''}</td>
+      <td style="text-align:center;">${dias}d</td>
+      <td style="text-align:right;">${fmt(totalGeral)}${consumo>0?'<br><span style="font-size:9px;color:#1A6B3A;">+'+fmt(consumo)+' estoque</span>':''}</td>
+      <td style="text-align:right;color:${saldo>0?'#B23B3B':'#2E7D52'};">${saldo>0?fmt(saldo):'Quitado'}</td>
+    </tr>`;
+  }).join('');
+
+  const totalPessoas = lista.length;
+  const totalDias = lista.reduce((a,h)=>a+diasNoHotel(h.checkin,h.checkinHora),0);
+  const totalGeralValor = lista.reduce((a,h)=>{
+    const dias = diasNoHotel(h.checkin,h.checkinHora);
+    const consumo = getConsumoHospede('mbrf',h.id).reduce((s,c)=>s+c.total,0);
+    return a + h.diaria*dias + consumo;
+  },0);
+  const totalSaldo = lista.reduce((a,h)=>{
+    const dias = diasNoHotel(h.checkin,h.checkinHora);
+    const consumo = getConsumoHospede('mbrf',h.id).reduce((s,c)=>s+c.total,0);
+    const totalG = h.diaria*dias+consumo;
+    return a + Math.max(0, totalG - h.diaria*h.diasPagos);
+  },0);
+
+  openPrintModal(`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
+  <title>Relatório de Pessoas BRF — Don Pita Hotel</title>
+  <style>
+    body{font-family:Arial,sans-serif;color:#111;margin:0;padding:20px;background:white;}
+    .rpt-header{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #5B3A8C;padding-bottom:14px;margin-bottom:20px;}
+    .rpt-hotel-name{font-size:22px;font-weight:700;color:#1A2340;}
+    .rpt-hotel-sub{font-size:11px;color:#666;letter-spacing:2px;text-transform:uppercase;margin-top:3px;}
+    .rpt-meta{text-align:right;font-size:12px;color:#555;}
+    .rpt-meta strong{display:block;font-size:15px;color:#1A2340;margin-bottom:2px;}
+    .rpt-periodo-badge{display:inline-block;background:#F2EDF9;color:#5B3A8C;padding:3px 10px;border-radius:6px;font-size:11px;font-weight:700;margin-top:4px;}
+    table{width:100%;border-collapse:collapse;font-size:11px;}
+    th{background:#5B3A8C;color:white;padding:8px 8px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:0.8px;}
+    td{padding:7px 8px;border-bottom:1px solid #eee;vertical-align:middle;}
+    tr:nth-child(even) td{background:#f8f8f8;}
+    .totais{background:#1A2340;color:white;border-radius:8px;padding:14px 18px;margin-top:20px;display:flex;gap:30px;flex-wrap:wrap;}
+    .totais-item{flex:1;min-width:120px;}
+    .totais-label{font-size:10px;opacity:0.7;text-transform:uppercase;letter-spacing:1px;}
+    .totais-value{font-size:18px;font-weight:700;color:#E8C97A;margin-top:2px;}
+    .footer{text-align:center;font-size:10px;color:#aaa;margin-top:30px;padding-top:14px;border-top:1px solid #eee;}
+    @media print{body{padding:10px;}button{display:none!important;}}
+  </style></head><body>
+  <div class="rpt-header">
+    <div>
+      <div class="rpt-hotel-name">🏨 Don Pita Hotel</div>
+      <div class="rpt-hotel-sub">Relatório de Pessoas BRF</div>
+      <div class="rpt-periodo-badge">🏢 ${totalPessoas} pessoa(s) no momento</div>
+    </div>
+    <div class="rpt-meta">
+      <strong>${dataHoje}</strong>
+      Emitido às ${horaHoje}
+    </div>
+  </div>
+
+  <table>
+    <thead><tr>
+      <th>Nome</th><th style="text-align:center;">Matrícula</th><th style="text-align:center;">Quarto</th>
+      <th>Setor</th><th>Entrada</th><th style="text-align:center;">Tempo</th>
+      <th style="text-align:right;">Total</th><th style="text-align:right;">Saldo</th>
+    </tr></thead>
+    <tbody>${linhas || '<tr><td colspan="8" style="text-align:center;color:#aaa;">Nenhum funcionário BRF ativo.</td></tr>'}</tbody>
+  </table>
+
+  <div class="totais">
+    <div class="totais-item">
+      <div class="totais-label">Total de Pessoas</div>
+      <div class="totais-value">${totalPessoas}</div>
+    </div>
+    <div class="totais-item">
+      <div class="totais-label">Total de Dias (somados)</div>
+      <div class="totais-value">${totalDias}d</div>
+    </div>
+    <div class="totais-item">
+      <div class="totais-label">Valor Total (diárias + estoque)</div>
+      <div class="totais-value">${fmt(totalGeralValor)}</div>
+    </div>
+    <div class="totais-item">
+      <div class="totais-label">Saldo Pendente</div>
+      <div class="totais-value">${fmt(totalSaldo)}</div>
+    </div>
+  </div>
+
+  <div style="text-align:center;margin-top:24px;">
+    <button onclick="window.print()" style="background:#5B3A8C;color:white;border:none;padding:12px 32px;border-radius:8px;font-size:14px;cursor:pointer;font-weight:700;">🖨️ Imprimir</button>
+  </div>
+  <div class="footer">Don Pita Hotel — Sistema de Gestão · Relatório gerado em ${dataHoje} às ${horaHoje}</div>
+  </body></html>`);
+}
+
+// ── RELATÓRIO DE ESTOQUE ──
+function imprimirRelatorioEstoque(){
+  const n = nowBR();
+  const dataHoje = n.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'});
+  const horaHoje = n.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+
+  const lista = [...estoque].sort((a,b)=>a.nome.localeCompare(b.nome));
+
+  const linhas = lista.map(p=>{
+    const qtd = qtdAtual(p);
+    const valorTotal = qtd * p.preco;
+    const st = statusEstoque(p);
+    const statusTxt = st==='zerado' ? 'ZERADO' : st==='baixo' ? 'BAIXO' : 'OK';
+    const statusColor = st==='zerado' ? '#B23B3B' : st==='baixo' ? '#B07D1A' : '#2E7D52';
+    return `<tr>
+      <td><strong>${p.nome}</strong>${p.codigo?'<br><span style="font-size:10px;color:#888;">'+p.codigo+'</span>':''}</td>
+      <td style="text-align:center;">${p.categoria||'—'}</td>
+      <td style="text-align:center;">${qtd} ${p.unidade||'un'}</td>
+      <td style="text-align:right;">${fmt(p.preco)}</td>
+      <td style="text-align:right;font-weight:700;">${fmt(valorTotal)}</td>
+      <td style="text-align:center;color:${statusColor};font-weight:700;">${statusTxt}</td>
+    </tr>`;
+  }).join('');
+
+  const totalProdutos = lista.length;
+  const valorTotalEstoque = lista.reduce((a,p)=>a+qtdAtual(p)*p.preco,0);
+  const totalZerados = lista.filter(p=>statusEstoque(p)==='zerado').length;
+  const totalBaixos = lista.filter(p=>statusEstoque(p)==='baixo').length;
+
+  openPrintModal(`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
+  <title>Relatório de Estoque — Don Pita Hotel</title>
+  <style>
+    body{font-family:Arial,sans-serif;color:#111;margin:0;padding:20px;background:white;}
+    .rpt-header{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #1A6B3A;padding-bottom:14px;margin-bottom:20px;}
+    .rpt-hotel-name{font-size:22px;font-weight:700;color:#1A2340;}
+    .rpt-hotel-sub{font-size:11px;color:#666;letter-spacing:2px;text-transform:uppercase;margin-top:3px;}
+    .rpt-meta{text-align:right;font-size:12px;color:#555;}
+    .rpt-meta strong{display:block;font-size:15px;color:#1A2340;margin-bottom:2px;}
+    .rpt-periodo-badge{display:inline-block;background:#E6F4EC;color:#1A6B3A;padding:3px 10px;border-radius:6px;font-size:11px;font-weight:700;margin-top:4px;}
+    table{width:100%;border-collapse:collapse;font-size:11px;}
+    th{background:#1A6B3A;color:white;padding:8px 8px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:0.8px;}
+    td{padding:7px 8px;border-bottom:1px solid #eee;vertical-align:middle;}
+    tr:nth-child(even) td{background:#f8f8f8;}
+    .totais{background:#1A2340;color:white;border-radius:8px;padding:14px 18px;margin-top:20px;display:flex;gap:30px;flex-wrap:wrap;}
+    .totais-item{flex:1;min-width:120px;}
+    .totais-label{font-size:10px;opacity:0.7;text-transform:uppercase;letter-spacing:1px;}
+    .totais-value{font-size:18px;font-weight:700;color:#E8C97A;margin-top:2px;}
+    .footer{text-align:center;font-size:10px;color:#aaa;margin-top:30px;padding-top:14px;border-top:1px solid #eee;}
+    @media print{body{padding:10px;}button{display:none!important;}}
+  </style></head><body>
+  <div class="rpt-header">
+    <div>
+      <div class="rpt-hotel-name">🏨 Don Pita Hotel</div>
+      <div class="rpt-hotel-sub">Relatório de Estoque</div>
+      <div class="rpt-periodo-badge">📦 ${totalProdutos} produto(s)</div>
+    </div>
+    <div class="rpt-meta">
+      <strong>${dataHoje}</strong>
+      Emitido às ${horaHoje}
+    </div>
+  </div>
+
+  <table>
+    <thead><tr>
+      <th>Produto</th><th style="text-align:center;">Categoria</th><th style="text-align:center;">Qtd. Atual</th>
+      <th style="text-align:right;">Preço Unit.</th><th style="text-align:right;">Valor em Estoque</th><th style="text-align:center;">Status</th>
+    </tr></thead>
+    <tbody>${linhas || '<tr><td colspan="6" style="text-align:center;color:#aaa;">Nenhum produto cadastrado.</td></tr>'}</tbody>
+  </table>
+
+  <div class="totais">
+    <div class="totais-item">
+      <div class="totais-label">Total de Produtos</div>
+      <div class="totais-value">${totalProdutos}</div>
+    </div>
+    <div class="totais-item">
+      <div class="totais-label">Valor Total em Estoque</div>
+      <div class="totais-value">${fmt(valorTotalEstoque)}</div>
+    </div>
+    <div class="totais-item">
+      <div class="totais-label">Estoque Baixo</div>
+      <div class="totais-value">${totalBaixos}</div>
+    </div>
+    <div class="totais-item">
+      <div class="totais-label">Zerados</div>
+      <div class="totais-value">${totalZerados}</div>
+    </div>
+  </div>
+
+  <div style="text-align:center;margin-top:24px;">
+    <button onclick="window.print()" style="background:#1A6B3A;color:white;border:none;padding:12px 32px;border-radius:8px;font-size:14px;cursor:pointer;font-weight:700;">🖨️ Imprimir</button>
+  </div>
+  <div class="footer">Don Pita Hotel — Sistema de Gestão · Relatório gerado em ${dataHoje} às ${horaHoje}</div>
+  </body></html>`);
+}
+
 // ── RELATÓRIOS / IMPRESSÃO ──
 function imprimirHospedes(periodo='diario'){
   const n = nowBR();
@@ -3807,7 +4369,10 @@ function imprimirHospedes(periodo='diario'){
   const linhas = todos.map(h => {
     const dias = h._status==='Saída' ? (h.diasHospedado||0) : diasNoHotel(h.checkin, h.checkinHora);
     const status = statusPgto(h);
-    const saldo = Math.max(0, h.diaria*dias - h.diaria*h.diasPagos);
+    const valorQuarto = h.diaria*dias;
+    const consumoEst = h._status==='Saída' ? 0 : getConsumoHospede(h.categoria, h.id).reduce((a,c)=>a+c.total,0);
+    const totalGeral = valorQuarto + consumoEst;
+    const saldo = Math.max(0, totalGeral - h.diaria*h.diasPagos);
     const badgeCls = status==='pago'?'pago':status==='vencido'?'vencido':'pendente';
     const badgeTxt = status==='pago'?'PAGO':status==='vencido'?'VENCIDO':'PENDENTE';
     const statusBadge = h._status==='Saída'
@@ -3820,7 +4385,7 @@ function imprimirHospedes(periodo='diario'){
       <td>${fmtDate(h.checkin)}</td>
       <td>${h.checkout?fmtDate(h.checkout):'Em aberto'}</td>
       <td style="text-align:center;">${dias}d</td>
-      <td style="text-align:right;">${fmt(h.diaria*dias)}</td>
+      <td style="text-align:right;">${fmt(totalGeral)}${consumoEst>0?'<br><span style="font-size:9px;color:#1A6B3A;">+'+fmt(consumoEst)+' estoque</span>':''}</td>
       <td style="text-align:right;">${saldo>0?'<span style="color:#B23B3B;">'+fmt(saldo)+'</span>':'<span style="color:#2E7D52;">Quitado</span>'}</td>
       <td style="text-align:center;">${statusBadge}</td>
     </tr>`;
@@ -3934,12 +4499,13 @@ function imprimirCaixa(periodo='diario'){
   const histMes = historico.filter(x=>x.checkout&&x.checkout.startsWith(mes));
   const recHist  = histMes.reduce((a,x)=>a+(x.valorPago||0),0);
 
-  // Vendas de estoque (movimentações com venda:true)
+  // Vendas de estoque avulsas (venda:true, sem vínculo a hóspede — já que consumo vinculado entra na conta do hóspede)
   const hoje = today(); // "2026-06-16"
   const vendasEstoque = [];
   estoque.forEach(p => {
     (p.movimentacoes||[]).forEach(m => {
       if(!m.venda) return;
+      if(m.clienteId!=null) return; // vinculado a hóspede — já contabilizado na linha dele
       const dataVenda = m.data ? m.data.slice(0,10) : '';
       if(periodo === 'mensal' && !dataVenda.startsWith(mes)) return;
       if(periodo === 'diario' && dataVenda !== hoje) return;
@@ -3960,10 +4526,31 @@ function imprimirCaixa(periodo='diario'){
   vendasEstoque.sort((a,b)=> (b.data||'').localeCompare(a.data||''));
   const recVendas = vendasEstoque.reduce((a,v)=>a+v.total, 0);
 
+  // Consumo de estoque vinculado a hóspedes ativos (entra na conta de cada um — diário considera apenas movimentações de hoje)
+  function consumoHospedePeriodo(cat, id){
+    const arr = cat==='hotel' ? hospedes : mbrfs;
+    const h   = arr.find(x=>x.id===id);
+    let total = 0;
+    estoque.forEach(p=>{
+      (p.movimentacoes||[]).forEach(m=>{
+        if(m.tipo!=='saida') return;
+        const vinculado = m.clienteId!=null ? (m.clienteCat===cat && m.clienteId===id) : (h && m.cliente===h.nome);
+        if(!vinculado) return;
+        const dataM = m.data ? m.data.slice(0,10) : '';
+        if(periodo==='mensal' && !dataM.startsWith(mes)) return;
+        if(periodo==='diario' && dataM !== hoje) return;
+        total += p.preco * m.qtd;
+      });
+    });
+    return total;
+  }
+  const recConsumoHotel = hospedes.reduce((a,h)=>a+consumoHospedePeriodo('hotel',h.id),0);
+  const recConsumoMbrf  = mbrfs.reduce((a,h)=>a+consumoHospedePeriodo('mbrf',h.id),0);
+
   // Para mensal, soma histórico também
   const recHistMensal = periodo==='mensal' ? recHist : 0;
 
-  const recTotal  = recHotel + recMbrf + (periodo==='mensal' ? recHistMensal : 0) + recVendas;
+  const recTotal  = recHotel + recMbrf + (periodo==='mensal' ? recHistMensal : 0) + recVendas + recConsumoHotel + recConsumoMbrf;
   const saldTotal = saldHotel + saldMbrf;
   const totTotal  = totHotel + totMbrf;
   const periodoLabel = periodo==='mensal' ? `Mensal — ${mesLabel}` : `Diário — ${dataHoje}`;
@@ -3971,7 +4558,8 @@ function imprimirCaixa(periodo='diario'){
   // Linhas hóspedes Hotel
   const linhasHotel = hospedes.map(h=>{
     const dias=diasNoHotel(h.checkin, h.checkinHora);
-    const total=h.diaria*dias;
+    const consumo=getConsumoHospede('hotel',h.id).reduce((a,c)=>a+c.total,0);
+    const total=h.diaria*dias + consumo;
     const pago=h.diaria*h.diasPagos;
     const saldo=Math.max(0,total-pago);
     return `<tr>
@@ -3979,7 +4567,7 @@ function imprimirCaixa(periodo='diario'){
       <td style="text-align:center;">${h.quarto||'—'}</td>
       <td style="text-align:center;">${dias}d</td>
       <td style="text-align:right;">${fmt(h.diaria)}/d</td>
-      <td style="text-align:right;">${fmt(total)}</td>
+      <td style="text-align:right;">${fmt(total)}${consumo>0?'<br><span style="font-size:9px;color:#1A6B3A;">+'+fmt(consumo)+' estoque</span>':''}</td>
       <td style="text-align:right;color:#2E7D52;">${fmt(pago)}</td>
       <td style="text-align:right;color:${saldo>0?'#B23B3B':'#2E7D52'};">${saldo>0?fmt(saldo):'Quitado'}</td>
       <td style="text-align:center;font-size:10px;">${h.ultimaPgtoForma||'—'}</td>
@@ -3988,7 +4576,8 @@ function imprimirCaixa(periodo='diario'){
 
   const linhasMbrf = mbrfs.map(h=>{
     const dias=diasNoHotel(h.checkin, h.checkinHora);
-    const total=h.diaria*dias;
+    const consumo=getConsumoHospede('mbrf',h.id).reduce((a,c)=>a+c.total,0);
+    const total=h.diaria*dias + consumo;
     const pago=h.diaria*h.diasPagos;
     const saldo=Math.max(0,total-pago);
     return `<tr>
@@ -3996,7 +4585,7 @@ function imprimirCaixa(periodo='diario'){
       <td style="text-align:center;">${h.quarto||'—'}</td>
       <td style="text-align:center;">${dias}d</td>
       <td style="text-align:right;">${fmt(h.diaria)}/d</td>
-      <td style="text-align:right;">${fmt(total)}</td>
+      <td style="text-align:right;">${fmt(total)}${consumo>0?'<br><span style="font-size:9px;color:#1A6B3A;">+'+fmt(consumo)+' estoque</span>':''}</td>
       <td style="text-align:right;color:#2E7D52;">${fmt(pago)}</td>
       <td style="text-align:right;color:${saldo>0?'#B23B3B':'#2E7D52'};">${saldo>0?fmt(saldo):'Quitado'}</td>
       <td style="text-align:center;font-size:10px;">${h.ultimaPgtoForma||'—'}</td>
@@ -4061,9 +4650,9 @@ function imprimirCaixa(periodo='diario'){
       <div class="resumo-sub">Pendente: ${fmt(saldMbrf)}</div>
     </div>
     <div class="resumo-card" style="background:#E6F4EC;border-color:#1A6B3A;">
-      <div class="resumo-label">Vendas Estoque</div>
-      <div class="resumo-value" style="color:#1A6B3A;">${fmt(recVendas)}</div>
-      <div class="resumo-sub">${vendasEstoque.length} venda(s)</div>
+      <div class="resumo-label">Estoque (vendas + consumo)</div>
+      <div class="resumo-value" style="color:#1A6B3A;">${fmt(recVendas + recConsumoHotel + recConsumoMbrf)}</div>
+      <div class="resumo-sub">${vendasEstoque.length} avulsa(s) · ${fmt(recConsumoHotel+recConsumoMbrf)} vinculado a hóspedes</div>
     </div>
     <div class="resumo-card total">
       <div class="resumo-label">Total em Caixa</div>
@@ -4092,7 +4681,7 @@ function imprimirCaixa(periodo='diario'){
     <tbody>${linhasMbrf}</tbody>
   </table>` : '<p style="color:#aaa;font-size:12px;">Nenhum funcionário BRF ativo.</p>'}
 
-  <div class="rpt-section-title">📦 Vendas de Estoque (${vendasEstoque.length})</div>
+  <div class="rpt-section-title">📦 Vendas Avulsas de Estoque — sem hóspede vinculado (${vendasEstoque.length})</div>
   ${vendasEstoque.length ? `<table>
     <thead><tr>
       <th>Produto</th>
@@ -4122,9 +4711,10 @@ function imprimirCaixa(periodo='diario'){
   </table>` : '<p style="color:#aaa;font-size:12px;">Nenhuma venda de estoque no período.</p>'}
 
   <div class="balanço">
-    <div class="bal-row"><span>💵 Receita Hotel (ativo)</span><span>${fmt(recHotel)}</span></div>
-    <div class="bal-row"><span>🏢 Receita BRF (ativo)</span><span>${fmt(recMbrf)}</span></div>
-    <div class="bal-row"><span>📦 Vendas de Estoque</span><span>${fmt(recVendas)}</span></div>
+    <div class="bal-row"><span>💵 Receita Hotel (diárias)</span><span>${fmt(recHotel)}</span></div>
+    <div class="bal-row"><span>🏢 Receita BRF (diárias)</span><span>${fmt(recMbrf)}</span></div>
+    <div class="bal-row"><span>📦 Estoque consumido por hóspedes</span><span>${fmt(recConsumoHotel + recConsumoMbrf)}</span></div>
+    <div class="bal-row"><span>🛍️ Vendas avulsas de estoque</span><span>${fmt(recVendas)}</span></div>
     <div class="bal-row"><span>📁 Checkouts${periodo==='mensal'?' do mês':' (histórico)'}</span><span>${fmt(recHist)}</span></div>
     <div class="bal-row"><span>⏳ Total pendente</span><span style="color:#ffaaaa;">${fmt(saldTotal)}</span></div>
     <div class="bal-row"><span>💰 TOTAL EM CAIXA</span><span>${fmt(recTotal)}</span></div>
@@ -4152,6 +4742,54 @@ const lixoState = {
   quartos:   true,   // 🗑️ botão deletar Quartos
   historico: true,   // 🗑️ botão Limpar Histórico
 };
+
+// ── CONFIGURAÇÃO BOTÃO REINICIAR SISTEMA ──
+// true  = mostra o botão "Reiniciar Sistema" na aba Relatórios (uso em testes)
+// false = oculta o botão completamente (produção)
+const resetSistemaHabilitado = false;
+
+function renderZonaReset(){
+  const wrap = document.getElementById('zonaResetWrap');
+  if(!wrap) return;
+  if(!resetSistemaHabilitado){ wrap.innerHTML=''; return; }
+  wrap.innerHTML = `
+    <div class="rel-card" style="border:2px solid var(--red);background:var(--red-light);">
+      <div class="rel-icon">⚠️</div>
+      <div class="rel-title" style="color:var(--red);">Zona de Risco — Reiniciar Sistema</div>
+      <div class="rel-desc">Apaga PERMANENTEMENTE todos os dados: hóspedes, funcionários BRF, refeições, reservas, quartos, estoque e histórico. Esta ação não pode ser desfeita.</div>
+      <button class="btn btn-danger" style="width:100%;justify-content:center;margin-top:6px;" onclick="confirmarResetSistema()">🗑️ Reiniciar Sistema Completo</button>
+    </div>`;
+}
+
+function confirmarResetSistema(){
+  const senha = prompt('⚠️ ATENÇÃO! Isso vai apagar TODOS os dados do sistema (hóspedes, BRF, estoque, histórico, reservas e quartos) PARA SEMPRE.\n\nDigite REINICIAR para confirmar:');
+  if(senha !== 'REINICIAR'){
+    if(senha !== null) showNotif('Reinício cancelado — texto de confirmação incorreto.','warn');
+    return;
+  }
+  executarResetSistema();
+}
+
+async function executarResetSistema(){
+  hospedes  = [];
+  mbrfs     = [];
+  reservas  = [];
+  refeicoes = [];
+  historico = [];
+  quartos   = [];
+  estoque   = [];
+  await Promise.all([
+    DB.set('donpita_hotel',     hospedes),
+    DB.set('donpita_mbrf',      mbrfs),
+    DB.set('donpita_reservas',  reservas),
+    DB.set('donpita_refeicoes', refeicoes),
+    DB.set('donpita_historico', historico),
+    DB.set('donpita_quartos',   quartos),
+    DB.set('donpita_estoque',   estoque),
+  ]);
+  renderAll();
+  showNotif('🗑️ Sistema reiniciado — todos os dados foram apagados.','warn');
+}
 
 // ── INIT ──
 function startApp(){
