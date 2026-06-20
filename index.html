@@ -960,6 +960,7 @@ const I18N = {
     erroDatas: &#x27;Por favor, selecione as datas de check-in e check-out.&#x27;,
     erroCheckout: &#x27;A data de check-out deve ser depois do check-in.&#x27;,
     erroConexao: &#x27;Sem conexão com o servidor no momento. Verifique sua internet e tente novamente.&#x27;,
+    erroJaReservou: &#x27;Você já enviou uma solicitação de reserva hoje com esses dados. Aguarde nosso contato ou consulte o status do seu pedido pelo link abaixo.&#x27;,
     enviando: &#x27;Enviando...&#x27;,
     erroEnviar: &#x27;Não foi possível enviar sua solicitação agora. Verifique sua conexão e tente novamente.&#x27;,
     numeroInvalido: &#x27;Informe um número de pedido válido.&#x27;,
@@ -1008,6 +1009,7 @@ const I18N = {
     erroDatas: &#x27;Please select the check-in and check-out dates.&#x27;,
     erroCheckout: &#x27;The check-out date must be after the check-in date.&#x27;,
     erroConexao: &#x27;No connection to the server right now. Check your internet and try again.&#x27;,
+    erroJaReservou: &#x27;You already sent a reservation request today with these details. Please wait for our contact or check your request status using the link below.&#x27;,
     enviando: &#x27;Sending...&#x27;,
     erroEnviar: &#x27;We could not send your request right now. Please check your connection and try again.&#x27;,
     numeroInvalido: &#x27;Please enter a valid request number.&#x27;,
@@ -1056,6 +1058,7 @@ const I18N = {
     erroDatas: &#x27;Por favor, selecciona las fechas de check-in y check-out.&#x27;,
     erroCheckout: &#x27;La fecha de check-out debe ser posterior al check-in.&#x27;,
     erroConexao: &#x27;Sin conexión con el servidor en este momento. Verifica tu internet e intenta de nuevo.&#x27;,
+    erroJaReservou: &#x27;Ya enviaste una solicitud de reserva hoy con estos datos. Espera nuestro contacto o consulta el estado de tu solicitud en el enlace de abajo.&#x27;,
     enviando: &#x27;Enviando...&#x27;,
     erroEnviar: &#x27;No fue posible enviar tu solicitud ahora. Verifica tu conexión e intenta de nuevo.&#x27;,
     numeroInvalido: &#x27;Indica un número de solicitud válido.&#x27;,
@@ -1244,6 +1247,33 @@ async function enviarSolicitacao(){
     if(errLoad) throw errLoad;
 
     const listaAtual = (data &amp;&amp; Array.isArray(data.valor)) ? data.valor : [];
+
+    // Verifica se a pessoa já enviou um pedido HOJE com o mesmo telefone,
+    // o mesmo documento (CPF/RG) ou o mesmo nome, pra evitar pedidos repetidos.
+    const hojeStr = new Date().toISOString().slice(0,10);
+    const norm = s =&gt; (s||&#x27;&#x27;).toString().trim().toLowerCase();
+    const soDigitos = s =&gt; (s||&#x27;&#x27;).toString().replace(/\D/g,&#x27;&#x27;);
+    const telNorm  = soDigitos(telefone);
+    const docNorm  = soDigitos(documento);
+    const nomeNorm = norm(nome);
+
+    const pedidoDuplicado = listaAtual.find(p =&gt; {
+      const dataPedido = (p.criadoEm||&#x27;&#x27;).slice(0,10);
+      if(dataPedido !== hojeStr) return false;
+      const pTel  = soDigitos(p.telefone);
+      const pDoc  = soDigitos(p.documento);
+      const pNome = norm(p.nome);
+      return (telNorm &amp;&amp; pTel &amp;&amp; telNorm === pTel)
+          || (docNorm &amp;&amp; pDoc &amp;&amp; docNorm === pDoc)
+          || (nomeNorm &amp;&amp; pNome &amp;&amp; nomeNorm === pNome);
+    });
+
+    if(pedidoDuplicado){
+      mostrarErro(t(&#x27;erroJaReservou&#x27;));
+      btn.disabled = false;
+      btn.textContent = &#x27;📨 &#x27; + t(&#x27;btnEnviar&#x27;);
+      return;
+    }
 
     const novoId = (listaAtual.length ? Math.max(...listaAtual.map(x=&gt;x.id||0)) : 0) + 1;
 
