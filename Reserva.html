@@ -98,6 +98,67 @@
   .logo-text { position: relative; z-index: 2; font-family: 'Playfair Display', serif; font-size: 27px; color: var(--white); }
   .logo-sub { position: relative; z-index: 2; font-size: 11px; color: var(--gold); letter-spacing: 3px; text-transform: uppercase; margin-top: 7px; opacity: 0.9; }
 
+  /* ===== MENU DE CATEGORIAS (topo, igual à página inicial) ===== */
+  nav.site-nav {
+    width: 100%;
+    padding: 22px 32px;
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap; gap: 14px;
+  }
+  .nav-logo { display: flex; align-items: center; gap: 13px; }
+  .nav-logo-icon {
+    width: 40px; height: 40px;
+    background: linear-gradient(145deg, var(--navy) 0%, var(--navy-mid) 100%);
+    border-radius: 11px; display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 14px rgba(26,35,64,0.25);
+    flex-shrink: 0;
+  }
+  .nav-logo-icon svg { width: 22px; height: auto; }
+  .nav-logo-text { font-family: 'Playfair Display', serif; font-size: 18px; color: var(--navy); line-height: 1.1; }
+  .nav-logo-sub { font-size: 8.5px; letter-spacing: 2.6px; text-transform: uppercase; color: var(--gold); opacity: 0.9; margin-top: 2px; }
+
+  .nav-menu { display: flex; align-items: center; gap: 30px; }
+  .nav-menu a {
+    font-family: 'Inter', sans-serif;
+    font-size: 13.5px; font-weight: 600; color: var(--navy);
+    text-decoration: none; letter-spacing: 0.3px;
+    position: relative; padding: 4px 2px;
+    transition: color 0.2s ease;
+  }
+  .nav-menu a::after {
+    content: ''; position: absolute; left: 0; bottom: -2px;
+    width: 0; height: 2px; background: var(--gold);
+    transition: width 0.25s ease;
+  }
+  .nav-menu a:hover { color: var(--gold); }
+  .nav-menu a:hover::after { width: 100%; }
+  .nav-menu a.active { color: var(--gold); }
+  .nav-menu a.active::after { width: 100%; }
+
+  .nav-burger {
+    display: none; flex-direction: column; gap: 5px;
+    background: none; border: none; cursor: pointer; padding: 6px;
+  }
+  .nav-burger span { width: 22px; height: 2px; background: var(--navy); border-radius: 2px; }
+
+  @media (max-width: 760px) {
+    nav.site-nav { position: relative; flex-wrap: wrap; }
+    .nav-menu {
+      position: absolute; top: 100%; left: 0; right: 0;
+      background: var(--white); flex-direction: column;
+      align-items: flex-start; gap: 0;
+      box-shadow: 0 12px 24px rgba(26,35,64,0.1);
+      max-height: 0; overflow: hidden; transition: max-height 0.3s ease;
+      z-index: 50;
+    }
+    .nav-menu.open { max-height: 320px; }
+    .nav-menu a { width: 100%; padding: 14px 22px; border-bottom: 1px solid var(--border); }
+    .nav-menu a::after { display: none; }
+    .nav-burger { display: flex; }
+  }
+
   main {
     width: 100%;
     max-width: 580px;
@@ -126,6 +187,14 @@
   }
   .card-header h1 { font-family: 'Playfair Display', serif; font-size: 23px; margin-bottom: 6px; position: relative; z-index: 1; }
   .card-header p { font-size: 13.5px; opacity: 0.88; position: relative; z-index: 1; line-height: 1.5; }
+  .card-header-logo {
+    width: 46px; height: 46px; margin-bottom: 12px;
+    background: linear-gradient(145deg, var(--gold) 0%, var(--gold-light) 60%, #F5DFA0 100%);
+    border-radius: 13px; display: flex; align-items: center; justify-content: center;
+    font-family: 'Playfair Display', serif; font-size: 18px; color: var(--navy); font-weight: 700;
+    box-shadow: 0 4px 14px rgba(201,168,76,0.45), inset 0 1px 0 rgba(255,255,255,0.3);
+    position: relative; z-index: 1;
+  }
   .card-body { padding: 26px; min-width: 0; }
 
   .section-title {
@@ -284,6 +353,30 @@
   <div data-i18n="conectando">Conectando ao hotel...</div>
 </div>
 
+<nav class="site-nav">
+  <div class="nav-logo">
+    <div class="nav-logo-icon">
+      <svg viewBox="0 0 200 150" fill="none" stroke="var(--gold-light)" stroke-width="11" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M100 4 L104.5 13.5 L115 15 L107.5 22.3 L109.3 32.7 L100 27.8 L90.7 32.7 L92.5 22.3 L85 15 L95.5 13.5 Z" fill="var(--gold-light)" stroke="none"></path>
+        <path d="M28 108 L28 78 L55 100 L80 38 L100 70 L120 38 L145 100 L172 78 L172 108"></path>
+      </svg>
+    </div>
+    <div>
+      <div class="nav-logo-text">Don Pita Hotel</div>
+      <div class="nav-logo-sub">Hospitalidade &amp; Bem-estar</div>
+    </div>
+  </div>
+  <div class="nav-menu" id="navMenu">
+    <a href="index.html#inicial">Inicial</a>
+    <a href="index.html#hotel">Hotel</a>
+    <a href="Reserva.html" class="active">Reservas</a>
+    <a href="index.html#contato">Contato</a>
+  </div>
+  <button class="nav-burger" id="navBurger" type="button" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
 <header>
   <div class="lang-switch">
     <button class="lang-btn" data-lang="pt" onclick="setLang('pt')">🇧🇷 PT</button>
@@ -298,8 +391,9 @@
 <main>
   <div class="card">
     <div class="card-header">
+      <div class="card-header-logo">DP</div>
       <h1 data-i18n="cardTitle">Reserve seu quarto</h1>
-      <p data-i18n="cardSub">Preencha seus dados — nossa equipe confirma sua reserva em breve</p>
+      <p data-i18n="cardSub">Preencha seus dados — em breve entraremos em contato pelo WhatsApp para confirmar sua reserva</p>
     </div>
 
     <div class="card-body" id="formWrap">
@@ -427,7 +521,7 @@ const I18N = {
     conectando: 'Conectando ao hotel...',
     logoSub: 'Solicitação de Reserva',
     cardTitle: 'Reserve seu quarto',
-    cardSub: 'Preencha seus dados — nossa equipe confirma sua reserva em breve',
+    cardSub: 'Preencha seus dados — em breve entraremos em contato pelo WhatsApp para confirmar sua reserva',
     secDados: 'Seus dados',
     lblNome: 'Nome completo *', phNome: 'Seu nome completo',
     lblTelefone: 'Telefone / WhatsApp *',
@@ -475,7 +569,7 @@ const I18N = {
     conectando: 'Connecting to the hotel...',
     logoSub: 'Reservation Request',
     cardTitle: 'Book your room',
-    cardSub: 'Fill in your details — our team will confirm your reservation shortly',
+    cardSub: 'Fill in your details — we will contact you on WhatsApp shortly to confirm your reservation',
     secDados: 'Your details',
     lblNome: 'Full name *', phNome: 'Your full name',
     lblTelefone: 'Phone / WhatsApp *',
@@ -523,7 +617,7 @@ const I18N = {
     conectando: 'Conectando con el hotel...',
     logoSub: 'Solicitud de Reserva',
     cardTitle: 'Reserva tu habitación',
-    cardSub: 'Completa tus datos — nuestro equipo confirmará tu reserva en breve',
+    cardSub: 'Completa tus datos — pronto nos pondremos en contacto por WhatsApp para confirmar tu reserva',
     secDados: 'Tus datos',
     lblNome: 'Nombre completo *', phNome: 'Tu nombre completo',
     lblTelefone: 'Teléfono / WhatsApp *',
@@ -645,6 +739,12 @@ function fmtMoeda(v){ return 'R$ '+Number(v).toLocaleString('pt-BR',{minimumFrac
 
 window.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.dataset.lang === LANG));
+
+  const navBurger = document.getElementById('navBurger');
+  const navMenu = document.getElementById('navMenu');
+  if(navBurger && navMenu){
+    navBurger.addEventListener('click', () => navMenu.classList.toggle('open'));
+  }
 
   const hoje = new Date().toISOString().split('T')[0];
   document.getElementById('f_checkin').min = hoje;
