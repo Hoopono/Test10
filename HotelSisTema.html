@@ -4608,7 +4608,7 @@ function renderReservas(filter=''){
     return `<div class="reserva-card">
       <div class="reserva-date-badge"><div class="reserva-date-day">${day}</div><div class="reserva-date-mon">${mon}</div></div>
       <div class="reserva-info">
-        <div class="reserva-name">${r.nome} ${r.tipo==='brf'?'<span style="font-size:10px;background:var(--mbrf-light);color:var(--mbrf-purple);padding:2px 8px;border-radius:10px;font-weight:700;vertical-align:middle;">🏢 BRF</span>':'<span style="font-size:10px;background:var(--reserva-light);color:var(--reserva-blue);padding:2px 8px;border-radius:10px;font-weight:700;vertical-align:middle;">🏨 Hotel</span>'}</div>
+        <div class="reserva-name">${r.nome} ${r.tipo==='brf'?'<span style="font-size:10px;background:var(--mbrf-light);color:var(--mbrf-purple);padding:2px 8px;border-radius:10px;font-weight:700;vertical-align:middle;">🏢 BRF</span>':'<span style="font-size:10px;background:var(--reserva-light);color:var(--reserva-blue);padding:2px 8px;border-radius:10px;font-weight:700;vertical-align:middle;">🏨 Hotel</span>'} ${r.codigo?`<span style="font-size:10px;color:var(--amber);font-weight:700;vertical-align:middle;">📋 ${r.codigo}</span>`:''}</div>
         <div class="reserva-details">
           <span>${quartoLabel}</span>
           ${nights>0?`<span>🌙 ${nights} noite${nights!==1?'s':''} · ${total}</span>`:''}
@@ -4824,8 +4824,15 @@ function salvarReserva(){
     obs:document.getElementById('r_obs').value.trim(),
     tipo:reservaTipoSel
   };
-  if(editingReservaId){ const r=reservas.find(x=>x.id===editingReservaId); if(r) Object.assign(r,obj); showNotif('Reserva atualizada!'); }
-  else { reservas.push({id:(reservas.length?Math.max(...reservas.map(x=>x.id)):0)+1,...obj}); showNotif(quartosSel.length>1?`Reserva cadastrada com ${quartosSel.length} quartos!`:'Reserva cadastrada!'); }
+  if(editingReservaId){
+    const r=reservas.find(x=>x.id===editingReservaId);
+    if(r){ obj.codigo = r.codigo || vincularOuGerarCodigoPessoa(obj, reservaTipoSel==='brf'); if(r.codigo) sincronizarPessoaDoCadastro(obj, reservaTipoSel==='brf', obj.codigo); Object.assign(r,obj); }
+    showNotif('Reserva atualizada!');
+  } else {
+    obj.codigo = vincularOuGerarCodigoPessoa(obj, reservaTipoSel==='brf');
+    reservas.push({id:(reservas.length?Math.max(...reservas.map(x=>x.id)):0)+1,...obj});
+    showNotif(quartosSel.length>1?`Reserva cadastrada com ${quartosSel.length} quartos! Cadastro: ${obj.codigo}`:`Reserva cadastrada! Cadastro: ${obj.codigo}`);
+  }
   saveReservas(); closeReservaModal(); renderAll();
 }
 function confirmarReserva(id){ const r=reservas.find(x=>x.id===id); if(r){r.status='confirmada';saveReservas();renderAll();showNotif('Reserva confirmada!');} }
@@ -4917,6 +4924,7 @@ function aprovarPedido(id){
     documento: p.documento||'',
     obs: (p.obs?p.obs+' · ':'') + `Tipo desejado: ${p.tipoQuarto||'—'} · ${p.pessoas||'—'} pessoa(s)`
   };
+  novaReserva.codigo = vincularOuGerarCodigoPessoa(novaReserva, false);
   reservas.push(novaReserva);
   saveReservas();
 
@@ -5028,15 +5036,6 @@ function executarConversaoReserva(cat, quartosOverride){
     : ((r.quartos && r.quartos.length) ? r.quartos : (r.quarto ? [r.quarto] : ['']));
   const grupoReserva = quartosReserva.length>1 ? 'RES-'+Date.now() : null;
 
-  // Monta observação extra com documento/endereço, se preenchidos
-  const dadosExtra=[];
-  if(r.documento) dadosExtra.push('Doc: '+r.documento);
-  if(r.cep) dadosExtra.push('CEP: '+r.cep);
-  if(r.endereco) dadosExtra.push('End: '+r.endereco+(r.numero?', '+r.numero:''));
-  if(r.bairro) dadosExtra.push(r.bairro);
-  if(r.cidade || r.estado) dadosExtra.push(`${r.cidade||''}${r.cidade&&r.estado?'/':''}${r.estado||''}`);
-  const obsExtra = dadosExtra.length ? (r.obs?r.obs+' · ':'')+dadosExtra.join(' · ') : (r.obs||'');
-
   const emUso=new Set(); [...hospedes,...mbrfs].forEach(h=>{if(h.codigoFicha)emUso.add(h.codigoFicha);});
   function proximoCodigo(){
     let c=null; for(let n=1;n<=999999;n++){ if(!emUso.has(String(n))){ c=String(n); break; } }
@@ -5044,16 +5043,26 @@ function executarConversaoReserva(cat, quartosOverride){
     emUso.add(c); return c;
   }
 
-  quartosReserva.forEach(q=>{
-    const cod=proximoCodigo();
+  quartosReserva.forEach((q, idx)=>{
+    // Reaproveita o código já vinculado à reserva (gerado quando ela foi criada)
+    // para o primeiro quarto, garantindo que seja a MESMA ficha em Cadastro.
+    // Quartos extras de uma reserva em grupo recebem código próprio.
+    const cod = (idx===0 && r.codigo) ? r.codigo : proximoCodigo();
+    emUso.add(cod);
+    let novoHospede;
     if(cat === 'hotel'){
-      hospedes.push({id:(hospedes.length?Math.max(...hospedes.map(x=>x.id)):0)+1,nome:r.nome,quarto:q||'',checkin:r.checkin||today(),checkout:r.checkout||'',diaria:r.diaria||0,diasPagos:0,obs:obsExtra,categoria:'hotel',codigoFicha:cod,telefone:r.telefone||'',grupoReserva});
+      novoHospede = {id:(hospedes.length?Math.max(...hospedes.map(x=>x.id)):0)+1,nome:r.nome,quarto:q||'',checkin:r.checkin||today(),checkout:r.checkout||'',diaria:r.diaria||0,diasPagos:0,obs:r.obs||'',categoria:'hotel',codigoFicha:cod,telefone:r.telefone||'',documento:r.documento||'',cep:r.cep||'',endereco:r.endereco||'',numero:r.numero||'',bairro:r.bairro||'',cidade:r.cidade||'',estado:r.estado||'',grupoReserva};
+      hospedes.push(novoHospede);
     } else {
       // BRF — aplica prefixo BRF- no nome e na matrícula
       const nomeBrf = r.nome && !r.nome.toUpperCase().startsWith('BRF-') ? 'BRF-'+r.nome : r.nome;
       const matBrf = r.matricula && !r.matricula.startsWith('BRF-') ? 'BRF-'+r.matricula : (r.matricula||'BRF-');
-      mbrfs.push({id:(mbrfs.length?Math.max(...mbrfs.map(x=>x.id)):0)+1,nome:nomeBrf,quarto:q||'',checkin:r.checkin||today(),checkout:'',diaria:r.diaria||0,diasPagos:0,obs:obsExtra,categoria:'mbrf',codigoFicha:cod,matricula:matBrf,setor:r.setor||'',telefone:r.telefone||'',grupoReserva});
+      novoHospede = {id:(mbrfs.length?Math.max(...mbrfs.map(x=>x.id)):0)+1,nome:nomeBrf,quarto:q||'',checkin:r.checkin||today(),checkout:'',diaria:r.diaria||0,diasPagos:0,obs:r.obs||'',categoria:'mbrf',codigoFicha:cod,matricula:matBrf,setor:r.setor||'',telefone:r.telefone||'',documento:r.documento||'',cep:r.cep||'',endereco:r.endereco||'',numero:r.numero||'',bairro:r.bairro||'',cidade:r.cidade||'',estado:r.estado||'',grupoReserva};
+      mbrfs.push(novoHospede);
     }
+    // Garante que a pessoa fique salva em Cadastro com este código,
+    // independente de a reserva ter vindo da aba Reservas, Hotel ou MBRF.
+    sincronizarPessoaDoCadastro(novoHospede, cat!=='hotel', cod);
   });
   if(cat === 'hotel') saveHotel(); else saveMbrf();
 
@@ -5335,15 +5344,46 @@ async function salvarHospede() {
   renderAll();
 }
 
+// Procura o próximo código numérico livre considerando TODAS as áreas do
+// sistema (Cadastro, Hotel, MBRF, Histórico e Reservas), evitando colisão
+// de código entre abas diferentes.
+function proximoCodigoLivre(){
+  const emUso = new Set([
+    ...pessoas.map(p=>p.codigo),
+    ...hospedes.map(h=>h.codigoFicha),
+    ...mbrfs.map(h=>h.codigoFicha),
+    ...historico.map(h=>h.codigoFicha),
+    ...reservas.map(r=>r.codigo)
+  ].filter(Boolean));
+  let cod = null;
+  for(let n=1;n<=999999;n++){ if(!emUso.has(String(n))){ cod=String(n); break; } }
+  if(!cod) cod = String(Date.now());
+  return cod;
+}
+
+// Vincula uma reserva (de qualquer aba) a uma Pessoa do Cadastro: se já existe
+// alguém com o mesmo documento ou telefone, reaproveita o código dela; senão
+// gera um código novo. Em seguida sincroniza os dados em "Pessoas".
+function vincularOuGerarCodigoPessoa(obj, isMbrf){
+  const nomeLimpo = (obj.nome||'').toLowerCase().replace(/^brf-/i,'').trim();
+  let existente = null;
+  if(obj.documento) existente = pessoas.find(p => p.documento && p.documento === obj.documento);
+  if(!existente && obj.telefone) existente = pessoas.find(p => p.telefone && p.telefone === obj.telefone && p.nome.toLowerCase().replace(/^brf-/i,'').trim() === nomeLimpo);
+  const codigo = existente ? existente.codigo : proximoCodigoLivre();
+  sincronizarPessoaDoCadastro(obj, isMbrf, codigo);
+  return codigo;
+}
+
 // Cria ou atualiza automaticamente o cadastro em "Pessoas" sempre que um
 // hóspede (Hotel) ou funcionário (MBRF) é salvo, usando o código da ficha
 // como chave de ligação entre os dois cadastros.
-function sincronizarPessoaDoCadastro(obj, isMbrf){
-  if(!obj.codigoFicha) return;
-  const existente = pessoas.find(p => p.codigo === obj.codigoFicha);
+function sincronizarPessoaDoCadastro(obj, isMbrf, codigoOverride){
+  const codigo = codigoOverride || obj.codigoFicha;
+  if(!codigo) return;
+  const existente = pessoas.find(p => p.codigo === codigo);
   const dadosPessoa = {
     nome:      isMbrf ? obj.nome.replace(/^BRF-/i,'').trim() : obj.nome,
-    codigo:    obj.codigoFicha,
+    codigo:    codigo,
     telefone:  obj.telefone  || '',
     documento: obj.documento || '',
     email:     existente?.email || '',
