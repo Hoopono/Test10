@@ -944,6 +944,7 @@
         <span class="search-icon">🔍</span>
         <input class="search-input" type="text" placeholder="Buscar quarto..." data-i18n-ph="phBuscarQuarto" oninput="filterQuartos(this.value)" id="quartosSearch">
       </div>
+      <button class="btn btn-outline" onclick="openImportQuartosModal()">📥 Importar Planilha</button>
       <button class="btn btn-quarto" onclick="openQuartoModal()">+ <span data-i18n="btnNovoQuarto">Novo Quarto</span></button>
     </div>
     <div class="quartos-legenda">
@@ -1481,6 +1482,10 @@
 
     <div style="margin-bottom:14px;">
       <label class="form-label" style="margin-bottom:8px;display:block;">Quarto(s) <span style="color:var(--gray);font-weight:400;font-size:9px;">(toque para selecionar — pode escolher 2 ou mais)</span></label>
+      <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--gray);margin-bottom:8px;cursor:pointer;">
+        <input type="checkbox" id="r_somente_livres" checked onchange="renderReservaQuartosGrid(reservaQuartosSelecionados)" style="width:14px;height:14px;cursor:pointer;">
+        Mostrar apenas quartos disponíveis
+      </label>
       <div class="reserva-quartos-grid" id="r_quartos_grid"></div>
       <div class="reserva-quartos-count" id="r_quartos_count"></div>
     </div>
@@ -1690,6 +1695,38 @@
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="closeImportBrfModal()">Cancelar</button>
       <button class="btn btn-mbrf" id="btnConfirmarImportBrf" onclick="confirmarImportBrf()" style="display:none;">Confirmar Importação</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL IMPORTAR PLANILHA DE QUARTOS -->
+<div class="modal-overlay" id="importQuartosOverlay">
+  <div class="modal" style="max-width:640px;">
+    <button class="modal-close" onclick="closeImportQuartosModal()">✕</button>
+    <div class="modal-title">📥 Importar Planilha de Quartos</div>
+    <p style="font-size:12.5px;color:var(--gray);margin-bottom:14px;line-height:1.5;">
+      Envie um arquivo Excel (.xlsx) com a coluna <b>Quarto</b> (obrigatória) e, opcionalmente,
+      <b>Andar</b>, <b>Tipo</b>, <b>Capacidade</b> e <b>Descrição</b> — uma linha por quarto.
+      Quartos que já existem terão os dados atualizados; os demais campos podem ficar em branco.
+    </p>
+    <div class="form-group" style="margin-bottom:14px;">
+      <input type="file" id="importQuartosFile" accept=".xlsx,.xls,.csv" class="form-input" onchange="handleImportQuartosFile(event)">
+    </div>
+    <div id="importQuartosPreviewWrap" style="display:none;">
+      <div id="importQuartosResumo" style="font-size:13px;font-weight:600;color:var(--navy);margin-bottom:10px;"></div>
+      <div style="max-height:280px;overflow:auto;border:1px solid var(--border);border-radius:10px;">
+        <table style="width:100%;font-size:12.5px;">
+          <thead style="position:sticky;top:0;background:var(--cream);">
+            <tr><th style="text-align:left;padding:8px 10px;">Quarto</th><th style="text-align:left;padding:8px 10px;">Andar</th><th style="text-align:left;padding:8px 10px;">Tipo</th><th style="text-align:left;padding:8px 10px;">Capacidade</th><th style="text-align:left;padding:8px 10px;">Situação</th></tr>
+          </thead>
+          <tbody id="importQuartosPreviewBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div id="importQuartosErro" style="display:none;color:var(--red);font-size:12.5px;font-weight:600;margin-top:10px;"></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeImportQuartosModal()">Cancelar</button>
+      <button class="btn btn-quarto" id="btnConfirmarImportQuartos" onclick="confirmarImportQuartos()" style="display:none;">Confirmar Importação</button>
     </div>
   </div>
 </div>
@@ -3746,6 +3783,130 @@ function confirmarImportBrf(){
   showNotif(`Importação concluída: ${quartosCriados} quarto(s) criado(s), ${pessoasCriadas} funcionário(s) importado(s).`);
 }
 
+// ── IMPORTAR PLANILHA DE QUARTOS ──
+let importQuartosRows = [];
+
+function openImportQuartosModal(){
+  importQuartosRows = [];
+  document.getElementById('importQuartosFile').value = '';
+  document.getElementById('importQuartosPreviewWrap').style.display = 'none';
+  document.getElementById('importQuartosErro').style.display = 'none';
+  document.getElementById('btnConfirmarImportQuartos').style.display = 'none';
+  document.getElementById('importQuartosOverlay').classList.add('open');
+}
+function closeImportQuartosModal(){
+  document.getElementById('importQuartosOverlay').classList.remove('open');
+  importQuartosRows = [];
+}
+
+function handleImportQuartosFile(ev){
+  const file = ev.target.files && ev.target.files[0];
+  if(!file) return;
+  const erroEl = document.getElementById('importQuartosErro');
+  erroEl.style.display = 'none';
+
+  const reader = new FileReader();
+  reader.onload = function(e){
+    try{
+      const data = new Uint8Array(e.target.result);
+      const wb = XLSX.read(data, {type:'array'});
+      const sheet = wb.Sheets[wb.SheetNames[0]];
+      const linhas = XLSX.utils.sheet_to_json(sheet, {defval:''});
+      if(!linhas.length){
+        erroEl.textContent = 'A planilha está vazia.';
+        erroEl.style.display = 'block';
+        return;
+      }
+      // Identifica as colunas (tolerante a maiúsculas/variações)
+      const colunas = Object.keys(linhas[0]);
+      const colQuarto      = colunas.find(c => /quarto|numero|n[uú]mero|apto/i.test(c));
+      const colAndar       = colunas.find(c => /andar|piso|floor/i.test(c));
+      const colTipo        = colunas.find(c => /tipo/i.test(c));
+      const colCapacidade  = colunas.find(c => /capacidade|vagas|pessoas/i.test(c));
+      const colDescricao   = colunas.find(c => /descri[cç][aã]o/i.test(c));
+      if(!colQuarto){
+        erroEl.textContent = 'Não encontrei a coluna "Quarto" na planilha. Verifique o cabeçalho da primeira linha.';
+        erroEl.style.display = 'block';
+        return;
+      }
+
+      importQuartosRows = linhas
+        .map(l => ({
+          numero:     String(l[colQuarto]||'').trim(),
+          andar:      colAndar      ? String(l[colAndar]||'').trim()      : '',
+          tipo:       colTipo       ? String(l[colTipo]||'').trim()       : '',
+          capacidade: colCapacidade ? parseInt(l[colCapacidade])||0       : 0,
+          descricao:  colDescricao  ? String(l[colDescricao]||'').trim()  : '',
+        }))
+        .filter(l => l.numero);
+
+      if(!importQuartosRows.length){
+        erroEl.textContent = 'Nenhuma linha válida foi encontrada (verifique se a coluna Quarto está preenchida).';
+        erroEl.style.display = 'block';
+        return;
+      }
+
+      renderImportQuartosPreview();
+    } catch(err){
+      erroEl.textContent = 'Não foi possível ler este arquivo. Confirme que é um .xlsx válido.';
+      erroEl.style.display = 'block';
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function renderImportQuartosPreview(){
+  let novos = 0, atualizados = 0;
+  const linhasHtml = importQuartosRows.map(r => {
+    const existe = quartos.some(q => q.numero === r.numero);
+    let situacao;
+    if(existe){ situacao = '<span style="color:var(--amber);">Já existe — será atualizado</span>'; atualizados++; }
+    else { situacao = '<span style="color:var(--green);">Novo</span>'; novos++; }
+    return `<tr><td style="padding:6px 10px;">${r.numero}</td><td style="padding:6px 10px;">${r.andar||'—'}</td><td style="padding:6px 10px;">${r.tipo||'—'}</td><td style="padding:6px 10px;">${r.capacidade||'—'}</td><td style="padding:6px 10px;">${situacao}</td></tr>`;
+  }).join('');
+
+  document.getElementById('importQuartosPreviewBody').innerHTML = linhasHtml;
+  document.getElementById('importQuartosResumo').textContent =
+    `${importQuartosRows.length} linha(s) na planilha • ${novos} quarto(s) novo(s) a criar` +
+    (atualizados ? ` • ${atualizados} já existente(s) (serão atualizados)` : '');
+  document.getElementById('importQuartosPreviewWrap').style.display = 'block';
+  document.getElementById('btnConfirmarImportQuartos').style.display = importQuartosRows.length ? 'inline-block' : 'none';
+}
+
+function confirmarImportQuartos(){
+  if(!importQuartosRows.length) return;
+
+  let proximoIdQuarto = quartos.length ? Math.max(...quartos.map(x=>x.id)) + 1 : 1;
+  let criados = 0, atualizados = 0;
+
+  importQuartosRows.forEach(r => {
+    let q = quartos.find(x => x.numero === r.numero);
+    if(!q){
+      quartos.push({
+        id: proximoIdQuarto++,
+        numero: r.numero,
+        andar: r.andar || '',
+        tipo: r.tipo || 'Standard',
+        capacidade: r.capacidade || 2,
+        statusManual: '',
+        descricao: r.descricao || 'Criado automaticamente via importação de planilha',
+      });
+      criados++;
+    } else {
+      if(r.andar) q.andar = r.andar;
+      if(r.tipo) q.tipo = r.tipo;
+      if(r.capacidade) q.capacidade = r.capacidade;
+      if(r.descricao) q.descricao = r.descricao;
+      atualizados++;
+    }
+  });
+
+  saveQuartos();
+  closeImportQuartosModal();
+  renderAll();
+  showNotif(`Importação concluída: ${criados} quarto(s) criado(s), ${atualizados} quarto(s) atualizado(s).`);
+}
+
 // ── MODAL CONFIRMAÇÃO SAÍDA ──
 function openConfirmSaida(cat, id){
   const arr = cat==='hotel' ? hospedes : mbrfs;
@@ -4910,12 +5071,17 @@ function renderReservaQuartosGrid(selecionados=[]){
   reservaQuartosSelecionados = [...selecionados].map(String);
   const wrap = document.getElementById('r_quartos_grid');
   if(!wrap) return;
-  // Para reservas, mostra todos os quartos (inclusive ocupados) pois a reserva é futura
-  const lista = [...quartos]
+  const somenteLivresEl = document.getElementById('r_somente_livres');
+  const somenteLivres = somenteLivresEl ? somenteLivresEl.checked : false;
+  // Para reservas, por padrão mostra só quartos livres; o toggle permite ver todos (inclusive ocupados), pois a reserva é futura
+  let lista = [...quartos]
     .filter(q => q.statusManual !== 'manutencao')
     .sort((a,b) => String(a.numero).localeCompare(String(b.numero), undefined, {numeric:true}));
+  if(somenteLivres){
+    lista = lista.filter(q => getQuartoStatus(q) === 'livre' || reservaQuartosSelecionados.includes(String(q.numero)));
+  }
   if(!lista.length){
-    wrap.innerHTML = `<div class="reserva-quartos-empty">${tp('emptyQuartoCadastrado')}</div>`;
+    wrap.innerHTML = `<div class="reserva-quartos-empty">${somenteLivres ? 'Nenhum quarto disponível no momento.' : tp('emptyQuartoCadastrado')}</div>`;
     atualizaContadorReservaQuartos();
     return;
   }
@@ -5689,6 +5855,7 @@ const overlayMap = {
   'recusaModalOverlay':    ()=>closeRecusaModal(),
   'selecaoQuartoOverlay':  ()=>closeSelecaoQuartoModal(),
   'importBrfOverlay':      ()=>closeImportBrfModal(),
+  'importQuartosOverlay':  ()=>closeImportQuartosModal(),
 };
 Object.entries(overlayMap).forEach(([oid, fn])=>{
   const el=document.getElementById(oid);
