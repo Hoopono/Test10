@@ -2858,38 +2858,82 @@ window._trashConfirm = CONFIG.confirmarExclusao;
 
 // ── PRINT MODAL HELPERS ──
 let _lastPrintHTML = '';
+let _lastPrintBlobURL = '';
+
 function openPrintModal(htmlContent) {
   _lastPrintHTML = htmlContent;
+
+  // Libera blob anterior para evitar memory leak
+  if (_lastPrintBlobURL) {
+    URL.revokeObjectURL(_lastPrintBlobURL);
+    _lastPrintBlobURL = '';
+  }
+
   const overlay = document.getElementById('printModalOverlay');
-  const frame = document.getElementById('printFrame');
+  const frame   = document.getElementById('printFrame');
   overlay.classList.add('open');
-  // Write content into iframe
-  const doc = frame.contentDocument || frame.contentWindow.document;
-  doc.open();
-  doc.write(htmlContent);
-  doc.close();
+
+  // ── Estratégia 1: srcdoc (suportado em todos navegadores modernos)
+  // Evita o bloqueio de document.write() em iframes em arquivos locais / CSP.
+  try {
+    frame.srcdoc = htmlContent;
+    return;
+  } catch(e) { /* fallback abaixo */ }
+
+  // ── Estratégia 2: Blob URL como src (fallback para Safari antigo)
+  try {
+    const blob = new Blob([htmlContent], { type: 'text/html; charset=utf-8' });
+    _lastPrintBlobURL = URL.createObjectURL(blob);
+    frame.src = _lastPrintBlobURL;
+  } catch(e) {
+    // Estratégia 3: document.write clássico (último recurso)
+    const doc = frame.contentDocument || frame.contentWindow.document;
+    doc.open(); doc.write(htmlContent); doc.close();
+  }
 }
+
 function closePrintModal() {
   document.getElementById('printModalOverlay').classList.remove('open');
 }
-// Em muitos navegadores móveis, chamar print() dentro de um iframe a partir
-// do documento pai não é tratado como "ação direta do usuário" e é ignorado
-// silenciosamente. Por isso, abrimos o recibo numa nova aba e imprimimos a
-// partir de dentro dela mesma — isso funciona de forma confiável em qualquer
-// navegador (celular, tablet ou desktop).
+
+// Imprime abrindo o conteúdo numa nova aba via Blob URL.
+// Usar Blob URL em vez de window.open('','_blank') + document.write evita:
+//   • bloqueio de pop-up (o href num <a> clicado diretamente não é pop-up)
+//   • bloqueio de document.write cross-origin em browsers modernos
 function imprimirViaNovaAba() {
   if (!_lastPrintHTML) return;
+
+  // Cria (ou reutiliza) o Blob URL
+  let blobURL = _lastPrintBlobURL;
+  if (!blobURL) {
+    try {
+      const blob = new Blob([_lastPrintHTML], { type: 'text/html; charset=utf-8' });
+      blobURL = URL.createObjectURL(blob);
+      _lastPrintBlobURL = blobURL;
+    } catch(e) { blobURL = null; }
+  }
+
+  if (blobURL) {
+    // Abre a nova aba com o Blob URL — não é tratado como pop-up pelo browser
+    const win = window.open(blobURL, '_blank');
+    if (win) {
+      win.onload = function () {
+        setTimeout(function () { win.print(); }, 300);
+      };
+      return;
+    }
+  }
+
+  // Fallback final: tenta window.open clássico
   const printWin = window.open('', '_blank');
   if (!printWin) {
-    showNotif('Permita pop-ups neste site para imprimir o recibo.', 'warn');
+    showNotif('Permita pop-ups neste site para imprimir.', 'warn');
     return;
   }
   printWin.document.open();
   printWin.document.write(_lastPrintHTML);
   printWin.document.close();
   printWin.focus();
-  // Aguarda o documento (e fontes) carregarem antes de chamar print(),
-  // chamado a partir da própria janela — sempre permitido pelo navegador.
   printWin.onload = function () {
     setTimeout(function () { printWin.print(); }, 300);
   };
@@ -4213,7 +4257,7 @@ function gerarReciboBRF(h, dias, valorTotal, valorPago, saldo, saidaISO){
     <div class="ass-item">Responsável Don Pita Hotel</div>
   </div>
 
-  <button class="btn-print" onclick="(window.top||window.parent).imprimirViaNovaAba?(window.top||window.parent).imprimirViaNovaAba():window.print()">🖨️ Imprimir Recibo</button>
+  <button class="btn-print" onclick="window.print()">🖨️ Imprimir Recibo</button>
   <div class="footer">Don Pita Hotel — Sistema de Gestão · Recibo gerado automaticamente em ${emissao}</div>
   </body></html>`);
 }
@@ -4461,7 +4505,7 @@ function gerarReciboPagamento(cat, h, diasPagos, forma, valorConsumo){
   </div>
 
   <div style="text-align:center;margin-top:28px;">
-    <button onclick="(window.top||window.parent).imprimirViaNovaAba?(window.top||window.parent).imprimirViaNovaAba():window.print()" style="background:#1A6B3A;color:white;border:none;padding:12px 32px;border-radius:8px;font-size:14px;cursor:pointer;font-weight:700;">🖨️ Imprimir Recibo</button>
+    <button onclick="window.print()" style="background:#1A6B3A;color:white;border:none;padding:12px 32px;border-radius:8px;font-size:14px;cursor:pointer;font-weight:700;">🖨️ Imprimir Recibo</button>
   </div>
   <div class="footer">Don Pita Hotel — Recibo gerado automaticamente em ${emissao}</div>
   </body></html>`);
@@ -4760,7 +4804,7 @@ function imprimirFichaHospede(cat, id){
   </div>
 
   <div style="text-align:center;margin-top:28px;">
-    <button onclick="(window.top||window.parent).imprimirViaNovaAba?(window.top||window.parent).imprimirViaNovaAba():window.print()" style="background:#1A2340;color:white;border:none;padding:12px 32px;border-radius:8px;font-size:14px;cursor:pointer;font-weight:700;">🖨️ Imprimir Ficha</button>
+    <button onclick="window.print()" style="background:#1A2340;color:white;border:none;padding:12px 32px;border-radius:8px;font-size:14px;cursor:pointer;font-weight:700;">🖨️ Imprimir Ficha</button>
   </div>
   <div class="footer">Don Pita Hotel — Sistema de Gestão · Ficha gerada em ${emissao}</div>
   </body></html>`);
@@ -6354,7 +6398,7 @@ function imprimirRelatorioBRF(){
   </div>
 
   <div style="text-align:center;margin-top:24px;">
-    <button onclick="(window.top||window.parent).imprimirViaNovaAba?(window.top||window.parent).imprimirViaNovaAba():window.print()" style="background:#5B3A8C;color:white;border:none;padding:12px 32px;border-radius:8px;font-size:14px;cursor:pointer;font-weight:700;">🖨️ Imprimir</button>
+    <button onclick="window.print()" style="background:#5B3A8C;color:white;border:none;padding:12px 32px;border-radius:8px;font-size:14px;cursor:pointer;font-weight:700;">🖨️ Imprimir</button>
   </div>
   <div class="footer">Don Pita Hotel — Sistema de Gestão · Relatório gerado em ${dataHoje} às ${horaHoje}</div>
   </body></html>`);
@@ -6450,7 +6494,7 @@ function imprimirRelatorioEstoque(){
   </div>
 
   <div style="text-align:center;margin-top:24px;">
-    <button onclick="(window.top||window.parent).imprimirViaNovaAba?(window.top||window.parent).imprimirViaNovaAba():window.print()" style="background:#1A6B3A;color:white;border:none;padding:12px 32px;border-radius:8px;font-size:14px;cursor:pointer;font-weight:700;">🖨️ Imprimir</button>
+    <button onclick="window.print()" style="background:#1A6B3A;color:white;border:none;padding:12px 32px;border-radius:8px;font-size:14px;cursor:pointer;font-weight:700;">🖨️ Imprimir</button>
   </div>
   <div class="footer">Don Pita Hotel — Sistema de Gestão · Relatório gerado em ${dataHoje} às ${horaHoje}</div>
   </body></html>`);
@@ -6588,7 +6632,7 @@ function imprimirHospedes(periodo='diario'){
   </div>
 
   <div style="text-align:center;margin-top:24px;">
-    <button onclick="(window.top||window.parent).imprimirViaNovaAba?(window.top||window.parent).imprimirViaNovaAba():window.print()" style="background:#1A2340;color:white;border:none;padding:12px 32px;border-radius:8px;font-size:14px;cursor:pointer;font-weight:700;">🖨️ Imprimir</button>
+    <button onclick="window.print()" style="background:#1A2340;color:white;border:none;padding:12px 32px;border-radius:8px;font-size:14px;cursor:pointer;font-weight:700;">🖨️ Imprimir</button>
   </div>
   <div class="footer">Don Pita Hotel — Sistema de Gestão · Relatório gerado em ${dataHoje} às ${horaHoje}</div>
   </body></html>`);
@@ -6843,7 +6887,7 @@ function imprimirCaixa(periodo='diario'){
   </div>
 
   <div style="text-align:center;margin-top:24px;">
-    <button onclick="(window.top||window.parent).imprimirViaNovaAba?(window.top||window.parent).imprimirViaNovaAba():window.print()" style="background:#1A2340;color:white;border:none;padding:12px 32px;border-radius:8px;font-size:14px;cursor:pointer;font-weight:700;">🖨️ Imprimir</button>
+    <button onclick="window.print()" style="background:#1A2340;color:white;border:none;padding:12px 32px;border-radius:8px;font-size:14px;cursor:pointer;font-weight:700;">🖨️ Imprimir</button>
   </div>
   <div class="footer">Don Pita Hotel — Sistema de Gestão · Relatório gerado em ${dataHoje} às ${horaHoje}</div>
   </body></html>`);
