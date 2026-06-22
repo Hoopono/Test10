@@ -845,7 +845,7 @@
       <div class="toolbar-title" data-i18n="mbrfToolbarTitle">Funcionários BRF</div>
       <div class="search-wrap">
         <span class="search-icon">🔍</span>
-        <input class="search-input" type="text" placeholder="Buscar funcionário..." data-i18n-ph="phBuscarFuncionario" oninput="filterTable(this.value,'mbrf')">
+        <input class="search-input" type="text" placeholder="Buscar por nome, quarto ou matrícula..." data-i18n-ph="phBuscarFuncionario" oninput="filterTable(this.value,'mbrf')">
       </div>
       <button class="btn btn-mbrf" onclick="openModal('mbrf')">+ <span data-i18n="btnNovoFuncionario">Novo Funcionário BRF</span></button>
       <button class="btn btn-outline" onclick="openImportBrfModal()">📥 Importar Planilha</button>
@@ -3208,7 +3208,9 @@ function renderAll(){
 function renderTable(cat, filter=''){
   const data  = cat==='hotel' ? hospedes : mbrfs;
   const tbody = document.getElementById('table'+cap(cat));
-  const rows  = data.filter(h=>!filter||h.nome.toLowerCase().includes(filter.toLowerCase())||String(h.quarto||'').includes(filter));
+  const isMbrf_= cat==='mbrf';
+  const q_ = (filter||'').toLowerCase();
+  const rows  = data.filter(h=>!filter||h.nome.toLowerCase().includes(q_)||String(h.quarto||'').toLowerCase().includes(q_)||(isMbrf_&&String(h.matricula||'').toLowerCase().includes(q_))||(isMbrf_&&String(h.setor||'').toLowerCase().includes(q_)));
   const isMbrf= cat==='mbrf';
 
   if(!rows.length){
@@ -3297,6 +3299,11 @@ function renderTable(cat, filter=''){
       </tr>`;
     }
   }).join('');
+}
+
+// ── FILTER TABLE (busca por nome, quarto e matrícula) ──
+function filterTable(value, cat){
+  renderTable(cat, value);
 }
 
 // ── STATS ──
@@ -5059,6 +5066,9 @@ function selectReservaTipo(tipo){
     // Coloca prefixo BRF- automaticamente se ainda não tem
     if(nomeInput.value && !nomeInput.value.startsWith('BRF-')) nomeInput.value = 'BRF-' + nomeInput.value;
     else if(!nomeInput.value) nomeInput.value = 'BRF-';
+    // Preço automático R$110 para reservas BRF (se campo estiver vazio ou padrão)
+    const rDiaria = document.getElementById('r_diaria');
+    if(rDiaria && (!rDiaria.value || parseFloat(rDiaria.value) === 0)) rDiaria.value = '110';
     // Foca e posiciona cursor após BRF-
     setTimeout(()=>{ nomeInput.focus(); nomeInput.setSelectionRange(4,4); }, 50);
   }
@@ -5653,6 +5663,8 @@ function openModal(cat,id=null){
     const agora = nowBR();
     document.getElementById('f_checkin_hora').value = `${String(agora.getHours()).padStart(2,'0')}:${String(agora.getMinutes()).padStart(2,'0')}`;
     document.getElementById('f_diasPagos').value='0';
+    // Preço automático R$110 para funcionários BRF
+    if(isMbrf){ document.getElementById('f_diaria').value='110'; }
     populateQuartosSelect(cat, '');
     // Foco no nome após o prefixo
     if(isMbrf){ setTimeout(()=>{ const el=document.getElementById('f_nome'); if(el){ el.focus(); }}, 100); }
