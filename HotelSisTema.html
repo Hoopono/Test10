@@ -9,6 +9,7 @@
 
 <!-- Supabase SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script>
   const SUPABASE_URL  = 'https://rliesnosftjhtrvfbhem.supabase.co';
   const SUPABASE_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJsaWVzbm9zZnRqaHRydmZiaGVtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MzYxNDAsImV4cCI6MjA5NzIxMjE0MH0.jmaqLfm4wkamYIQaEIHTm1XFipftsPx1X0DotKbEYfk';
@@ -847,6 +848,7 @@
         <input class="search-input" type="text" placeholder="Buscar funcionário..." data-i18n-ph="phBuscarFuncionario" oninput="filterTable(this.value,'mbrf')">
       </div>
       <button class="btn btn-mbrf" onclick="openModal('mbrf')">+ <span data-i18n="btnNovoFuncionario">Novo Funcionário BRF</span></button>
+      <button class="btn btn-outline" onclick="openImportBrfModal()">📥 Importar Planilha</button>
     </div>
     <div class="table-wrap">
       <table>
@@ -1652,6 +1654,38 @@
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="closeQuartoModal()" data-i18n="btnCancelar">Cancelar</button>
       <button class="btn btn-quarto" id="btnSalvarQuarto" onclick="salvarQuarto()"><span data-i18n="btnCadastrarQuarto">Cadastrar Quarto</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL IMPORTAR PLANILHA BRF -->
+<div class="modal-overlay" id="importBrfOverlay">
+  <div class="modal" style="max-width:640px;">
+    <button class="modal-close" onclick="closeImportBrfModal()">✕</button>
+    <div class="modal-title">📥 Importar Planilha BRF</div>
+    <p style="font-size:12.5px;color:var(--gray);margin-bottom:14px;line-height:1.5;">
+      Envie um arquivo Excel (.xlsx) com as colunas <b>Quarto</b> e <b>Nome</b> — uma linha por pessoa.
+      Quartos que ainda não existem serão criados automaticamente, com capacidade igual à
+      quantidade de pessoas daquele quarto na planilha.
+    </p>
+    <div class="form-group" style="margin-bottom:14px;">
+      <input type="file" id="importBrfFile" accept=".xlsx,.xls,.csv" class="form-input" onchange="handleImportBrfFile(event)">
+    </div>
+    <div id="importBrfPreviewWrap" style="display:none;">
+      <div id="importBrfResumo" style="font-size:13px;font-weight:600;color:var(--navy);margin-bottom:10px;"></div>
+      <div style="max-height:280px;overflow:auto;border:1px solid var(--border);border-radius:10px;">
+        <table style="width:100%;font-size:12.5px;">
+          <thead style="position:sticky;top:0;background:var(--cream);">
+            <tr><th style="text-align:left;padding:8px 10px;">Quarto</th><th style="text-align:left;padding:8px 10px;">Nome</th><th style="text-align:left;padding:8px 10px;">Situação</th></tr>
+          </thead>
+          <tbody id="importBrfPreviewBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div id="importBrfErro" style="display:none;color:var(--red);font-size:12.5px;font-weight:600;margin-top:10px;"></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeImportBrfModal()">Cancelar</button>
+      <button class="btn btn-mbrf" id="btnConfirmarImportBrf" onclick="confirmarImportBrf()" style="display:none;">Confirmar Importação</button>
     </div>
   </div>
 </div>
@@ -3511,6 +3545,201 @@ function removerQuarto(id){
   quartos = quartos.filter(q=>q.id!==id);
   saveQuartos(); renderAll();
   showNotif('Quarto removido.','warn');
+}
+
+// ── IMPORTAR PLANILHA BRF (Quarto + Nome) ──
+let importBrfRows = [];
+
+function openImportBrfModal(){
+  importBrfRows = [];
+  document.getElementById('importBrfFile').value = '';
+  document.getElementById('importBrfPreviewWrap').style.display = 'none';
+  document.getElementById('importBrfErro').style.display = 'none';
+  document.getElementById('btnConfirmarImportBrf').style.display = 'none';
+  document.getElementById('importBrfOverlay').classList.add('open');
+}
+function closeImportBrfModal(){
+  document.getElementById('importBrfOverlay').classList.remove('open');
+  importBrfRows = [];
+}
+
+function handleImportBrfFile(ev){
+  const file = ev.target.files && ev.target.files[0];
+  if(!file) return;
+  const erroEl = document.getElementById('importBrfErro');
+  erroEl.style.display = 'none';
+
+  const reader = new FileReader();
+  reader.onload = function(e){
+    try{
+      const data = new Uint8Array(e.target.result);
+      const wb = XLSX.read(data, {type:'array'});
+      const sheet = wb.Sheets[wb.SheetNames[0]];
+      const linhas = XLSX.utils.sheet_to_json(sheet, {defval:''});
+      if(!linhas.length){
+        erroEl.textContent = 'A planilha está vazia.';
+        erroEl.style.display = 'block';
+        return;
+      }
+      // Identifica as colunas de Quarto e Nome (tolerante a maiúsculas/variações)
+      const colunas = Object.keys(linhas[0]);
+      const colQuarto = colunas.find(c => /quarto/i.test(c));
+      const colNome   = colunas.find(c => /nome/i.test(c));
+      if(!colQuarto || !colNome){
+        erroEl.textContent = 'Não encontrei as colunas "Quarto" e "Nome" na planilha. Verifique o cabeçalho da primeira linha.';
+        erroEl.style.display = 'block';
+        return;
+      }
+
+      importBrfRows = linhas
+        .map(l => ({
+          quarto: String(l[colQuarto]||'').trim(),
+          nome:   String(l[colNome]  ||'').trim(),
+        }))
+        .filter(l => l.quarto && l.nome);
+
+      if(!importBrfRows.length){
+        erroEl.textContent = 'Nenhuma linha válida foi encontrada (verifique se Quarto e Nome estão preenchidos).';
+        erroEl.style.display = 'block';
+        return;
+      }
+
+      renderImportBrfPreview();
+    } catch(err){
+      erroEl.textContent = 'Não foi possível ler este arquivo. Confirme que é um .xlsx válido.';
+      erroEl.style.display = 'block';
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function renderImportBrfPreview(){
+  // Conta quantas pessoas por quarto na planilha
+  const contagem = {};
+  importBrfRows.forEach(r => { contagem[r.quarto] = (contagem[r.quarto]||0) + 1; });
+
+  const nomesExistentesPorQuarto = {};
+  mbrfs.forEach(m => {
+    const key = (m.quarto||'').trim();
+    const nomeLimpo = (m.nome||'').toLowerCase().replace(/^brf-/i,'').trim();
+    if(!nomesExistentesPorQuarto[key]) nomesExistentesPorQuarto[key] = new Set();
+    nomesExistentesPorQuarto[key].add(nomeLimpo);
+  });
+
+  let novosQuartos = 0, novasPessoas = 0, duplicadas = 0;
+  const linhasHtml = importBrfRows.map(r => {
+    const existeQuarto = quartos.some(q => q.numero === r.quarto);
+    const nomeLimpo = r.nome.toLowerCase().replace(/^brf-/i,'').trim();
+    const jaExistePessoa = (nomesExistentesPorQuarto[r.quarto]||new Set()).has(nomeLimpo);
+    if(!existeQuarto) {} // contado uma vez abaixo, fora do map
+    let situacao;
+    if(jaExistePessoa){ situacao = '<span style="color:var(--amber);">Já cadastrado(a) — será ignorado</span>'; duplicadas++; }
+    else { situacao = '<span style="color:var(--green);">Novo</span>'; novasPessoas++; }
+    return `<tr><td style="padding:6px 10px;">${r.quarto}</td><td style="padding:6px 10px;">${r.nome}</td><td style="padding:6px 10px;">${situacao}</td></tr>`;
+  }).join('');
+
+  novosQuartos = Object.keys(contagem).filter(num => !quartos.some(q=>q.numero===num)).length;
+
+  document.getElementById('importBrfPreviewBody').innerHTML = linhasHtml;
+  document.getElementById('importBrfResumo').textContent =
+    `${importBrfRows.length} linha(s) na planilha • ${novosQuartos} quarto(s) novo(s) a criar • ${novasPessoas} pessoa(s) nova(s) a importar` +
+    (duplicadas ? ` • ${duplicadas} já cadastrada(s) (serão ignoradas)` : '');
+  document.getElementById('importBrfPreviewWrap').style.display = 'block';
+  document.getElementById('btnConfirmarImportBrf').style.display = novasPessoas ? 'inline-block' : 'none';
+}
+
+function confirmarImportBrf(){
+  if(!importBrfRows.length) return;
+
+  // 1) Conta pessoas por quarto na planilha
+  const contagem = {};
+  importBrfRows.forEach(r => { contagem[r.quarto] = (contagem[r.quarto]||0) + 1; });
+
+  // 2) Cria os quartos que ainda não existem (capacidade = qtd de pessoas daquele quarto)
+  let proximoIdQuarto = quartos.length ? Math.max(...quartos.map(x=>x.id)) + 1 : 1;
+  let quartosCriados = 0;
+  Object.keys(contagem).forEach(numero => {
+    let q = quartos.find(x => x.numero === numero);
+    if(!q){
+      quartos.push({
+        id: proximoIdQuarto++,
+        numero,
+        andar: '',
+        tipo: 'BRF',
+        capacidade: contagem[numero],
+        statusManual: '',
+        descricao: 'Criado automaticamente via importação de planilha BRF',
+      });
+      quartosCriados++;
+    } else if((q.capacidade||0) < contagem[numero]){
+      // Aumenta a capacidade se a planilha indica mais pessoas do que o cadastrado
+      q.capacidade = contagem[numero];
+    }
+  });
+
+  // 3) Monta um índice de pessoas já cadastradas (por quarto + nome) para evitar duplicar
+  const existentesPorQuarto = {};
+  mbrfs.forEach(m => {
+    const key = (m.quarto||'').trim();
+    const nomeLimpo = (m.nome||'').toLowerCase().replace(/^brf-/i,'').trim();
+    if(!existentesPorQuarto[key]) existentesPorQuarto[key] = new Set();
+    existentesPorQuarto[key].add(nomeLimpo);
+  });
+
+  // 4) Cadastra cada pessoa nova como funcionário BRF
+  let proximoIdMbrf = mbrfs.length ? Math.max(...mbrfs.map(x=>x.id)) + 1 : 1;
+  const emUsoCodigo = new Set();
+  [...hospedes, ...mbrfs].forEach(h => { if(h.codigoFicha) emUsoCodigo.add(h.codigoFicha); });
+  function proximoCodigoDisponivel(){
+    let n = 1;
+    while(emUsoCodigo.has(String(n))) n++;
+    emUsoCodigo.add(String(n));
+    return String(n);
+  }
+
+  const agora = nowBR();
+  const horaAtual = `${String(agora.getHours()).padStart(2,'0')}:${String(agora.getMinutes()).padStart(2,'0')}`;
+  let pessoasCriadas = 0;
+
+  importBrfRows.forEach(r => {
+    const nomeLimpo = r.nome.toLowerCase().replace(/^brf-/i,'').trim();
+    const jaExiste = (existentesPorQuarto[r.quarto]||new Set()).has(nomeLimpo);
+    if(jaExiste) return;
+
+    const nomeFormatado = 'BRF-' + r.nome.replace(/^brf-/i,'').trim();
+    const codigoFicha = proximoCodigoDisponivel();
+    const obj = {
+      nome: nomeFormatado,
+      telefone: '',
+      quarto: r.quarto,
+      checkin: today(),
+      checkinHora: horaAtual,
+      checkout: '',
+      diaria: 0,
+      diasPagos: 0,
+      obs: 'Importado(a) via planilha',
+      matricula: '',
+      setor: '',
+      codigoFicha,
+      documento: '',
+      cep: '', endereco: '', numero: '', bairro: '', cidade: '', estado: '',
+      carro: '', placa: '',
+      categoria: 'mbrf',
+    };
+    const novo = { id: proximoIdMbrf++, criadoEm: new Date().toISOString(), ...obj };
+    mbrfs.push(novo);
+    sincronizarPessoaDoCadastro(obj, true);
+    // Atualiza índice local para não duplicar caso o mesmo nome se repita na planilha
+    if(!existentesPorQuarto[r.quarto]) existentesPorQuarto[r.quarto] = new Set();
+    existentesPorQuarto[r.quarto].add(nomeLimpo);
+    pessoasCriadas++;
+  });
+
+  saveQuartos();
+  saveMbrf();
+  closeImportBrfModal();
+  renderAll();
+  showNotif(`Importação concluída: ${quartosCriados} quarto(s) criado(s), ${pessoasCriadas} funcionário(s) importado(s).`);
 }
 
 // ── MODAL CONFIRMAÇÃO SAÍDA ──
@@ -5448,6 +5677,7 @@ const overlayMap = {
   'pessoaModalOverlay':    ()=>closePessoaModal(),
   'recusaModalOverlay':    ()=>closeRecusaModal(),
   'selecaoQuartoOverlay':  ()=>closeSelecaoQuartoModal(),
+  'importBrfOverlay':      ()=>closeImportBrfModal(),
 };
 Object.entries(overlayMap).forEach(([oid, fn])=>{
   const el=document.getElementById(oid);
